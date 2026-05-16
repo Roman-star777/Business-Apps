@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cargo Pro">
+<meta name="theme-color" content="#080d14">
+<title>Cargo Pro 🚛</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:#080d14;font-family:'DM Mono','Courier New',monospace;color:#e0e8f0;overflow:hidden;}
+  :root{
+    --bg:#080d14;--bg2:#0d1620;--bg3:#0a1218;
+    --bor:#1a2a3a;--bor2:#1a3a4a;
+    --gr:#2aee80;--rd:#ee4a4a;--bl:#4acfef;--or:#ee8a30;
+    --tx:#e0e8f0;--tx2:#8aaabb;--tx3:#5a8aaa;--tx4:#3a5a6a;
+  }
+  #app{height:100%;display:flex;flex-direction:column;}
+  header{background:var(--bg2);border-bottom:1px solid var(--bor);padding:.9rem 1.1rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:50;}
+  .h-title{font-size:10px;color:#3a7a9a;letter-spacing:.2em;margin-bottom:2px;}
+  .h-name{font-size:16px;font-weight:700;color:#fff;}
+  .btn-icon{background:transparent;border:1px solid var(--bor);border-radius:8px;color:var(--bl);padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:background .15s;}
+  .btn-icon.on{background:#1a3a4a;}
+  #settings-panel{background:var(--bg2);border-bottom:1px solid var(--bor);padding:1.1rem;overflow-y:auto;flex-shrink:0;max-height:50vh;}
+  .s-section{font-size:10px;color:#3a7a9a;letter-spacing:.15em;margin-bottom:.6rem;margin-top:.9rem;}
+  .s-section:first-child{margin-top:0;}
+  .s-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.3rem;}
+  .s-field label{font-size:10px;color:var(--tx3);display:block;margin-bottom:3px;}
+  .s-field label span{color:#3a6a8a;}
+  .inp{background:var(--bg3);border:1px solid var(--bor2);border-radius:6px;color:var(--bl);padding:6px 9px;font-size:13px;font-family:inherit;width:100%;}
+  .inp-r{text-align:right;}
+  .toll-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .toll-row{display:flex;align-items:center;gap:5px;}
+  .toll-row span{font-size:12px;}
+  .toll-row label{font-size:10px;color:var(--tx3);min-width:65px;flex-shrink:0;}
+  .toll-row input{width:60px;}
+  #content{flex:1;overflow-y:auto;padding:1rem;padding-bottom:80px;-webkit-overflow-scrolling:touch;}
+  .tab-pane{display:none;}
+  .tab-pane.active{display:block;}
+  nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bor);display:flex;padding:6px 0 max(6px,env(safe-area-inset-bottom));z-index:50;}
+  .nav-btn{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;}
+  .nav-btn span:first-child{font-size:18px;}
+  .nav-btn .nav-lbl{font-size:9px;color:var(--tx4);letter-spacing:.05em;}
+  .nav-btn.active .nav-lbl{color:var(--bl);}
+  .nav-dot{width:16px;height:2px;background:var(--bl);border-radius:1px;display:none;}
+  .nav-btn.active .nav-dot{display:block;}
+  /* Cards */
+  .card{background:var(--bg2);border:1px solid var(--bor);border-radius:12px;padding:1rem;margin-bottom:.7rem;}
+  .card-title{font-size:10px;color:#3a7a9a;letter-spacing:.15em;margin-bottom:.7rem;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg3);font-size:12px;}
+  .row:last-child{border-bottom:none;}
+  .row label{color:var(--tx2);}
+  .row input{width:120px;}
+  .row-t{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bg3);}
+  .row-t:last-child{border-bottom:none;}
+  /* Breakeven */
+  .be-card{border-radius:14px;padding:1.2rem;margin-bottom:.7rem;}
+  .be-good{background:linear-gradient(135deg,#0a2a18,#0d3520);border:1px solid #1a5a30;}
+  .be-wait{background:linear-gradient(135deg,#14100a,#1e1508);border:1px solid #3a2a10;}
+  .be-status{font-size:10px;letter-spacing:.15em;margin-bottom:.6rem;}
+  .be-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:.8rem;}
+  .be-item label{font-size:10px;color:var(--tx3);}
+  .be-item .big{font-size:19px;font-weight:700;}
+  .be-item small{font-size:10px;color:var(--tx4);}
+  .progress{height:10px;background:#0a1820;border-radius:5px;overflow:hidden;margin-bottom:4px;}
+  .progress-fill{height:100%;border-radius:5px;transition:width .4s;}
+  .progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--tx4);}
+  /* Metrics grid */
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.7rem;}
+  .metric{background:var(--bg2);border:1px solid var(--bor);border-radius:10px;padding:11px;}
+  .metric label{font-size:10px;color:var(--tx3);display:block;margin-bottom:3px;}
+  .metric .val{font-size:18px;font-weight:700;}
+  .metric small{font-size:10px;color:var(--tx4);}
+  /* Colors */
+  .c-gr{color:var(--gr)!important;} .c-rd{color:var(--rd)!important;} .c-bl{color:var(--bl)!important;} .c-or{color:var(--or)!important;} .c-tx{color:var(--tx)!important;} .c-tx2{color:var(--tx2)!important;}
+  /* Live calc banner */
+  .live-banner{border-radius:12px;padding:.9rem;margin-bottom:.7rem;}
+  .live-good{background:linear-gradient(135deg,#0a2018,#0d2a1a);border:1px solid #1a5a30;}
+  .live-bad{background:linear-gradient(135deg,#180a0a,#200d0d);border:1px solid #4a1a1a;}
+  .live-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;}
+  .live-item label{font-size:9px;color:var(--tx3);display:block;}
+  .live-item .lv{font-size:12px;font-weight:700;}
+  /* Toggle */
+  .toggle-row{background:var(--bg2);border:1px solid var(--bor);border-radius:12px;padding:.9rem;margin-bottom:.7rem;display:flex;justify-content:space-between;align-items:center;}
+  .toggle-row .tl{font-size:12px;color:var(--tx);}
+  .toggle-row .ts{font-size:10px;color:var(--tx3);}
+  .toggle{width:44px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+  .toggle .knob{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;transition:left .2s;}
+  .toggle.on{background:var(--gr);}
+  .toggle.off{background:#1a2a3a;}
+  .toggle.on .knob{left:25px;}
+  .toggle.off .knob{left:3px;}
+  /* Countries */
+  .country-grid{display:flex;flex-wrap:wrap;gap:5px;margin:.4rem 0;}
+  .c-btn{padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;border:1px solid var(--bor);background:transparent;color:var(--tx3);transition:all .15s;}
+  .c-btn.sel{background:#1a3a4a;border-color:#3a8abf;color:var(--bl);}
+  .toll-hint{font-size:10px;color:#3a8abf;margin-top:3px;}
+  /* Buttons */
+  .btn-save{width:100%;padding:13px;background:#1a4a2a;border:1px solid var(--gr);border-radius:10px;color:var(--gr);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:.4rem;}
+  .btn-cancel{padding:13px 16px;background:transparent;border:1px solid #3a2a1a;border-radius:10px;color:#8a6a4a;font-size:13px;cursor:pointer;font-family:inherit;margin-top:.4rem;}
+  .btn-row{display:flex;gap:8px;}
+  /* History */
+  .trip-card{background:var(--bg2);border:1px solid var(--bor);border-radius:12px;padding:.9rem;margin-bottom:.6rem;}
+  .trip-head{display:flex;justify-content:space-between;align-items:flex-start;}
+  .trip-name{font-size:13px;font-weight:600;color:var(--tx);}
+  .trip-meta{font-size:10px;color:var(--tx3);margin-top:2px;}
+  .trip-net{font-size:15px;font-weight:700;}
+  .trip-net-lbl{font-size:10px;color:var(--tx4);}
+  .tags{display:flex;gap:5px;margin-top:.5rem;flex-wrap:wrap;}
+  .tag{font-size:10px;border-radius:4px;padding:3px 7px;}
+  .tag-gr{background:#0a1820;border:1px solid #1a3a2a;color:var(--gr);}
+  .tag-rd{background:#1a0a08;border:1px solid #3a1a10;color:var(--rd);}
+  .tag-bl{background:#0a1820;border:1px solid var(--bor2);color:var(--bl);}
+  .trip-note{font-size:10px;color:#5a7a8a;margin-top:.4rem;font-style:italic;}
+  .trip-actions{display:flex;gap:6px;margin-top:.6rem;}
+  .btn-sm{font-size:11px;background:transparent;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit;}
+  .btn-edit{border:1px solid var(--bor2);color:#4a8aaa;}
+  .btn-del{border:1px solid #3a1a1a;color:#8a4a4a;}
+  .running-bar{margin-top:.5rem;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .running-bar label{font-size:10px;}
+  .mini-bar{height:4px;width:60px;background:#0a1218;border-radius:2px;flex-shrink:0;overflow:hidden;}
+  .mini-fill{height:100%;border-radius:2px;}
+  /* Month selector */
+  .month-tabs{display:flex;gap:6px;margin-bottom:.7rem;overflow-x:auto;padding-bottom:2px;}
+  .month-tabs::-webkit-scrollbar{display:none;}
+  .m-tab{padding:5px 12px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;border:1px solid var(--bor);background:transparent;color:var(--tx3);white-space:nowrap;flex-shrink:0;}
+  .m-tab.active{background:#1a3a4a;border-color:#3a8abf;color:var(--bl);}
+  /* Stats */
+  .month-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bg3);}
+  .month-row:last-child{border-bottom:none;}
+  /* Empty */
+  .empty{text-align:center;padding:3rem 1rem;color:var(--tx4);font-size:12px;line-height:1.8;}
+  .btn-add{margin-top:.8rem;background:#1a3a4a;border:1px solid #3a8abf;border-radius:8px;color:var(--bl);padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit;}
+  /* Saved toast */
+  #toast{position:fixed;top:70px;right:1rem;background:#1a4a2a;border:1px solid var(--gr);border-radius:8px;color:var(--gr);padding:8px 14px;font-size:12px;font-family:inherit;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
+  #toast.show{opacity:1;}
+  /* Export/Import */
+  .exp-btn{background:transparent;border:1px solid var(--bor2);border-radius:8px;color:var(--bl);padding:8px 14px;font-size:11px;cursor:pointer;font-family:inherit;}
+  textarea.inp{height:60px;resize:vertical;padding-top:8px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div class="h-title">CARGO PROFIT SYSTEM</div>
+      <div class="h-name">🚛 Моя логістична компанія</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="saved-lbl" style="font-size:11px;color:var(--gr);display:none;">✓ Збережено</span>
+      <button class="btn-icon" id="btn-settings" onclick="toggleSettings()">⚙️</button>
+    </div>
+  </header>
+
+  <div id="settings-panel" style="display:none;">
+    <div class="s-section">⚙️ НАЛАШТУВАННЯ АВТО</div>
+    <div class="s-grid">
+      <div class="s-field"><label>Ціна палива <span>Kč/л</span></label><input class="inp inp-r" id="s-fuelPrice" type="number" value="41"></div>
+      <div class="s-field"><label>Витрата <span>л/100км</span></label><input class="inp inp-r" id="s-fuelCons" type="number" value="8"></div>
+      <div class="s-field"><label>Амортизація <span>Kč/км</span></label><input class="inp inp-r" id="s-amort" type="number" value="1.0" step="0.1"></div>
+      <div class="s-field"><label>Їжа <span>Kč/день</span></label><input class="inp inp-r" id="s-meal" type="number" value="400"></div>
+      <div class="s-field"><label>Готель <span>Kč/ніч</span></label><input class="inp inp-r" id="s-hotel" type="number" value="800"></div>
+    </div>
+    <div class="s-section">💳 ЩОМІСЯЧНІ ФІКСОВАНІ ВИТРАТИ</div>
+    <div class="s-grid">
+      <div class="s-field"><label>Кредит за авто <span>Kč/міс</span></label><input class="inp inp-r" id="s-credit" type="number" value="5000"></div>
+      <div class="s-field"><label>Страховка авто <span>Kč/міс</span></label><input class="inp inp-r" id="s-insurance" type="number" value="2000"></div>
+      <div class="s-field"><label>CMR страховка <span>Kč/міс</span></label><input class="inp inp-r" id="s-cmr" type="number" value="1200"></div>
+      <div class="s-field"><label>TIMOCOM <span>Kč/міс</span></label><input class="inp inp-r" id="s-timocom" type="number" value="2500"></div>
+      <div class="s-field"><label>Інші витрати <span>Kč/міс</span></label><input class="inp inp-r" id="s-other" type="number" value="1500"></div>
+    </div>
+    <div class="s-section">🛣️ МИТО ПО КРАЇНАХ (Kč)</div>
+    <div class="toll-grid" id="toll-grid"></div>
+    <div style="margin-top:1rem;margin-bottom:.5rem;">
+      <button onclick="saveStAndRefresh()" style="width:100%;padding:13px;background:#0a1a2a;border:2px solid var(--bl);border-radius:10px;color:var(--bl);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.05em;">
+        ✓ ЗБЕРЕГТИ НАЛАШТУВАННЯ
+      </button>
+    </div>
+    <div class="s-section">📦 ЕКСПОРТ / ІМПОРТ ДАНИХ</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="exp-btn" onclick="exportData()">⬇️ Скачати дані</button>
+      <button class="exp-btn" onclick="document.getElementById('imp-file').click()">⬆️ Завантажити дані</button>
+      <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div id="content">
+    <!-- DASHBOARD -->
+    <div class="tab-pane active" id="tab-dashboard"></div>
+    <!-- NEW TRIP -->
+    <div class="tab-pane" id="tab-new"></div>
+    <!-- HISTORY -->
+    <div class="tab-pane" id="tab-history"></div>
+    <!-- STATS -->
+    <div class="tab-pane" id="tab-stats"></div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')">
+      <span>📊</span><span class="nav-lbl">Місяць</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-new" onclick="showTab('new')">
+      <span>➕</span><span class="nav-lbl">Рейс</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="showTab('history')">
+      <span>📋</span><span class="nav-lbl">Історія</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-stats" onclick="showTab('stats')">
+      <span>📈</span><span class="nav-lbl">Статистика</span><div class="nav-dot"></div>
+    </button>
+  </nav>
+</div>
+<div id="toast">✓ Збережено</div>
+
+<script>
+const COUNTRIES = [
+  {code:"CZ",flag:"🇨🇿",name:"Чехія"},
+  {code:"SK",flag:"🇸🇰",name:"Словаччина"},
+  {code:"PL",flag:"🇵🇱",name:"Польща"},
+  {code:"HU",flag:"🇭🇺",name:"Угорщина"},
+  {code:"AT",flag:"🇦🇹",name:"Австрія"},
+  {code:"DE",flag:"🇩🇪",name:"Німеччина"},
+  {code:"RO",flag:"🇷🇴",name:"Румунія"},
+  {code:"IT",flag:"🇮🇹",name:"Італія"},
+  {code:"FR",flag:"🇫🇷",name:"Франція"},
+  {code:"HR",flag:"🇭🇷",name:"Хорватія"},
+];
+const DEFAULT_TOLLS = {CZ:0,SK:0,PL:400,HU:350,AT:800,DE:0,RO:600,IT:1200,FR:1400,HR:500};
+
+let history = [];
+let editingId = null;
+let selectedMonth = todayMonth();
+let tripCountries = ["CZ"];
+let tripReturnCountries = [];
+
+function todayMonth(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function fmt(n){return Math.round(n).toLocaleString("cs-CZ");}
+function fmtD(n){return (n>=0?"+":"")+fmt(n);}
+function gv(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function gi(id){return parseInt(document.getElementById(id)?.value)||0;}
+function gs(id){return document.getElementById(id)?.value||"";}
+
+function getTolls(){
+  const t={};
+  COUNTRIES.forEach(c=>{
+    const el=document.getElementById("toll-"+c.code);
+    t[c.code]=el?parseInt(el.value)||0:(DEFAULT_TOLLS[c.code]||0);
+  });
+  return t;
+}
+function getSt(){
+  return {
+    fuelPrice:gv("s-fuelPrice")||41,
+    fuelCons:gv("s-fuelCons")||8,
+    amort:gv("s-amort")||1,
+    meal:gv("s-meal")||400,
+    hotel:gv("s-hotel")||800,
+    credit:gi("s-credit")||5000,
+    insurance:gi("s-insurance")||2000,
+    cmr:gi("s-cmr")||1200,
+    timocom:gi("s-timocom")||2500,
+    other:gi("s-other")||1500,
+    tolls:getTolls(),
+  };
+}
+function monthlyFixed(){
+  const s=getSt();
+  return s.credit+s.insurance+s.cmr+s.timocom+s.other;
+}
+function tollSum(codes){
+  const t=getTolls();
+  return codes.reduce((s,c)=>s+(t[c]||0),0);
+}
+function calcVar(km,days,nights,countries,rKm,rDays,rNights,rCountries,hasReturn,ferry,loading){
+  const s=getSt();
+  const f1=(km/100)*s.fuelCons*s.fuelPrice;
+  const f2=hasReturn?(rKm/100)*s.fuelCons*s.fuelPrice:0;
+  const t1=tollSum(countries);
+  const t2=hasReturn?tollSum(rCountries):0;
+  const totalD=days+(hasReturn?rDays:0);
+  const totalN=nights+(hasReturn?rNights:0);
+  const meals=totalD*s.meal;
+  const hotelC=totalN*s.hotel;
+  const totalKm=km+(hasReturn?rKm:0);
+  const amort=totalKm*s.amort;
+  const total=f1+f2+t1+t2+meals+hotelC+amort+(ferry||0)+(loading||0);
+  return {f1,f2,t1,t2,meals,hotelC,amort,total,totalKm};
+}
+
+// ─── SETTINGS ───
+function buildTollGrid(){
+  const g=document.getElementById("toll-grid");
+  const saved=JSON.parse(localStorage.getItem("cargo-settings")||"{}");
+  const tolls=saved.tolls||DEFAULT_TOLLS;
+  g.innerHTML=COUNTRIES.map(c=>`
+    <div class="toll-row">
+      <span>${c.flag}</span>
+      <label>${c.name}</label>
+      <input class="inp inp-r" id="toll-${c.code}" type="number" value="${tolls[c.code]||0}" oninput="saveSt()" style="width:65px;">
+    </div>`).join("");
+}
+function loadSettings(){
+  const saved=JSON.parse(localStorage.getItem("cargo-settings")||"{}");
+  if(!saved.fuelPrice) return;
+  const map={fuelPrice:"s-fuelPrice",fuelCons:"s-fuelCons",amort:"s-amort",meal:"s-meal",hotel:"s-hotel",credit:"s-credit",insurance:"s-insurance",cmr:"s-cmr",timocom:"s-timocom",other:"s-other"};
+  for(const [k,id] of Object.entries(map)){
+    const el=document.getElementById(id);
+    if(el&&saved[k]!==undefined) el.value=saved[k];
+  }
+  if(saved.tolls){
+    COUNTRIES.forEach(c=>{
+      const el=document.getElementById("toll-"+c.code);
+      if(el&&saved.tolls[c.code]!==undefined) el.value=saved.tolls[c.code];
+    });
+  }
+}
+function saveSt(){
+  localStorage.setItem("cargo-settings",JSON.stringify(getSt()));
+}
+function saveStAndRefresh(){
+  saveSt();
+  renderDashboard();
+  if(currentTab==="stats") renderStats();
+  if(currentTab==="new") renderTripForm();
+  showToast("✓ Налаштування збережено");
+  document.getElementById("settings-panel").style.display="none";
+  document.getElementById("btn-settings").classList.remove("on");
+}
+function toggleSettings(){
+  const p=document.getElementById("settings-panel");
+  const b=document.getElementById("btn-settings");
+  const hidden=p.style.display==="none";
+  p.style.display=hidden?"block":"none";
+  b.classList.toggle("on",hidden);
+}
+
+// ─── TABS ───
+let currentTab="dashboard";
+function showTab(name){
+  document.querySelectorAll(".tab-pane").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  document.getElementById("nav-"+name).classList.add("active");
+  currentTab=name;
+  if(name==="new"&&!editingId) resetTripForm();
+  if(name==="dashboard") renderDashboard();
+  if(name==="history") renderHistory();
+  if(name==="stats") renderStats();
+  if(name==="new") renderTripForm();
+}
+
+// ─── DASHBOARD ───
+function renderDashboard(){
+  const mf=monthlyFixed();
+  const trips=history.filter(t=>t.date&&t.date.startsWith(selectedMonth));
+  const mRev=trips.reduce((s,t)=>s+(t.revenue||0),0);
+  const mVar=trips.reduce((s,t)=>s+(t.varCosts||0),0);
+  const mMargin=mRev-mVar;
+  const mNet=mMargin-mf;
+  const fixLeft=Math.max(0,mf-mMargin);
+  const breakEven=mMargin>=mf;
+  const pct=mf>0?Math.min(100,(mMargin/mf)*100):0;
+
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+  if(!months.includes(selectedMonth)) months.unshift(selectedMonth);
+  const monthTabs=months.slice(0,5).map(m=>`<button class="m-tab ${m===selectedMonth?"active":""}" onclick="setMonth('${m}')">${m===selectedMonth?"📅 "+m:m}</button>`).join("");
+
+  let tripsHTML="";
+  let running=0;
+  trips.forEach((t,i)=>{
+    running+=(t.revenue||0)-(t.varCosts||0);
+    const fl=Math.max(0,mf-running);
+    const ip=running>=mf;
+    const barW=Math.min(100,(running/mf)*100).toFixed(0);
+    tripsHTML+=`<div style="padding:9px 0;border-bottom:${i<trips.length-1?"1px solid var(--bg3)":"none"}">
+      <div style="display:flex;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx)">${t.name||""}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${t.date||""} · ${fmt(t.km||0)} км · ${t.pallets||0} пал</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:${(t.net||0)>=0?"var(--gr)":"var(--rd)"}">${fmtD(t.net||0)}</div>
+          <div style="font-size:10px;color:var(--tx4)">Kč маржа</div>
+        </div>
+      </div>
+      <div class="running-bar">
+        <label style="color:${ip?"var(--gr)":"var(--or)"};">${ip?`✅ Фіксовані покриті! Прибуток: +${fmt(running-mf)} Kč`:`⏳ До покриття: ${fmt(fl)} Kč`}</label>
+        <div class="mini-bar"><div class="mini-fill" style="width:${barW}%;background:${ip?"var(--gr)":"var(--or)"}"></div></div>
+      </div>
+    </div>`;
+  });
+
+  const fixedItems=[
+    {l:"Кредит за авто",k:"credit"},{l:"Страховка авто",k:"insurance"},
+    {l:"CMR страховка",k:"cmr"},{l:"TIMOCOM",k:"timocom"},{l:"Інші витрати",k:"other"}
+  ];
+  const s=getSt();
+  const fixedRows=fixedItems.map(it=>`
+    <div class="row-t">
+      <span style="font-size:12px;color:${breakEven?"#2aaa60":"var(--tx2)"}">${breakEven?"✓ ":"· "}${it.l}</span>
+      <span style="font-size:12px;color:${breakEven?"var(--gr)":"var(--rd)"}">−${fmt(s[it.k])} Kč</span>
+    </div>`).join("")+`
+    <div style="display:flex;justify-content:space-between;padding-top:8px;font-size:13px;font-weight:700;">
+      <span style="color:var(--tx)">Всього</span>
+      <span style="color:var(--rd)">−${fmt(mf)} Kč</span>
+    </div>`;
+
+  document.getElementById("tab-dashboard").innerHTML=`
+    <div class="month-tabs">${monthTabs}</div>
+    <div class="be-card ${breakEven?"be-good":"be-wait"}">
+      <div class="be-status" style="color:${breakEven?"var(--gr)":"var(--or)"}">
+        ${breakEven?"✅ ФІКСОВАНІ ПОКРИТІ — ВСЕ ЙДЕ В ПРИБУТОК":"⏳ ПОКРИВАЄМО ФІКСОВАНІ ВИТРАТИ"}
+      </div>
+      <div class="be-grid">
+        <div class="be-item"><label>Фіксовані/міс</label><div class="big c-rd">${fmt(mf)}</div><small>Kč</small></div>
+        <div class="be-item"><label>Покрито маржею</label><div class="big c-gr">${fmt(Math.min(mMargin,mf))}</div><small>Kč</small></div>
+        <div class="be-item"><label>Залишилось</label><div class="big" style="color:${fixLeft>0?"var(--or)":"var(--gr)"}">${fixLeft>0?fmt(fixLeft):"0"}</div><small>Kč</small></div>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${pct.toFixed(0)}%;background:${breakEven?"var(--gr)":"linear-gradient(90deg,#ee6a20,#eeaa20)"}"></div></div>
+      <div class="progress-labels"><span>0</span><span style="color:${breakEven?"var(--gr)":"var(--or)"}">${pct.toFixed(0)}% покрито</span><span>${fmt(mf)} Kč</span></div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><label>Виручка</label><div class="val c-gr">+${fmt(mRev)}</div><small>Kč</small></div>
+      <div class="metric"><label>Змінні витрати</label><div class="val c-rd">−${fmt(mVar)}</div><small>Kč</small></div>
+      <div class="metric"><label>Маржа (до фікс.)</label><div class="val c-bl">${fmt(mMargin)}</div><small>Kč</small></div>
+      <div class="metric"><label>Чистий прибуток</label><div class="val" style="color:${mNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(mNet)}</div><small>Kč</small></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💳 ФІКСОВАНІ ВИТРАТИ ${selectedMonth}</div>
+      ${fixedRows}
+    </div>
+    ${trips.length>0?`
+    <div class="card">
+      <div class="card-title">🚛 РЕЙСИ ${selectedMonth} (${trips.length})</div>
+      ${tripsHTML}
+    </div>`:`<div class="empty">Немає рейсів у ${selectedMonth}<br><button class="btn-add" onclick="showTab('new')">➕ Додати перший рейс</button></div>`}
+  `;
+}
+
+function setMonth(m){
+  selectedMonth=m;
+  renderDashboard();
+}
+
+// ─── TRIP FORM ───
+let tripData={
+  name:"",from:"Praha",to:"",orderRevenue:0,km:0,days:1,nights:0,pallets:0,
+  hasReturn:false,returnRevenue:0,returnKm:0,returnDays:1,returnNights:0,
+  ferryFee:0,loadingFee:0,date:new Date().toISOString().split("T")[0],note:""
+};
+
+function resetTripForm(){
+  editingId=null;
+  tripData={name:"",from:"Praha",to:"",orderRevenue:0,km:0,days:1,nights:0,pallets:0,hasReturn:false,returnRevenue:0,returnKm:0,returnDays:1,returnNights:0,ferryFee:0,loadingFee:0,date:new Date().toISOString().split("T")[0],note:""};
+  tripCountries=["CZ"];
+  tripReturnCountries=[];
+}
+
+function renderTripForm(){
+  const d=tripData;
+  const cv=calcVar(d.km,d.days,d.nights,tripCountries,d.returnKm,d.returnDays,d.returnNights,tripReturnCountries,d.hasReturn,d.ferryFee,d.loadingFee);
+  const rev=d.orderRevenue+(d.hasReturn?d.returnRevenue:0);
+  const net=rev-cv.total;
+  const mg=rev>0?((net/rev)*100).toFixed(1):"0";
+  const pk=cv.totalKm>0?(net/cv.totalKm).toFixed(1):"0";
+  const isGood=net>0;
+
+  const cBtns=(list,ret)=>COUNTRIES.map(c=>`<button class="c-btn ${list.includes(c.code)?"sel":""}" onclick="toggleCountry('${c.code}',${ret})">${c.flag} ${c.code}</button>`).join("");
+
+  document.getElementById("tab-new").innerHTML=`
+    <div style="font-size:14px;font-weight:600;color:var(--tx);margin-bottom:.7rem">${editingId?"✏️ Редагувати рейс":"➕ Новий рейс"}</div>
+    <div class="live-banner ${isGood?"live-good":"live-bad"}">
+      <div style="font-size:10px;color:${isGood?"var(--gr)":"var(--rd)"};letter-spacing:.12em;margin-bottom:5px">${isGood?"✅ ВИГІДНИЙ":"❌ ПЕРЕВІР ПАРАМЕТРИ"}</div>
+      <div class="live-grid">
+        <div class="live-item"><label>Прибуток</label><div class="lv" style="color:${net>=0?"var(--gr)":"var(--rd)"}">${fmtD(net)}</div></div>
+        <div class="live-item"><label>Маржа</label><div class="lv" style="color:${parseFloat(mg)>30?"var(--gr)":"var(--or)"}">${mg}%</div></div>
+        <div class="live-item"><label>Kč/км</label><div class="lv" style="color:${parseFloat(pk)>10?"var(--gr)":"var(--or)"}">${pk}</div></div>
+        <div class="live-item"><label>Км</label><div class="lv c-bl">${fmt(cv.totalKm)}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 ІНФОРМАЦІЯ</div>
+      <div class="row"><label>Назва рейсу</label><input class="inp" style="width:170px;text-align:left" id="f-name" value="${d.name}" oninput="updateField('name',this.value)"></div>
+      <div class="row"><label>Звідки</label><input class="inp" style="width:130px;text-align:left" id="f-from" value="${d.from}" oninput="updateField('from',this.value)"></div>
+      <div class="row"><label>Куди</label><input class="inp" style="width:130px;text-align:left" id="f-to" value="${d.to}" oninput="updateField('to',this.value)"></div>
+      <div class="row"><label>Дата</label><input class="inp" style="width:150px" id="f-date" type="date" value="${d.date}" oninput="updateField('date',this.value)"></div>
+      <div class="row"><label>Кількість палет</label><input class="inp inp-r" id="f-pallets" type="number" value="${d.pallets}" oninput="updateField('pallets',+this.value)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 ДОХІД ТУДИ</div>
+      <div class="row"><label>Ціна замовлення</label><input class="inp inp-r" id="f-rev" type="number" value="${d.orderRevenue}" oninput="updateNum('orderRevenue',this.value)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗺️ МАРШРУТ ТУДИ</div>
+      <div class="row"><label>Кілометраж</label><input class="inp inp-r" type="number" value="${d.km}" oninput="updateNum('km',this.value)"></div>
+      <div class="row"><label>Кількість днів</label><input class="inp inp-r" type="number" value="${d.days}" oninput="updateNum('days',this.value)"></div>
+      <div class="row"><label>Ночей в готелі</label><input class="inp inp-r" type="number" value="${d.nights}" oninput="updateNum('nights',this.value)"></div>
+      <div class="row"><label>Паром/тунель</label><input class="inp inp-r" type="number" value="${d.ferryFee}" oninput="updateNum('ferryFee',this.value)"></div>
+      <div class="row"><label>Завантаження</label><input class="inp inp-r" type="number" value="${d.loadingFee}" oninput="updateNum('loadingFee',this.value)"></div>
+      <div style="padding:7px 0 3px;font-size:10px;color:var(--tx3)">Країни маршруту:</div>
+      <div class="country-grid">${cBtns(tripCountries,false)}</div>
+      <div class="toll-hint">Мито: ${fmt(tollSum(tripCountries))} Kč</div>
+    </div>
+    <div class="toggle-row">
+      <div><div class="tl">↩️ Зворотній вантаж</div><div class="ts">${d.hasReturn?"Є замовлення назад":"Порожній зворотній рейс"}</div></div>
+      <button class="toggle ${d.hasReturn?"on":"off"}" onclick="toggleReturn()"><div class="knob"></div></button>
+    </div>
+    ${d.hasReturn?`
+    <div class="card">
+      <div class="card-title">↩️ ЗВОРОТНІЙ РЕЙС</div>
+      <div class="row"><label>Ціна замовлення</label><input class="inp inp-r" type="number" value="${d.returnRevenue}" oninput="updateNum('returnRevenue',this.value)"></div>
+      <div class="row"><label>Кілометраж</label><input class="inp inp-r" type="number" value="${d.returnKm}" oninput="updateNum('returnKm',this.value)"></div>
+      <div class="row"><label>Кількість днів</label><input class="inp inp-r" type="number" value="${d.returnDays}" oninput="updateNum('returnDays',this.value)"></div>
+      <div class="row"><label>Ночей</label><input class="inp inp-r" type="number" value="${d.returnNights}" oninput="updateNum('returnNights',this.value)"></div>
+      <div style="padding:7px 0 3px;font-size:10px;color:var(--tx3)">Країни назад:</div>
+      <div class="country-grid">${cBtns(tripReturnCountries,true)}</div>
+      <div class="toll-hint">Мито: ${fmt(tollSum(tripReturnCountries))} Kč</div>
+    </div>`:""}
+    <div class="card">
+      <div class="card-title">📝 НОТАТКА</div>
+      <textarea class="inp" style="width:100%;height:56px;text-align:left;padding-top:8px" id="f-note" oninput="updateField('note',this.value)">${d.note}</textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveTrip()">${editingId?"✓ Зберегти зміни":"✓ Додати рейс"}</button>
+      ${editingId?`<button class="btn-cancel" onclick="cancelEdit()">✕</button>`:""}
+    </div>
+  `;
+}
+
+function updateField(k,v){tripData[k]=v;updateLiveBanner();}
+function updateNum(k,v){tripData[k]=parseFloat(v)||0;updateLiveBanner();}
+function toggleReturn(){tripData.hasReturn=!tripData.hasReturn;renderTripForm();}
+function toggleCountry(code,ret){
+  if(ret){
+    tripReturnCountries=tripReturnCountries.includes(code)?tripReturnCountries.filter(c=>c!==code):[...tripReturnCountries,code];
+  } else {
+    tripCountries=tripCountries.includes(code)?tripCountries.filter(c=>c!==code):[...tripCountries,code];
+  }
+  renderTripForm();
+}
+function updateLiveBanner(){
+  if(currentTab==="new") renderTripForm();
+}
+
+function saveTrip(){
+  const d=tripData;
+  const cv=calcVar(d.km,d.days,d.nights,tripCountries,d.returnKm,d.returnDays,d.returnNights,tripReturnCountries,d.hasReturn,d.ferryFee,d.loadingFee);
+  const rev=d.orderRevenue+(d.hasReturn?d.returnRevenue:0);
+  const net=rev-cv.total;
+  const entry={
+    id:editingId||Date.now().toString(),
+    date:d.date,
+    name:d.name||(d.from+" → "+d.to),
+    from:d.from,to:d.to,
+    revenue:rev,varCosts:cv.total,net,
+    km:cv.totalKm,pallets:d.pallets,note:d.note,
+    hasReturn:d.hasReturn,
+    countries:[...tripCountries],
+    returnCountries:[...tripReturnCountries],
+  };
+  if(editingId){
+    history=history.map(h=>h.id===editingId?entry:h);
+  } else {
+    history=[entry,...history];
+  }
+  localStorage.setItem("cargo-history",JSON.stringify(history));
+  showToast();
+  editingId=null;
+  resetTripForm();
+  showTab("dashboard");
+}
+
+function cancelEdit(){
+  editingId=null;
+  resetTripForm();
+  showTab("history");
+}
+
+// ─── HISTORY ───
+function renderHistory(){
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+  const filtered=selectedMonth?history.filter(t=>t.date?.startsWith(selectedMonth)):history;
+
+  const sel=`<select onchange="filterMonth(this.value)" style="background:var(--bg2);border:1px solid var(--bor);border-radius:6px;color:var(--bl);padding:5px 8px;font-size:11px;font-family:inherit;">
+    <option value="">Всі місяці</option>
+    ${months.map(m=>`<option value="${m}" ${m===selectedMonth?"selected":""}>${m}</option>`).join("")}
+  </select>`;
+
+  const cards=filtered.length===0
+    ?`<div class="empty">Рейсів ще немає</div>`
+    :filtered.map(t=>`
+      <div class="trip-card">
+        <div class="trip-head">
+          <div style="flex:1">
+            <div class="trip-name">${t.name||""}</div>
+            <div class="trip-meta">${t.date||""} · ${fmt(t.km||0)} км · ${t.pallets||0} пал</div>
+          </div>
+          <div style="text-align:right;margin-left:12px">
+            <div class="trip-net" style="color:${(t.net||0)>=0?"var(--gr)":"var(--rd)"}">${fmtD(t.net||0)}</div>
+            <div class="trip-net-lbl">Kč чистими</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag tag-gr">+${fmt(t.revenue||0)} виручка</span>
+          <span class="tag tag-rd">−${fmt(t.varCosts||0)} витрати</span>
+          ${t.hasReturn?`<span class="tag tag-bl">↩️ зворотній</span>`:""}
+        </div>
+        ${t.note?`<div class="trip-note">${t.note}</div>`:""}
+        <div class="trip-actions">
+          <button class="btn-sm btn-edit" onclick="editTrip('${t.id}')">✏️ Ред.</button>
+          <button class="btn-sm btn-del" onclick="deleteTrip('${t.id}')">🗑️</button>
+        </div>
+      </div>`).join("");
+
+  document.getElementById("tab-history").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem">
+      <div style="font-size:14px;font-weight:600;color:var(--tx)">📋 Рейси (${filtered.length})</div>
+      ${sel}
+    </div>
+    ${cards}`;
+}
+
+function filterMonth(m){selectedMonth=m;renderHistory();}
+
+function editTrip(id){
+  const t=history.find(h=>h.id===id);
+  if(!t) return;
+  editingId=id;
+  tripData={
+    name:t.name||"",from:t.from||"Praha",to:t.to||"",
+    date:t.date||new Date().toISOString().split("T")[0],
+    note:t.note||"",pallets:t.pallets||0,
+    orderRevenue:t.revenue||0,km:t.km||0,days:1,nights:0,
+    hasReturn:t.hasReturn||false,returnRevenue:0,returnKm:0,returnDays:1,returnNights:0,
+    ferryFee:0,loadingFee:0,
+  };
+  tripCountries=t.countries||["CZ"];
+  tripReturnCountries=t.returnCountries||[];
+  showTab("new");
+}
+
+function deleteTrip(id){
+  if(!confirm("Видалити цей рейс?")) return;
+  history=history.filter(h=>h.id!==id);
+  localStorage.setItem("cargo-history",JSON.stringify(history));
+  renderHistory();
+  renderDashboard();
+}
+
+// ─── STATS ───
+function renderStats(){
+  const allNet=history.reduce((s,t)=>s+(t.net||0),0);
+  const allRev=history.reduce((s,t)=>s+(t.revenue||0),0);
+  const allKm=history.reduce((s,t)=>s+(t.km||0),0);
+  const avgNet=history.length?Math.round(allNet/history.length):0;
+  const mf=monthlyFixed();
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+
+  const monthRows=months.map(m=>{
+    const mt=history.filter(t=>t.date?.startsWith(m));
+    const mr=mt.reduce((s,t)=>s+(t.revenue||0),0);
+    const mv=mt.reduce((s,t)=>s+(t.varCosts||0),0);
+    const mn=mr-mv-mf;
+    const mp=mr>0?(((mr-mv)/mr)*100).toFixed(0):0;
+    return `<div class="month-row">
+      <div>
+        <div style="font-size:12px;color:var(--tx)">${m}</div>
+        <div style="font-size:10px;color:var(--tx3)">${mt.length} рейсів · ${fmt(mr)} Kč · маржа ${mp}%</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:700;color:${mn>=0?"var(--gr)":"var(--rd)"}">${fmtD(mn)}</div>
+        <div style="font-size:10px;color:var(--tx4)">Kč чистими</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("tab-stats").innerHTML=`
+    <div style="font-size:14px;font-weight:600;color:var(--tx);margin-bottom:.7rem">📈 Загальна статистика</div>
+    <div class="metrics">
+      <div class="metric"><label>Всього рейсів</label><div class="val c-bl">${history.length}</div><small>рейсів</small></div>
+      <div class="metric"><label>Загальний пробіг</label><div class="val c-bl">${fmt(allKm)}</div><small>км</small></div>
+      <div class="metric"><label>Загальна виручка</label><div class="val c-gr">${fmt(allRev)}</div><small>Kč</small></div>
+      <div class="metric"><label>Загальний прибуток</label><div class="val" style="color:${allNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(allNet)}</div><small>Kč</small></div>
+      <div class="metric"><label>Середній за рейс</label><div class="val" style="color:${avgNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(avgNet)}</div><small>Kč/рейс</small></div>
+      <div class="metric"><label>Прибуток/км</label><div class="val c-bl">${allKm>0?(allNet/allKm).toFixed(1):"0"}</div><small>Kč/км</small></div>
+    </div>
+    ${months.length>0?`<div class="card"><div class="card-title">📅 ПО МІСЯЦЯХ</div>${monthRows}</div>`:""}
+    ${history.length===0?`<div class="empty">Додай перший рейс щоб побачити статистику</div>`:""}
+  `;
+}
+
+// ─── EXPORT / IMPORT ───
+function exportData(){
+  const data={settings:getSt(),history};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`cargo-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importData(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.history) { history=data.history; localStorage.setItem("cargo-history",JSON.stringify(history)); }
+      if(data.settings){
+        localStorage.setItem("cargo-settings",JSON.stringify(data.settings));
+        loadSettings();
+      }
+      showToast("✓ Дані завантажено");
+      renderDashboard();
+    } catch(err){ alert("Помилка імпорту: "+err.message); }
+  };
+  r.readAsText(file);
+}
+
+// ─── TOAST ───
+function showToast(msg){
+  const t=document.getElementById("toast");
+  if(msg) t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+// ─── INIT ───
+buildTollGrid();
+loadSettings();
+history=JSON.parse(localStorage.getItem("cargo-history")||"[]");
+renderDashboard();
+renderTripForm();
+</script>
+</body>
+</html>

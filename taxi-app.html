@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taxi Pro">
+<meta name="theme-color" content="#0a0800">
+<title>Taxi Pro 🚕</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#0a0800;font-family:'DM Mono','Courier New',monospace;color:#e0e8f0;overflow:hidden;}
+:root{
+  --bg:#0a0800;--bg2:#141008;--bg3:#0d0c06;
+  --bor:#2a2410;--bor2:#3a3418;
+  --ye:#f0c020;--gr:#2aee80;--rd:#ee4a4a;--or:#ee8a30;--bl:#4acfef;
+  --tx:#e0e8f0;--tx2:#a09870;--tx3:#706840;--tx4:#504830;
+}
+#app{height:100%;display:flex;flex-direction:column;}
+header{background:var(--bg2);border-bottom:1px solid var(--bor);padding:.9rem 1.1rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.h-title{font-size:10px;color:#806820;letter-spacing:.2em;margin-bottom:2px;}
+.h-name{font-size:16px;font-weight:700;color:#fff;}
+.btn-icon{background:transparent;border:1px solid var(--bor);border-radius:8px;color:var(--ye);padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;}
+.btn-icon.on{background:#2a2010;}
+#settings-panel{background:var(--bg2);border-bottom:1px solid var(--bor);padding:1.1rem;overflow-y:auto;flex-shrink:0;max-height:55vh;}
+.s-section{font-size:10px;color:#806820;letter-spacing:.15em;margin-bottom:.6rem;margin-top:.9rem;}
+.s-section:first-child{margin-top:0;}
+.s-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.s-field label{font-size:10px;color:var(--tx3);display:block;margin-bottom:3px;}
+.s-field label span{color:#504820;}
+.inp{background:var(--bg3);border:1px solid var(--bor2);border-radius:6px;color:var(--ye);padding:6px 9px;font-size:13px;font-family:inherit;width:100%;}
+.inp-r{text-align:right;}
+#content{flex:1;overflow-y:auto;padding:1rem;padding-bottom:80px;-webkit-overflow-scrolling:touch;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bor);display:flex;padding:6px 0 max(6px,env(safe-area-inset-bottom));z-index:50;}
+.nav-btn{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;}
+.nav-btn span:first-child{font-size:18px;}
+.nav-lbl{font-size:9px;color:var(--tx4);letter-spacing:.05em;}
+.nav-btn.active .nav-lbl{color:var(--ye);}
+.nav-dot{width:16px;height:2px;background:var(--ye);border-radius:1px;display:none;}
+.nav-btn.active .nav-dot{display:block;}
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--bor);border-radius:12px;padding:1rem;margin-bottom:.7rem;}
+.card-title{font-size:10px;color:#806820;letter-spacing:.15em;margin-bottom:.7rem;}
+.row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg3);font-size:12px;}
+.row:last-child{border-bottom:none;}
+.row label{color:var(--tx2);}
+/* Breakeven */
+.be-card{border-radius:14px;padding:1.2rem;margin-bottom:.7rem;}
+.be-good{background:linear-gradient(135deg,#0a2a18,#0d3520);border:1px solid #1a5a30;}
+.be-wait{background:linear-gradient(135deg,#1a1400,#201a00);border:1px solid #3a3010;}
+.be-status{font-size:10px;letter-spacing:.15em;margin-bottom:.6rem;}
+.be-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:.8rem;}
+.be-item label{font-size:10px;color:var(--tx3);}
+.be-item .big{font-size:19px;font-weight:700;}
+.be-item small{font-size:10px;color:var(--tx4);}
+.progress{height:10px;background:#0a0c06;border-radius:5px;overflow:hidden;margin-bottom:4px;}
+.progress-fill{height:100%;border-radius:5px;transition:width .4s;}
+.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--tx4);}
+/* Metrics */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.7rem;}
+.metric{background:var(--bg2);border:1px solid var(--bor);border-radius:10px;padding:11px;}
+.metric label{font-size:10px;color:var(--tx3);display:block;margin-bottom:3px;}
+.metric .val{font-size:18px;font-weight:700;}
+.metric small{font-size:10px;color:var(--tx4);}
+/* Today form */
+.today-banner{background:linear-gradient(135deg,#1a1400,#201c00);border:1px solid #4a3a10;border-radius:14px;padding:1.2rem;margin-bottom:.7rem;}
+.today-title{font-size:10px;color:var(--ye);letter-spacing:.15em;margin-bottom:.8rem;}
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.8rem;}
+.today-field label{font-size:10px;color:var(--tx3);display:block;margin-bottom:4px;}
+.today-field .big-inp{background:var(--bg3);border:1px solid #3a3010;border-radius:8px;color:var(--ye);padding:10px 12px;font-size:20px;font-weight:700;font-family:inherit;width:100%;text-align:right;}
+.today-field .big-inp:focus{outline:none;border-color:var(--ye);}
+/* Live result */
+.live-result{background:var(--bg3);border-radius:8px;padding:.75rem;margin-bottom:.8rem;}
+.live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;}
+.live-item label{font-size:9px;color:var(--tx3);display:block;}
+.live-item .lv{font-size:13px;font-weight:700;}
+/* Btn */
+.btn-save{width:100%;padding:13px;background:#2a1e00;border:1px solid var(--ye);border-radius:10px;color:var(--ye);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-cancel{padding:13px 16px;background:transparent;border:1px solid #3a2a1a;border-radius:10px;color:#8a6a4a;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-row{display:flex;gap:8px;}
+/* History */
+.day-card{background:var(--bg2);border:1px solid var(--bor);border-radius:12px;padding:.9rem;margin-bottom:.6rem;}
+.day-head{display:flex;justify-content:space-between;align-items:flex-start;}
+.day-date{font-size:13px;font-weight:600;color:var(--tx);}
+.day-meta{font-size:10px;color:var(--tx3);margin-top:2px;}
+.day-net{font-size:15px;font-weight:700;}
+.tags{display:flex;gap:5px;margin-top:.5rem;flex-wrap:wrap;}
+.tag{font-size:10px;border-radius:4px;padding:3px 7px;}
+.tag-ye{background:#1a1400;border:1px solid #3a3010;color:var(--ye);}
+.tag-rd{background:#1a0a08;border:1px solid #3a1a10;color:var(--rd);}
+.tag-gr{background:#0a1820;border:1px solid #1a3a2a;color:var(--gr);}
+.day-actions{display:flex;gap:6px;margin-top:.6rem;}
+.btn-sm{font-size:11px;background:transparent;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit;}
+.btn-edit{border:1px solid var(--bor2);color:#8a7a40;}
+.btn-del{border:1px solid #3a1a1a;color:#8a4a4a;}
+/* Running */
+.running-bar{margin-top:.5rem;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.running-bar label{font-size:10px;}
+.mini-bar{height:4px;width:60px;background:#0a0c06;border-radius:2px;flex-shrink:0;overflow:hidden;}
+.mini-fill{height:100%;border-radius:2px;}
+/* Month tabs */
+.month-tabs{display:flex;gap:6px;margin-bottom:.7rem;overflow-x:auto;padding-bottom:2px;}
+.month-tabs::-webkit-scrollbar{display:none;}
+.m-tab{padding:5px 12px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;border:1px solid var(--bor);background:transparent;color:var(--tx3);white-space:nowrap;flex-shrink:0;}
+.m-tab.active{background:#2a1e00;border-color:#6a5010;color:var(--ye);}
+/* Stats */
+.month-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bg3);}
+.month-row:last-child{border-bottom:none;}
+.empty{text-align:center;padding:3rem 1rem;color:var(--tx4);font-size:12px;line-height:1.8;}
+.btn-add{margin-top:.8rem;background:#2a1e00;border:1px solid #6a5010;border-radius:8px;color:var(--ye);padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit;}
+/* Colors */
+.c-ye{color:var(--ye)!important;} .c-gr{color:var(--gr)!important;} .c-rd{color:var(--rd)!important;} .c-bl{color:var(--bl)!important;} .c-or{color:var(--or)!important;}
+/* Toast */
+#toast{position:fixed;top:70px;right:1rem;background:#2a1e00;border:1px solid var(--ye);border-radius:8px;color:var(--ye);padding:8px 14px;font-size:12px;font-family:inherit;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+/* Export */
+.exp-btn{background:transparent;border:1px solid var(--bor2);border-radius:8px;color:var(--ye);padding:8px 14px;font-size:11px;cursor:pointer;font-family:inherit;}
+/* Compare card */
+.cmp-card{background:linear-gradient(135deg,#0a1410,#0d1a14);border:1px solid #1a3a20;border-radius:12px;padding:1rem;margin-bottom:.7rem;}
+.cmp-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #0a100a;font-size:12px;}
+.cmp-row:last-child{border-bottom:none;}
+textarea.inp{height:52px;resize:vertical;padding-top:8px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div class="h-title">TAXI PROFIT SYSTEM</div>
+      <div class="h-name">🚕 Моє таксі</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-icon" id="btn-settings" onclick="toggleSettings()">⚙️</button>
+    </div>
+  </header>
+
+  <div id="settings-panel" style="display:none;">
+    <div class="s-section">⛽ НАЛАШТУВАННЯ АВТО</div>
+    <div class="s-grid">
+      <div class="s-field"><label>Ціна пального <span>Kč/л</span></label><input class="inp inp-r" id="s-fuelPrice" type="number" value="41"></div>
+      <div class="s-field"><label>Витрата <span>л/100км</span></label><input class="inp inp-r" id="s-fuelCons" type="number" value="9"></div>
+      <div class="s-field"><label>Амортизація <span>Kč/км</span></label><input class="inp inp-r" id="s-amort" type="number" value="1.5" step="0.1"></div>
+    </div>
+    <div class="s-section">💳 ЩОМІСЯЧНІ ФІКСОВАНІ ВИТРАТИ</div>
+    <div class="s-grid">
+      <div class="s-field"><label>Кредит за авто <span>Kč/міс</span></label><input class="inp inp-r" id="s-credit" type="number" value="0"></div>
+      <div class="s-field"><label>Страховка авто <span>Kč/міс</span></label><input class="inp inp-r" id="s-insurance" type="number" value="2000"></div>
+      <div class="s-field"><label>Соціалка + підприємець <span>Kč/міс</span></label><input class="inp inp-r" id="s-social" type="number" value="5000"></div>
+      <div class="s-field"><label>Платформа (Bolt/Uber) <span>Kč/міс</span></label><input class="inp inp-r" id="s-platform" type="number" value="0"></div>
+      <div class="s-field"><label>Інші витрати <span>Kč/міс</span></label><input class="inp inp-r" id="s-other" type="number" value="1000"></div>
+    </div>
+    <div style="margin-top:1rem;margin-bottom:.5rem;">
+      <button onclick="saveStAndRefresh()" style="width:100%;padding:13px;background:#2a1e00;border:2px solid var(--ye);border-radius:10px;color:var(--ye);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.05em;">
+        ✓ ЗБЕРЕГТИ НАЛАШТУВАННЯ
+      </button>
+    </div>
+    <div class="s-section">📦 ЕКСПОРТ / ІМПОРТ</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="exp-btn" onclick="exportData()">⬇️ Скачати дані</button>
+      <button class="exp-btn" onclick="document.getElementById('imp-file').click()">⬆️ Завантажити дані</button>
+      <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="tab-pane active" id="tab-dashboard"></div>
+    <div class="tab-pane" id="tab-day"></div>
+    <div class="tab-pane" id="tab-history"></div>
+    <div class="tab-pane" id="tab-stats"></div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')">
+      <span>📊</span><span class="nav-lbl">Місяць</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-day" onclick="showTab('day')">
+      <span>➕</span><span class="nav-lbl">День</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="showTab('history')">
+      <span>📋</span><span class="nav-lbl">Історія</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-stats" onclick="showTab('stats')">
+      <span>📈</span><span class="nav-lbl">Статистика</span><div class="nav-dot"></div>
+    </button>
+  </nav>
+</div>
+<div id="toast">✓ Збережено</div>
+
+<script>
+let history = [];
+let editingId = null;
+let selectedMonth = todayMonth();
+let dayData = { date: today(), earnings: 0, km: 0, note: "" };
+
+function today(){ return new Date().toISOString().split("T")[0]; }
+function todayMonth(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function fmt(n){ return Math.round(n).toLocaleString("cs-CZ"); }
+function fmtD(n){ return (n>=0?"+":"")+fmt(n); }
+function fmtH(n){ return n>=0?"+"+fmt(n):fmt(n); }
+
+function getSt(){
+  return {
+    fuelPrice: parseFloat(document.getElementById("s-fuelPrice")?.value)||41,
+    fuelCons:  parseFloat(document.getElementById("s-fuelCons")?.value)||9,
+    amort:     parseFloat(document.getElementById("s-amort")?.value)||1.5,
+    credit:    parseInt(document.getElementById("s-credit")?.value)||0,
+    insurance: parseInt(document.getElementById("s-insurance")?.value)||2000,
+    social:    parseInt(document.getElementById("s-social")?.value)||5000,
+    platform:  parseInt(document.getElementById("s-platform")?.value)||0,
+    other:     parseInt(document.getElementById("s-other")?.value)||1000,
+  };
+}
+function monthlyFixed(){
+  const s=getSt();
+  return s.credit+s.insurance+s.social+s.platform+s.other;
+}
+function calcDayVar(km){
+  const s=getSt();
+  const fuel=(km/100)*s.fuelCons*s.fuelPrice;
+  const amort=km*s.amort;
+  return { fuel, amort, total: fuel+amort };
+}
+
+// Settings
+function loadSettings(){
+  const saved=JSON.parse(localStorage.getItem("taxi-settings")||"{}");
+  if(!saved.fuelPrice) return;
+  const map={fuelPrice:"s-fuelPrice",fuelCons:"s-fuelCons",amort:"s-amort",
+    credit:"s-credit",insurance:"s-insurance",social:"s-social",
+    platform:"s-platform",other:"s-other"};
+  for(const [k,id] of Object.entries(map)){
+    const el=document.getElementById(id);
+    if(el&&saved[k]!==undefined) el.value=saved[k];
+  }
+}
+function saveSt(){
+  localStorage.setItem("taxi-settings",JSON.stringify(getSt()));
+}
+function saveStAndRefresh(){
+  saveSt();
+  renderDashboard();
+  if(currentTab==="day") renderDayForm();
+  if(currentTab==="stats") renderStats();
+  showToast("✓ Налаштування збережено");
+  // Close settings panel
+  document.getElementById("settings-panel").style.display="none";
+  document.getElementById("btn-settings").classList.remove("on");
+}
+function toggleSettings(){
+  const p=document.getElementById("settings-panel");
+  const b=document.getElementById("btn-settings");
+  const hidden=p.style.display==="none";
+  p.style.display=hidden?"block":"none";
+  b.classList.toggle("on",hidden);
+}
+
+// Tabs
+let currentTab="dashboard";
+function showTab(name){
+  document.querySelectorAll(".tab-pane").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  document.getElementById("nav-"+name).classList.add("active");
+  currentTab=name;
+  if(name==="day"&&!editingId) resetDayForm();
+  if(name==="dashboard") renderDashboard();
+  if(name==="history") renderHistory();
+  if(name==="stats") renderStats();
+  if(name==="day") renderDayForm();
+}
+
+// Dashboard
+function renderDashboard(){
+  const mf=monthlyFixed();
+  const s=getSt();
+  const trips=history.filter(t=>t.date&&t.date.startsWith(selectedMonth));
+  const mEarnings=trips.reduce((s,t)=>s+(t.earnings||0),0);
+  const mVar=trips.reduce((s,t)=>s+(t.varCosts||0),0);
+  const mKm=trips.reduce((s,t)=>s+(t.km||0),0);
+  const mMargin=mEarnings-mVar;
+  const mNet=mMargin-mf;
+  const fixLeft=Math.max(0,mf-mMargin);
+  const breakEven=mMargin>=mf;
+  const pct=mf>0?Math.min(100,(mMargin/mf)*100):0;
+  const workDays=trips.length;
+  const avgDay=workDays>0?Math.round(mNet/workDays):0;
+  const avgHourly=workDays>0?Math.round(mNet/(workDays*10)):0; // assume 10h/day
+
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+  if(!months.includes(selectedMonth)) months.unshift(selectedMonth);
+  const monthTabs=months.slice(0,5).map(m=>`<button class="m-tab ${m===selectedMonth?"active":""}" onclick="setMonth('${m}')">${m===selectedMonth?"📅 "+m:m}</button>`).join("");
+
+  // Running total per day
+  let running=0;
+  let daysHTML="";
+  trips.forEach((t,i)=>{
+    running+=(t.earnings||0)-(t.varCosts||0);
+    const fl=Math.max(0,mf-running);
+    const ip=running>=mf;
+    const barW=Math.min(100,(running/mf)*100).toFixed(0);
+    daysHTML+=`<div style="padding:9px 0;border-bottom:${i<trips.length-1?"1px solid var(--bg3)":"none"}">
+      <div style="display:flex;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx)">${t.date||""}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${fmt(t.km||0)} км · заробив ${fmt(t.earnings||0)} Kč</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:${(t.net||0)>=0?"var(--gr)":"var(--rd)"}">${fmtD(t.net||0)}</div>
+          <div style="font-size:10px;color:var(--tx4)">Kč чистими</div>
+        </div>
+      </div>
+      <div class="running-bar">
+        <label style="color:${ip?"var(--gr)":"var(--or)"};">${ip?`✅ Фіксовані покриті! Прибуток: +${fmt(running-mf)} Kč`:`⏳ До покриття: ${fmt(fl)} Kč`}</label>
+        <div class="mini-bar"><div class="mini-fill" style="width:${barW}%;background:${ip?"var(--gr)":"var(--or)"}"></div></div>
+      </div>
+    </div>`;
+  });
+
+  const fixedItems=[
+    {l:"Кредит за авто",k:"credit"},
+    {l:"Страховка авто",k:"insurance"},
+    {l:"Соціалка + підприємець",k:"social"},
+    {l:"Платформа (Bolt/Uber)",k:"platform"},
+    {l:"Інші витрати",k:"other"},
+  ];
+  const fixedRows=fixedItems.filter(it=>s[it.k]>0).map(it=>`
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bg3);font-size:12px;">
+      <span style="color:${breakEven?"#2aaa60":"var(--tx2)"}">${breakEven?"✓ ":"· "}${it.l}</span>
+      <span style="color:${breakEven?"var(--gr)":"var(--rd)"}">−${fmt(s[it.k])} Kč</span>
+    </div>`).join("")+`
+    <div style="display:flex;justify-content:space-between;padding-top:8px;font-size:13px;font-weight:700;">
+      <span style="color:var(--tx)">Всього фіксованих</span>
+      <span style="color:var(--rd)">−${fmt(mf)} Kč</span>
+    </div>`;
+
+  document.getElementById("tab-dashboard").innerHTML=`
+    <div class="month-tabs">${monthTabs}</div>
+
+    <div class="be-card ${breakEven?"be-good":"be-wait"}">
+      <div class="be-status" style="color:${breakEven?"var(--gr)":"var(--ye)"}">
+        ${breakEven?"✅ ФІКСОВАНІ ПОКРИТІ — ВСЕ ЙДЕ В ПРИБУТОК":"⏳ ПОКРИВАЄМО ФІКСОВАНІ ВИТРАТИ"}
+      </div>
+      <div class="be-grid">
+        <div class="be-item"><label>Фіксовані/міс</label><div class="big c-rd">${fmt(mf)}</div><small>Kč</small></div>
+        <div class="be-item"><label>Покрито маржею</label><div class="big c-gr">${fmt(Math.min(mMargin,mf))}</div><small>Kč</small></div>
+        <div class="be-item"><label>Залишилось</label><div class="big" style="color:${fixLeft>0?"var(--or)":"var(--gr)"}">${fixLeft>0?fmt(fixLeft):"0"}</div><small>Kč</small></div>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${pct.toFixed(0)}%;background:${breakEven?"var(--gr)":"linear-gradient(90deg,#ee6a20,var(--ye))"}"></div></div>
+      <div class="progress-labels"><span>0</span><span style="color:${breakEven?"var(--gr)":"var(--ye)"}">${pct.toFixed(0)}% покрито</span><span>${fmt(mf)} Kč</span></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><label>Виручка з поїздок</label><div class="val c-ye">+${fmt(mEarnings)}</div><small>Kč</small></div>
+      <div class="metric"><label>Пальне + амортизація</label><div class="val c-rd">−${fmt(mVar)}</div><small>Kč</small></div>
+      <div class="metric"><label>Маржа (до фікс.)</label><div class="val c-bl">${fmt(mMargin)}</div><small>Kč</small></div>
+      <div class="metric"><label>Чистий прибуток</label><div class="val" style="color:${mNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(mNet)}</div><small>Kč</small></div>
+      <div class="metric"><label>Робочих днів</label><div class="val c-ye">${workDays}</div><small>днів</small></div>
+      <div class="metric"><label>Пробіг</label><div class="val c-ye">${fmt(mKm)}</div><small>км</small></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💳 ФІКСОВАНІ ВИТРАТИ ${selectedMonth}</div>
+      ${fixedRows}
+    </div>
+
+    ${workDays>0?`
+    <div class="card">
+      <div class="card-title">🚕 РОБОЧІ ДНІ ${selectedMonth} (${workDays})</div>
+      ${daysHTML}
+    </div>`:`<div class="empty">Немає записів у ${selectedMonth}<br><button class="btn-add" onclick="showTab('day')">➕ Додати перший день</button></div>`}
+  `;
+}
+
+function setMonth(m){ selectedMonth=m; renderDashboard(); }
+
+// Day form
+function resetDayForm(){
+  editingId=null;
+  dayData={ date:today(), earnings:0, km:0, note:"" };
+}
+
+function renderDayForm(){
+  const d=dayData;
+  const cv=calcDayVar(d.km);
+  const net=d.earnings-cv.total;
+  const isGood=net>0;
+  const perKm=d.km>0?(net/d.km).toFixed(1):"0";
+  const perH=d.km>0?(net/(d.km/50)).toFixed(0):"0"; // assume avg 50km/h in city
+
+  document.getElementById("tab-day").innerHTML=`
+    <div style="font-size:14px;font-weight:600;color:var(--tx);margin-bottom:.7rem">${editingId?"✏️ Редагувати день":"➕ Додати робочий день"}</div>
+
+    <div class="today-banner">
+      <div class="today-title">📅 ${d.date}</div>
+      <div class="today-grid">
+        <div class="today-field">
+          <label>💰 Виручка з поїздок <span style="font-size:9px;color:var(--tx4)">Kč</span></label>
+          <input class="big-inp" id="f-earnings" type="number" inputmode="numeric" placeholder="0" value="${d.earnings||""}" oninput="dayData.earnings=+this.value;updateLiveResult()">
+        </div>
+        <div class="today-field">
+          <label>🛣️ Пробіг за день <span style="font-size:9px;color:var(--tx4)">км</span></label>
+          <input class="big-inp" id="f-km" type="number" inputmode="numeric" placeholder="0" value="${d.km||""}" oninput="dayData.km=+this.value;updateLiveResult()">
+        </div>
+      </div>
+      <div class="live-result" id="live-result-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 ДЕТАЛІ</div>
+      <div class="row"><label>Дата</label><input class="inp" style="width:150px" id="f-date" type="date" value="${d.date}" oninput="dayData.date=this.value"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 НОТАТКА</div>
+      <textarea class="inp" style="width:100%;height:52px;text-align:left;padding-top:8px" oninput="dayData.note=this.value">${d.note||""}</textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveDay()">${editingId?"✓ Зберегти зміни":"✓ Зберегти день"}</button>
+      ${editingId?`<button class="btn-cancel" onclick="cancelEdit()">✕</button>`:""}
+    </div>
+  `;
+}
+
+function updateDay(k,v){
+  dayData[k]=v;
+  updateLiveResult();
+}
+function updateLiveResult(){
+  const d=dayData;
+  const cv=calcDayVar(d.km);
+  const net=d.earnings-cv.total;
+  const isGood=net>0;
+  const perKm=d.km>0?(net/d.km).toFixed(1):"0";
+  const el=document.getElementById("live-result-box");
+  if(!el) return;
+  el.innerHTML=`
+    <div style="font-size:9px;color:var(--tx3);margin-bottom:5px;letter-spacing:.1em">РЕЗУЛЬТАТ ДНЯ</div>
+    <div class="live-grid">
+      <div class="live-item"><label>Виручка</label><div class="lv c-ye">+${fmt(d.earnings)}</div></div>
+      <div class="live-item"><label>Пальне</label><div class="lv c-rd">−${fmt(cv.fuel)}</div></div>
+      <div class="live-item"><label>Амортизація</label><div class="lv c-rd">−${fmt(cv.amort)}</div></div>
+    </div>
+    <div style="border-top:1px solid var(--bor);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:10px;color:var(--tx3)">Чисті за день (без фікс.)</div>
+        <div style="font-size:22px;font-weight:700;color:${isGood?"var(--gr)":"var(--rd)"}">${fmtD(net)} Kč</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--tx3)">Kč/км</div>
+        <div style="font-size:18px;font-weight:700;color:${parseFloat(perKm)>10?"var(--gr)":"var(--or)"}">${perKm}</div>
+      </div>
+    </div>`;
+}
+
+function saveDay(){
+  const d=dayData;
+  const cv=calcDayVar(d.km);
+  const net=d.earnings-cv.total;
+  const entry={
+    id: editingId||Date.now().toString(),
+    date: d.date,
+    earnings: d.earnings,
+    km: d.km,
+    varCosts: cv.total,
+    fuelCost: cv.fuel,
+    amortCost: cv.amort,
+    net,
+    note: d.note||"",
+  };
+  if(editingId){
+    history=history.map(h=>h.id===editingId?entry:h);
+  } else {
+    // Check duplicate date
+    const exists=history.find(h=>h.date===d.date&&h.id!==editingId);
+    if(exists){
+      if(!confirm(`За ${d.date} вже є запис. Додати ще один?`)) return;
+    }
+    history=[entry,...history];
+  }
+  history.sort((a,b)=>b.date.localeCompare(a.date));
+  localStorage.setItem("taxi-history",JSON.stringify(history));
+  showToast();
+  editingId=null;
+  resetDayForm();
+  showTab("dashboard");
+}
+
+function cancelEdit(){
+  editingId=null;
+  resetDayForm();
+  showTab("history");
+}
+
+// History
+function renderHistory(){
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+  const filtered=selectedMonth?history.filter(t=>t.date?.startsWith(selectedMonth)):history;
+
+  const sel=`<select onchange="filterMonth(this.value)" style="background:var(--bg2);border:1px solid var(--bor);border-radius:6px;color:var(--ye);padding:5px 8px;font-size:11px;font-family:inherit;">
+    <option value="">Всі місяці</option>
+    ${months.map(m=>`<option value="${m}" ${m===selectedMonth?"selected":""}>${m}</option>`).join("")}
+  </select>`;
+
+  const cards=filtered.length===0
+    ?`<div class="empty">Записів ще немає</div>`
+    :filtered.map(t=>`
+      <div class="day-card">
+        <div class="day-head">
+          <div style="flex:1">
+            <div class="day-date">${t.date||""}</div>
+            <div class="day-meta">${fmt(t.km||0)} км · виручка ${fmt(t.earnings||0)} Kč</div>
+          </div>
+          <div style="text-align:right;margin-left:12px">
+            <div class="day-net" style="color:${(t.net||0)>=0?"var(--gr)":"var(--rd)"}">${fmtD(t.net||0)}</div>
+            <div style="font-size:10px;color:var(--tx4)">Kč чистими</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag tag-ye">+${fmt(t.earnings||0)} виручка</span>
+          <span class="tag tag-rd">−${fmt(t.fuelCost||0)} пальне</span>
+          <span class="tag tag-rd">−${fmt(t.amortCost||0)} амортиз.</span>
+        </div>
+        ${t.note?`<div style="font-size:10px;color:#5a7a8a;margin-top:.4rem;font-style:italic">${t.note}</div>`:""}
+        <div class="day-actions">
+          <button class="btn-sm btn-edit" onclick="editDay('${t.id}')">✏️ Ред.</button>
+          <button class="btn-sm btn-del" onclick="deleteDay('${t.id}')">🗑️</button>
+        </div>
+      </div>`).join("");
+
+  document.getElementById("tab-history").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem">
+      <div style="font-size:14px;font-weight:600;color:var(--tx)">📋 Записи (${filtered.length})</div>
+      ${sel}
+    </div>
+    ${cards}`;
+}
+
+function filterMonth(m){ selectedMonth=m; renderHistory(); }
+
+function editDay(id){
+  const t=history.find(h=>h.id===id);
+  if(!t) return;
+  editingId=id;
+  dayData={ date:t.date||today(), earnings:t.earnings||0, km:t.km||0, note:t.note||"" };
+  showTab("day");
+}
+
+function deleteDay(id){
+  if(!confirm("Видалити цей запис?")) return;
+  history=history.filter(h=>h.id!==id);
+  localStorage.setItem("taxi-history",JSON.stringify(history));
+  renderHistory();
+  renderDashboard();
+}
+
+// Stats
+function renderStats(){
+  const mf=monthlyFixed();
+  const allNet=history.reduce((s,t)=>s+(t.net||0),0);
+  const allEarnings=history.reduce((s,t)=>s+(t.earnings||0),0);
+  const allKm=history.reduce((s,t)=>s+(t.km||0),0);
+  const allDays=history.length;
+  const avgDayNet=allDays?Math.round(allNet/allDays):0;
+  const avgDayEarnings=allDays?Math.round(allEarnings/allDays):0;
+  const months=[...new Set(history.map(t=>t.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+
+  const monthRows=months.map(m=>{
+    const mt=history.filter(t=>t.date?.startsWith(m));
+    const me=mt.reduce((s,t)=>s+(t.earnings||0),0);
+    const mv=mt.reduce((s,t)=>s+(t.varCosts||0),0);
+    const mk=mt.reduce((s,t)=>s+(t.km||0),0);
+    const mn=me-mv-mf;
+    return `<div class="month-row">
+      <div>
+        <div style="font-size:12px;color:var(--tx)">${m}</div>
+        <div style="font-size:10px;color:var(--tx3)">${mt.length} днів · ${fmt(mk)} км · виручка ${fmt(me)} Kč</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:700;color:${mn>=0?"var(--gr)":"var(--rd)"}">${fmtD(mn)}</div>
+        <div style="font-size:10px;color:var(--tx4)">Kč чистими</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("tab-stats").innerHTML=`
+    <div style="font-size:14px;font-weight:600;color:var(--tx);margin-bottom:.7rem">📈 Загальна статистика</div>
+    <div class="metrics">
+      <div class="metric"><label>Робочих днів</label><div class="val c-ye">${allDays}</div><small>днів</small></div>
+      <div class="metric"><label>Загальний пробіг</label><div class="val c-ye">${fmt(allKm)}</div><small>км</small></div>
+      <div class="metric"><label>Загальна виручка</label><div class="val c-ye">${fmt(allEarnings)}</div><small>Kč</small></div>
+      <div class="metric"><label>Загальний прибуток</label><div class="val" style="color:${allNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(allNet)}</div><small>Kč</small></div>
+      <div class="metric"><label>Середній день (виручка)</label><div class="val c-ye">${fmt(avgDayEarnings)}</div><small>Kč/день</small></div>
+      <div class="metric"><label>Середній день (чисті)</label><div class="val" style="color:${avgDayNet>=0?"var(--gr)":"var(--rd)"}">${fmtD(avgDayNet)}</div><small>Kč/день</small></div>
+    </div>
+    ${months.length>0?`<div class="card"><div class="card-title">📅 ПО МІСЯЦЯХ</div>${monthRows}</div>`:""}
+    ${history.length===0?`<div class="empty">Додай перший день щоб побачити статистику</div>`:""}
+  `;
+}
+
+// Export/Import
+function exportData(){
+  const data={settings:getSt(),history};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`taxi-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importData(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.history){ history=data.history; localStorage.setItem("taxi-history",JSON.stringify(history)); }
+      if(data.settings){ localStorage.setItem("taxi-settings",JSON.stringify(data.settings)); loadSettings(); }
+      showToast("✓ Дані завантажено");
+      renderDashboard();
+    } catch(err){ alert("Помилка: "+err.message); }
+  };
+  r.readAsText(file);
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  if(msg) t.textContent=msg;
+  else t.textContent="✓ Збережено";
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+// Init
+loadSettings();
+history=JSON.parse(localStorage.getItem("taxi-history")||"[]");
+renderDashboard();
+renderDayForm();
+</script>
+</body>
+</html>
