@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Taxi Pro · Калькулятор виплат</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  background: #0A0A12;
+  color: #fff;
+  min-height: 100vh;
+  padding: 24px 18px 60px;
+}
+.wrap { max-width: 420px; margin: 0 auto; }
+
+.header { text-align: center; margin-bottom: 28px; }
+.header-icon { font-size: 44px; margin-bottom: 8px; }
+.header-title { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+.header-title span { color: #FFC400; }
+.header-sub { font-size: 13px; color: rgba(255,255,255,.35); margin-top: 4px; }
+
+.section-lbl {
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,.3);
+  letter-spacing: .15em;
+  margin: 0 0 8px 2px;
+}
+
+.card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 6px 0;
+  margin-bottom: 14px;
+}
+
+.inp-row {
+  display: flex; align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  gap: 12px;
+}
+.inp-row:last-child { border-bottom: none; }
+.inp-icon { font-size: 22px; width: 28px; flex-shrink: 0; }
+.inp-info { flex: 1; }
+.inp-name { font-size: 15px; font-weight: 600; color: #fff; }
+.inp-hint { font-size: 11px; color: rgba(255,255,255,.3); margin-top: 2px; }
+.inp-field {
+  width: 110px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  color: #FFC400;
+  padding: 10px 12px;
+  font-size: 15px; font-weight: 700;
+  font-family: inherit;
+  text-align: right; outline: none;
+  flex-shrink: 0;
+}
+.inp-field:focus { border-color: #FFC400; background: rgba(255,196,0,.07); }
+.inp-field::placeholder { color: rgba(255,196,0,.25); font-size: 12px; font-weight: 400; }
+.inp-fixed {
+  font-size: 15px; font-weight: 700;
+  color: rgba(255,196,0,.5);
+  width: 110px; text-align: right;
+}
+
+/* RATE PILLS */
+.rate-row {
+  display: flex; align-items: center;
+  padding: 12px 16px; gap: 8px;
+}
+.rate-lbl { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.7); flex: 1; }
+.rate-hint { font-size: 11px; color: rgba(255,255,255,.3); }
+.pills { display: flex; gap: 6px; }
+.pill {
+  padding: 7px 13px; border-radius: 20px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.35);
+  font-family: inherit; transition: all .15s;
+}
+.pill.on { background: rgba(255,196,0,.15); border-color: rgba(255,196,0,.4); color: #FFC400; }
+
+/* TOP ROW */
+.top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.top-field label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.3); letter-spacing: .1em; display: block; margin-bottom: 6px; }
+.top-inp {
+  width: 100%;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px; color: rgba(255,255,255,.8);
+  padding: 11px 13px; font-size: 14px; font-weight: 600;
+  font-family: inherit; outline: none; color-scheme: dark;
+}
+.top-inp:focus { border-color: #FFC400; }
+
+/* DIVIDER */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 20px 0 16px;
+}
+.div-line { flex: 1; height: 1px; background: rgba(255,255,255,.07); }
+.div-txt { font-size: 11px; color: rgba(255,255,255,.2); font-weight: 700; letter-spacing: .15em; }
+
+/* RESULT ROWS */
+.result-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.res-row {
+  display: flex; align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  gap: 12px;
+}
+.res-row:last-child { border-bottom: none; }
+.res-icon { font-size: 22px; width: 28px; flex-shrink: 0; }
+.res-info { flex: 1; }
+.res-name { font-size: 14px; font-weight: 600; }
+.res-hint { font-size: 11px; color: rgba(255,255,255,.3); margin-top: 2px; line-height: 1.4; }
+.res-val { font-size: 17px; font-weight: 800; white-space: nowrap; }
+
+.row-green { background: rgba(48,209,88,.04); }
+.row-red { background: rgba(255,69,58,.03); }
+.row-purple { background: rgba(191,90,242,.04); }
+.row-orange { background: rgba(255,159,10,.03); }
+
+/* FINAL */
+.final-box {
+  background: linear-gradient(135deg, rgba(255,196,0,.12), rgba(255,155,0,.06));
+  border: 1.5px solid rgba(255,196,0,.3);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.final-lbl { font-size: 11px; font-weight: 700; color: rgba(255,196,0,.6); letter-spacing: .1em; margin-bottom: 4px; }
+.final-driver { font-size: 13px; color: rgba(255,255,255,.4); margin-bottom: 6px; }
+.final-num { font-size: 40px; font-weight: 800; color: #FFC400; letter-spacing: -1px; line-height: 1; }
+.final-kc { font-size: 20px; font-weight: 700; color: rgba(255,196,0,.6); }
+.final-emoji { font-size: 46px; opacity: .5; }
+
+/* SHARE */
+.share-btn {
+  width: 100%; padding: 16px;
+  background: rgba(255,196,0,.1);
+  border: 1px solid rgba(255,196,0,.3);
+  border-radius: 14px; color: #FFC400;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all .15s; margin-bottom: 8px;
+}
+.share-btn:active { transform: scale(.98); }
+
+/* ZERO */
+.zero { text-align: center; padding: 28px; color: rgba(255,255,255,.2); font-size: 13px; }
+.zero-icon { font-size: 36px; margin-bottom: 8px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(48,209,88,.15);
+  border: 1px solid rgba(48,209,88,.3);
+  border-radius: 12px; padding: 10px 22px;
+  font-size: 13px; font-weight: 700; color: #30D158;
+  z-index: 99; opacity: 0; transition: opacity .25s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-icon">🚕</div>
+    <div class="header-title">Taxi <span>Pro</span></div>
+    <div class="header-sub">Розрахунок виплати водія · OSVČ</div>
+  </div>
+
+  <!-- ТИЖДЕНЬ + ІМ'Я -->
+  <div class="top-row">
+    <div class="top-field">
+      <label>ТИЖДЕНЬ</label>
+      <input class="top-inp" type="week" id="weekPicker">
+    </div>
+    <div class="top-field">
+      <label>ІМ'Я ВОДІЯ</label>
+      <input class="top-inp" type="text" id="driverName" placeholder="Ім'я" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- ВИРУЧКА -->
+  <div class="section-lbl">ВИРУЧКА З ПЛАТФОРМ</div>
+  <div class="card">
+    <div class="inp-row">
+      <div class="inp-icon">⚡</div>
+      <div class="inp-info">
+        <div class="inp-name">Bolt</div>
+        <div class="inp-hint">Повна сума всіх поїздок</div>
+      </div>
+      <input class="inp-field" type="number" inputmode="decimal" id="boltVal" placeholder="0 Kč" oninput="calc()">
+    </div>
+    <div class="inp-row">
+      <div class="inp-icon">🚗</div>
+      <div class="inp-info">
+        <div class="inp-name">Uber</div>
+        <div class="inp-hint">Повна сума всіх поїздок</div>
+      </div>
+      <input class="inp-field" type="number" inputmode="decimal" id="uberVal" placeholder="0 Kč" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- КОМІСІЯ -->
+  <div class="section-lbl">КОМІСІЯ ПЛАТФОРМИ</div>
+  <div class="card">
+    <div class="rate-row">
+      <div>
+        <div class="rate-lbl">Bolt / Uber беруть</div>
+        <div class="rate-hint">Відсоток з кожної поїздки</div>
+      </div>
+      <div class="pills">
+        <button class="pill" onclick="setRate(20)">20%</button>
+        <button class="pill on" onclick="setRate(25)">25%</button>
+        <button class="pill" onclick="setRate(28)">28%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФІКСОВАНІ ВИТРАТИ -->
+  <div class="section-lbl">ФІКСОВАНІ ВИТРАТИ</div>
+  <div class="card">
+    <div class="inp-row">
+      <div class="inp-icon">🚙</div>
+      <div class="inp-info">
+        <div class="inp-name">Оренда авто</div>
+        <div class="inp-hint">Фіксована щотижнева плата</div>
+      </div>
+      <div class="inp-fixed">3 500 Kč</div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="div-line"></div>
+    <div class="div-txt">РОЗРАХУНОК</div>
+    <div class="div-line"></div>
+  </div>
+
+  <!-- РЕЗУЛЬТАТИ -->
+  <div id="results">
+    <div class="zero">
+      <div class="zero-icon">🧮</div>
+      Введи виручку вище — побачиш розрахунок
+    </div>
+  </div>
+
+  <button class="share-btn" onclick="copyResult()">📋 Скопіювати і відправити водію</button>
+
+</div>
+
+<div class="toast" id="toast">✅ Скопійовано!</div>
+
+<script>
+let rate = 25;
+let result = null;
+const RENT = 3500;
+
+// Поточний тиждень
+const wp = document.getElementById('weekPicker');
+const now = new Date();
+const jan1 = new Date(now.getFullYear(), 0, 1);
+const wk = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+wp.value = `${now.getFullYear()}-W${String(wk).padStart(2,'0')}`;
+wp.addEventListener('change', calc);
+
+function setRate(r) {
+  rate = r;
+  document.querySelectorAll('.pill').forEach(b => b.classList.toggle('on', b.textContent === r + '%'));
+  calc();
+}
+
+function f(n) { return Math.round(n).toLocaleString('cs-CZ') + ' Kč'; }
+
+function calc() {
+  const bolt = parseFloat(document.getElementById('boltVal').value) || 0;
+  const uber = parseFloat(document.getElementById('uberVal').value) || 0;
+  const gross = bolt + uber;
+  const name = document.getElementById('driverName').value || 'Водій';
+  const week = wp.value;
+
+  if (gross <= 0) {
+    document.getElementById('results').innerHTML = `
+      <div class="zero"><div class="zero-icon">🧮</div>Введи виручку вище — побачиш розрахунок</div>`;
+    result = null;
+    return;
+  }
+
+  // 1. Комісія Bolt/Uber
+  const commission = gross * rate / 100;
+
+  // 2. DPH 21% на комісію (reverse charge — OSVČ платить щомісяця)
+  //    DPH = 21% від суми комісії (не включаючи — додаткове зобов'язання)
+  const vat = commission * 0.21;
+
+  // 3. Після комісії + DPH
+  const afterCommVat = gross - commission - vat;
+
+  // 4. Подохідний податок OSVČ (paušální výdaje 60%)
+  //    Základ daně = 40% від afterCommVat
+  //    Daň = 15% від základu = 6% від afterCommVat
+  const taxBase = afterCommVat * 0.40;
+  const incomeTax = taxBase * 0.15;  // = afterCommVat * 0.06
+
+  // 5. Після податку
+  const afterTax = afterCommVat - incomeTax;
+
+  // 6. Оренда авто
+  const afterRent = afterTax - RENT;
+
+  result = { gross, bolt, uber, commission, vat, afterCommVat, taxBase, incomeTax, afterTax, afterRent, name, week, rate };
+
+  const netColor = afterRent >= 0 ? '#FFC400' : '#FF453A';
+  const netEmoji = afterRent >= 0 ? '💰' : '⚠️';
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+
+      <!-- 1. Виручка -->
+      <div class="res-row">
+        <div class="res-icon">💵</div>
+        <div class="res-info">
+          <div class="res-name" style="color:#4FC3F7;">Загальна виручка</div>
+          <div class="res-hint">
+            ${bolt > 0 ? `⚡ Bolt: ${f(bolt)}` : ''}
+            ${bolt > 0 && uber > 0 ? ' + ' : ''}
+            ${uber > 0 ? `🚗 Uber: ${f(uber)}` : ''}
+          </div>
+        </div>
+        <div class="res-val" style="color:#4FC3F7;">+${f(gross)}</div>
+      </div>
+
+      <!-- 2. Комісія -->
+      <div class="res-row row-red">
+        <div class="res-icon">✂️</div>
+        <div class="res-info">
+          <div class="res-name" style="color:#FF6B6B;">Bolt/Uber забирають (${rate}%)</div>
+          <div class="res-hint">Комісія платформи за кожну поїздку</div>
+        </div>
+        <div class="res-val" style="color:#FF6B6B;">-${f(commission)}</div>
+      </div>
+
+      <!-- 3. DPH -->
+      <div class="res-row row-orange">
+        <div class="res-icon">🧾</div>
+        <div class="res-info">
+          <div class="res-name" style="color:#FF9F0A;">DPH 21% на комісію</div>
+          <div class="res-hint">Reverse charge — OSVČ платить щомісяця державі · 21% від ${f(commission)}</div>
+        </div>
+        <div class="res-val" style="color:#FF9F0A;">-${f(vat)}</div>
+      </div>
+
+      <!-- 4. Після комісії і DPH -->
+      <div class="res-row row-green">
+        <div class="res-icon">🏦</div>
+        <div class="res-info">
+          <div class="res-name" style="color:#30D158;font-weight:700;">Поступить на рахунок</div>
+          <div class="res-hint">Що Bolt/Uber реально перерахують</div>
+        </div>
+        <div class="res-val" style="color:#30D158;">+${f(afterCommVat)}</div>
+      </div>
+
+      <!-- 5. Podohідний податок -->
+      <div class="res-row row-purple">
+        <div class="res-icon">📋</div>
+        <div class="res-info">
+          <div class="res-name" style="color:#BF5AF2;">Резерва на daň z příjmu</div>
+          <div class="res-hint">OSVČ паушальні витрати 60% → základ ${f(taxBase)} → daň 15%</div>
+        </div>
+        <div class="res-val" style="color:#BF5AF2;">-${f(incomeTax)}</div>
+      </div>
+
+      <!-- 6. Оренда -->
+      <div class="res-row">
+        <div class="res-icon">🚙</div>
+        <div class="res-info">
+          <div class="res-name" style="color:rgba(255,255,255,.7);">Оренда авто</div>
+          <div class="res-hint">Фіксована щотижнева плата</div>
+        </div>
+        <div class="res-val" style="color:rgba(255,255,255,.6);">-${f(RENT)}</div>
+      </div>
+
+    </div>
+
+    <div class="final-box">
+      <div>
+        <div class="final-lbl">ВИПЛАТА ВОДІЮ НА РУКИ</div>
+        <div class="final-driver">${name} · ${week}</div>
+        <div class="final-num" style="color:${netColor};">${Math.round(afterRent).toLocaleString('cs-CZ')} <span class="final-kc">Kč</span></div>
+        ${afterRent < 0 ? `<div style="font-size:11px;color:#FF453A;margin-top:6px;">⚠️ Недостатньо виручки для покриття витрат</div>` : ''}
+      </div>
+      <div class="final-emoji">${netEmoji}</div>
+    </div>
+  `;
+}
+
+function copyResult() {
+  if (!result) { alert('Введи виручку!'); return; }
+  const r = result;
+  const txt =
+`🚕 ВИПЛАТА ВОДІЯ · ${r.week}
+Водій: ${r.name}
+──────────────────────
+
+💵 Загальна виручка:        +${Math.round(r.gross).toLocaleString('cs-CZ')} Kč
+${r.bolt > 0 ? `   ⚡ Bolt:  ${Math.round(r.bolt).toLocaleString('cs-CZ')} Kč\n` : ''}${r.uber > 0 ? `   🚗 Uber:  ${Math.round(r.uber).toLocaleString('cs-CZ')} Kč\n` : ''}
+✂️  Bolt/Uber (${r.rate}%):      -${Math.round(r.commission).toLocaleString('cs-CZ')} Kč
+🧾 DPH 21% на комісію:     -${Math.round(r.vat).toLocaleString('cs-CZ')} Kč
+🏦 Поступить на рахунок:   +${Math.round(r.afterCommVat).toLocaleString('cs-CZ')} Kč
+
+📋 Резерва daň z příjmu:   -${Math.round(r.incomeTax).toLocaleString('cs-CZ')} Kč
+🚙 Оренда авто:            -${Math.round(RENT).toLocaleString('cs-CZ')} Kč
+
+──────────────────────
+💰 ВИПЛАТА НА РУКИ: ${Math.round(r.afterRent).toLocaleString('cs-CZ')} Kč
+──────────────────────
+Taxi Pro · Калькулятор виплат`;
+
+  navigator.clipboard.writeText(txt).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+calc();
+</script>
+</body>
+</html>
