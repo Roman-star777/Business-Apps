@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Taxi Pro">
+<meta name="theme-color" content="#0E0E0E">
+<title>Taxi Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#08080F;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;color:#fff;overflow:hidden;}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+/* LOGIN */
+#login-screen{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem;background:linear-gradient(160deg,#08080F 0%,#0C0C1A 100%);}
+.login-logo{font-size:52px;margin-bottom:14px;}
+.login-title{font-size:30px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.5px;}
+.login-sub{font-size:13px;color:rgba(255,255,255,.3);margin-bottom:44px;text-align:center;}
+.login-form{width:100%;max-width:320px;}
+.login-label{font-size:10px;color:rgba(255,255,255,.35);font-weight:700;letter-spacing:.12em;margin-bottom:6px;display:block;}
+.login-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;padding:14px 16px;font-size:15px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none;}
+.login-inp:focus{outline:none;border-color:#FFC400;background:rgba(255,196,0,.05);}
+.login-btn{width:100%;padding:15px;background:linear-gradient(135deg,rgba(255,196,0,.15),rgba(255,196,0,.08));border:1px solid rgba(255,196,0,.4);border-radius:14px;color:#FFC400;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;letter-spacing:.02em;}
+.login-error{font-size:12px;color:#FF453A;text-align:center;margin-top:8px;display:none;}
+.login-version{font-size:10px;color:rgba(255,255,255,.15);margin-top:32px;text-align:center;}
+
+/* MAIN APP */
+#main-app{display:none;height:100%;flex-direction:column;background:linear-gradient(160deg,#08080F 0%,#0C0C1A 100%);}
+header{background:rgba(8,8,15,.9);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);}
+.h-logo{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.2em;font-weight:700;}
+.h-title{font-size:18px;font-weight:700;color:#fff;margin-top:1px;letter-spacing:-.3px;}
+.h-sync{background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.25);border-radius:20px;color:#FFC400;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.h-sync.loading{opacity:.5;pointer-events:none;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#30D158;}
+.sync-dot.syncing{background:#FFC400;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px 90px;}
+.tab-pane{display:none;padding-top:14px;}
+.tab-pane.active{display:block;}
+
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(8,8,15,.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid rgba(255,255,255,.07);display:flex;padding:7px 0 max(10px,env(safe-area-inset-bottom));z-index:50;}
+.nav-btn{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;}
+.nav-btn span:first-child{font-size:20px;line-height:1;}
+.nav-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:500;}
+.nav-btn.active .nav-lbl{color:#FFC400;font-weight:700;}
+.nav-dot{width:4px;height:4px;border-radius:2px;background:#FFC400;display:none;}
+.nav-btn.active .nav-dot{display:block;}
+
+/* HERO CARD */
+.hero{background:linear-gradient(135deg,rgba(10,132,255,.12) 0%,rgba(94,92,230,.12) 100%);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px;margin-bottom:10px;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(rgba(10,132,255,.2),transparent 70%);pointer-events:none;}
+.hero-lbl{font-size:10px;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:4px;letter-spacing:.1em;}
+.hero-num{font-size:36px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px;}
+.hero-num-accent{color:#FFC400;}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;}
+.prog{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin:12px 0 4px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#0A84FF,#5E5CE6);transition:width .5s;}
+.prog-labels{display:flex;justify-content:space-between;font-size:10px;}
+.be-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);border-radius:10px;padding:5px 10px;font-size:11px;color:#30D158;font-weight:700;margin-top:8px;}
+.be-badge.wait{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.2);color:#FFC400;}
+
+/* CARDS */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:14px;margin-bottom:10px;backdrop-filter:blur(10px);}
+.card-ttl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.12em;margin-bottom:11px;}
+
+/* METRICS GRID */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.metric{border-radius:16px;padding:13px;border:1px solid rgba(255,255,255,.06);}
+.metric-blue{background:linear-gradient(135deg,rgba(10,132,255,.15),rgba(10,132,255,.05));}
+.metric-green{background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));}
+.metric-red{background:linear-gradient(135deg,rgba(255,69,58,.15),rgba(255,69,58,.05));}
+.metric-purple{background:linear-gradient(135deg,rgba(94,92,230,.15),rgba(94,92,230,.05));}
+.metric-yellow{background:linear-gradient(135deg,rgba(255,196,0,.15),rgba(255,196,0,.05));}
+.metric-default{background:rgba(255,255,255,.04);}
+.m-lbl{font-size:10px;color:rgba(255,255,255,.35);font-weight:700;margin-bottom:3px;letter-spacing:.06em;}
+.m-val{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+.m-sub{font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;}
+
+/* ROWS */
+.row-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.row-item:last-child{border-bottom:none;}
+.ri-l{font-size:13px;color:rgba(255,255,255,.55);}
+.ri-r{font-size:13px;font-weight:700;}
+
+/* HISTORY */
+.day-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.day-row:last-child{border-bottom:none;}
+.day-date{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.day-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+.day-num{font-size:15px;font-weight:800;letter-spacing:-.3px;}
+.mini-bar{width:34px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-right:6px;}
+.mini-fill{height:100%;border-radius:2px;}
+
+/* DRIVER CARDS */
+.driver-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px;margin-bottom:8px;}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.driver-name{font-size:13px;font-weight:700;color:#fff;}
+.driver-status{font-size:10px;font-weight:600;}
+.driver-earn{font-size:14px;font-weight:800;color:#FFC400;}
+
+/* EXPENSES */
+.exp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.exp-row:last-child{border-bottom:none;}
+.exp-lbl{font-size:13px;color:rgba(255,255,255,.5);}
+.exp-val{font-size:13px;font-weight:700;color:#FF453A;}
+.add-btn{display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px;cursor:pointer;}
+.add-lbl{font-size:13px;color:#FFC400;font-weight:700;}
+.add-icon{font-size:22px;color:#FFC400;line-height:1;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:#0F0F1A;border:1px solid rgba(255,255,255,.1);border-radius:24px 24px 0 0;padding:20px 20px max(20px,env(safe-area-inset-bottom));width:100%;max-width:430px;}
+.modal-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:18px;letter-spacing:-.3px;}
+.modal-label{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:6px;}
+.modal-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#FFC400;padding:13px 14px;font-size:16px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none;}
+.modal-inp:focus{outline:none;border-color:#FFC400;}
+.modal-row{display:flex;gap:8px;}
+.modal-save{flex:1;padding:14px;background:rgba(255,196,0,.12);border:1px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.modal-cancel{padding:14px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:rgba(255,255,255,.4);font-size:14px;cursor:pointer;font-family:inherit;}
+
+/* SETTINGS */
+.settings-section{font-size:10px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.15em;margin:16px 0 8px;}
+.settings-section:first-child{margin-top:0;}
+.settings-group{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:10px;}
+.st-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.st-row:last-child{border-bottom:none;}
+.st-lbl{font-size:13px;color:rgba(255,255,255,.7);font-weight:500;}
+.st-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#FFC400;padding:6px 10px;font-size:13px;font-family:inherit;width:110px;text-align:right;-webkit-appearance:none;}
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;}
+.menu-item:last-child{border-bottom:none;}
+.mi-icon{font-size:16px;width:20px;text-align:center;}
+.mi-text{font-size:13px;color:rgba(255,255,255,.7);font-weight:500;flex:1;}
+.mi-arr{font-size:13px;color:rgba(255,255,255,.2);}
+.status-badge{font-size:9px;padding:3px 8px;border-radius:6px;font-weight:700;}
+.sb-on{background:rgba(48,209,88,.12);color:#30D158;border:1px solid rgba(48,209,88,.25);}
+.sb-off{background:rgba(255,69,58,.1);color:#FF453A;border:1px solid rgba(255,69,58,.2);}
+.save-settings-btn{width:100%;padding:14px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;}
+.logout-btn{width:100%;padding:12px;background:rgba(255,69,58,.08);border:1px solid rgba(255,69,58,.2);border-radius:12px;color:#FF453A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+
+/* TOAST */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(255,196,0,.15);border:1px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;padding:10px 18px;font-size:13px;font-family:inherit;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-weight:700;backdrop-filter:blur(10px);}
+#toast.show{opacity:1;}
+.worker-url{font-size:10px;color:rgba(255,255,255,.15);text-align:center;padding:4px 0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">🚕</div>
+  <div class="login-title">Taxi Pro</div>
+  <div class="login-sub">Bolt + Uber · Фінансовий трекер</div>
+  <div class="login-form">
+    <label class="login-label">ІМ'Я ВОДІЯ</label>
+    <input class="login-inp" id="login-name" type="text" placeholder="Roman Yarema" autocomplete="name">
+    <label class="login-label">ПАРОЛЬ</label>
+    <input class="login-inp" id="login-pass" type="password" placeholder="••••••" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">Увійти</button>
+    <div class="login-error" id="login-error">Невірний пароль</div>
+  </div>
+  <div class="login-version">Taxi Pro v1.0 · Bolt Fleet Integration</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <header>
+    <div>
+      <div class="h-logo" id="h-platform">BOLT + UBER</div>
+      <div class="h-title" id="h-name">Водій</div>
+    </div>
+    <button class="h-sync" id="sync-btn" onclick="syncBolt()">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-lbl">Синхронізувати</span>
+    </button>
+  </header>
+
+  <div id="content">
+    <div class="tab-pane active" id="tab-today"></div>
+    <div class="tab-pane" id="tab-month"></div>
+    <div class="tab-pane" id="tab-history"></div>
+    <div class="tab-pane" id="tab-settings"></div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" id="nav-today" onclick="showTab('today')">
+      <span>🚕</span><span class="nav-lbl" id="nl-today">Сьогодні</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-month" onclick="showTab('month')">
+      <span>📅</span><span class="nav-lbl" id="nl-month">Місяць</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="showTab('history')">
+      <span>📋</span><span class="nav-lbl" id="nl-history">Історія</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="showTab('settings')">
+      <span>⚙️</span><span class="nav-lbl" id="nl-profile">Профіль</span><div class="nav-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="modal-overlay" id="exp-modal" style="display:none;" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Додати витрату</div>
+    <label class="modal-label">НАЗВА ВИТРАТИ</label>
+    <input class="modal-inp" id="exp-name" type="text" placeholder="Парковка, мийка...">
+    <label class="modal-label">СУМА (Kč)</label>
+    <input class="modal-inp" id="exp-amount" type="number" inputmode="numeric" placeholder="0">
+    <label class="modal-label">ДАТА</label>
+    <input class="modal-inp" id="exp-date" type="date">
+    <div class="modal-row">
+      <button class="modal-save" onclick="saveExpense()">✓ Зберегти</button>
+      <button class="modal-cancel" onclick="document.getElementById('exp-modal').style.display='none'">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WORKER = "https://uber-bolt-proxy.romon-yarema.workers.dev";
+const USERS = { "Roman Yarema": "taxi2026", "Admin": "fleet2026" };
+
+const USER_COMPANIES = {
+  "Roman Yarema": [175398],
+  "Admin": [120982, 175398],
+};
+
+function isAdmin() { return state.user === "Admin"; }
+
+// ===== ПЕРЕКЛАДИ =====
+const LANG = {
+  uk: {
+    today: "Сьогодні", month: "Місяць", history: "Історія", profile: "Профіль",
+    goodMorning: "Доброго ранку", goodDay: "Доброго дня", goodEvening: "Доброго вечора",
+    syncBtn: "Синхронізувати", syncing: "Завантаження...", updated: "Оновлено",
+    todayEarnings: "ЗАРОБІТОК СЬОГОДНІ · BOLT", monthProfit: "ЧИСТИЙ ПРИБУТОК",
+    trips: "поїздок", km: "км", revenue: "виручка",
+    dailyGoal: "Денна ціль", toGoal: "До цілі",
+    goalDone: "✅ Ціль виконана!", goalWait: "⏳ До цілі",
+    boltRevenue: "BOLT ВИРУЧКА", tripsCount: "ПОЇЗДОК",
+    mileage: "ПРОБІГ", fuel: "ПАЛЬНЕ",
+    todayExpenses: "ВИТРАТИ СЬОГОДНІ", carAmort: "Амортизація авто",
+    addExpense: "+ Додати витрату", dataFrom: "Дані з Bolt",
+    monthCoverage: "ПОКРИТТЯ МІСЯЧНИХ ВИТРАТ", totalExpenses: "Всього витрат",
+    covered: "✅ Покрито!", stillNeed: "Ще",
+    income: "ВИРУЧКА", varCosts: "ЗМІННІ ВИТРАТИ", margin: "МАРЖА", net: "ЧИСТИЙ",
+    fixedCosts: "ФІКСОВАНІ ВИТРАТИ МІСЯЦЯ", carCredit: "Кредит за авто",
+    insurance: "Страховка авто", social: "Соціалка + підприємець",
+    platform: "Платформа Bolt/Uber", other: "Інші витрати", total: "Всього",
+    myExpenses: "МОЇ ДОДАТКОВІ ВИТРАТИ", noExpenses: "Немає додаткових витрат",
+    workDays: "РОБОЧІ ДНІ · З BOLT", noData: "Синхронізуй з Bolt щоб побачити поїздки",
+    myExpensesList: "МОЇ ВИТРАТИ", noRecords: "Немає записів",
+    fuelSection: "⛽ АВТО І ПАЛИВО", fuelPrice: "Ціна пального Kč/л",
+    fuelCons: "Витрата л/100км", amort: "Амортизація Kč/км", goalSetting: "Денна ціль Kč",
+    monthlySection: "💳 ЩОМІСЯЧНІ ВИТРАТИ", connectSection: "🔗 ПІДКЛЮЧЕННЯ",
+    dataSection: "📦 ДАНІ", langSection: "🌐 МОВА",
+    boltApi: "Bolt Fleet API", uberApi: "Uber API",
+    boltActive: "✅ Активно", uberSoon: "Незабаром",
+    download: "Скачати резервну копію", restore: "Відновити дані",
+    saveBtn: "✓ Зберегти налаштування", logoutBtn: "Вийти з акаунту",
+    driver: "Водій", boltFleet: "Bolt Fleet · Водій",
+    addModal: "Додати витрату", expName: "НАЗВА ВИТРАТИ",
+    expAmount: "СУМА (Kč)", expDate: "ДАТА",
+    saveModal: "✓ Зберегти", cancelModal: "Скасувати",
+    parking: "Парковка, мийка...", settingsSaved: "✓ Налаштування збережено",
+    expAdded: "✓ Витрату додано", fillAll: "Заповни всі поля",
+    allFleets: "BOLT · ВСІ ФЛОТИЛІЇ", myTrips: "BOLT · МОЇ ПОЇЗДКИ",
+    byWeeks: "По тижнях", compareMonth: "Порівняно з минулим місяцем",
+    week: "Тиждень", cashNote: "⚠️ Готівка не включена · тільки безготівка"
+  },
+  cs: {
+    today: "Dnes", month: "Měsíc", history: "Historie", profile: "Profil",
+    goodMorning: "Dobré ráno", goodDay: "Dobrý den", goodEvening: "Dobrý večer",
+    syncBtn: "Synchronizovat", syncing: "Načítání...", updated: "Aktualizováno",
+    todayEarnings: "VÝDĚLEK DNES · BOLT", monthProfit: "ČISTÝ ZISK",
+    trips: "jízd", km: "km", revenue: "výdělek",
+    dailyGoal: "Denní cíl", toGoal: "Do cíle",
+    goalDone: "✅ Cíl splněn!", goalWait: "⏳ Do cíle",
+    boltRevenue: "BOLT VÝDĚLEK", tripsCount: "JÍZD",
+    mileage: "NAJETO", fuel: "PALIVO",
+    todayExpenses: "VÝDAJE DNES", carAmort: "Amortizace auta",
+    addExpense: "+ Přidat výdaj", dataFrom: "Data z Bolt",
+    monthCoverage: "KRYTÍ MĚSÍČNÍCH VÝDAJŮ", totalExpenses: "Celkem výdajů",
+    covered: "✅ Pokryto!", stillNeed: "Ještě",
+    income: "VÝDĚLEK", varCosts: "VARIABILNÍ VÝDAJE", margin: "MARŽE", net: "ČISTÝ",
+    fixedCosts: "FIXNÍ VÝDAJE MĚSÍCE", carCredit: "Splátka auta",
+    insurance: "Pojištění auta", social: "Sociální + OSVČ",
+    platform: "Platforma Bolt/Uber", other: "Ostatní výdaje", total: "Celkem",
+    myExpenses: "MOJE DALŠÍ VÝDAJE", noExpenses: "Žádné další výdaje",
+    workDays: "PRACOVNÍ DNY · Z BOLT", noData: "Synchronizuj s Bolt pro zobrazení jízd",
+    myExpensesList: "MOJE VÝDAJE", noRecords: "Žádné záznamy",
+    fuelSection: "⛽ AUTO A PALIVO", fuelPrice: "Cena paliva Kč/l",
+    fuelCons: "Spotřeba l/100km", amort: "Amortizace Kč/km", goalSetting: "Denní cíl Kč",
+    monthlySection: "💳 MĚSÍČNÍ VÝDAJE", connectSection: "🔗 PŘIPOJENÍ",
+    dataSection: "📦 DATA", langSection: "🌐 JAZYK",
+    boltApi: "Bolt Fleet API", uberApi: "Uber API",
+    boltActive: "✅ Aktivní", uberSoon: "Brzy",
+    download: "Stáhnout zálohu", restore: "Obnovit data",
+    saveBtn: "✓ Uložit nastavení", logoutBtn: "Odhlásit se",
+    driver: "Řidič", boltFleet: "Bolt Fleet · Řidič",
+    addModal: "Přidat výdaj", expName: "NÁZEV VÝDAJE",
+    expAmount: "ČÁSTKA (Kč)", expDate: "DATUM",
+    saveModal: "✓ Uložit", cancelModal: "Zrušit",
+    parking: "Parkování, mytí...", settingsSaved: "✓ Nastavení uloženo",
+    expAdded: "✓ Výdaj přidán", fillAll: "Vyplňte všechna pole",
+    allFleets: "BOLT · VŠECHNY FLOTILY", myTrips: "BOLT · MOJE JÍZDY",
+    byWeeks: "Po týdnech", compareMonth: "Srovnání s minulým měsícem",
+    week: "Týden", cashNote: "⚠️ Hotovost není zahrnuta · pouze bezhotovost"
+  },
+  ru: {
+    today: "Сегодня", month: "Месяц", history: "История", profile: "Профиль",
+    goodMorning: "Доброе утро", goodDay: "Добрый день", goodEvening: "Добрый вечер",
+    syncBtn: "Синхронизировать", syncing: "Загрузка...", updated: "Обновлено",
+    todayEarnings: "ЗАРАБОТОК СЕГОДНЯ · BOLT", monthProfit: "ЧИСТАЯ ПРИБЫЛЬ",
+    trips: "поездок", km: "км", revenue: "выручка",
+    dailyGoal: "Дневная цель", toGoal: "До цели",
+    goalDone: "✅ Цель выполнена!", goalWait: "⏳ До цели",
+    boltRevenue: "BOLT ВЫРУЧКА", tripsCount: "ПОЕЗДОК",
+    mileage: "ПРОБЕГ", fuel: "ТОПЛИВО",
+    todayExpenses: "РАСХОДЫ СЕГОДНЯ", carAmort: "Амортизация авто",
+    addExpense: "+ Добавить расход", dataFrom: "Данные из Bolt",
+    monthCoverage: "ПОКРЫТИЕ МЕСЯЧНЫХ РАСХОДОВ", totalExpenses: "Всего расходов",
+    covered: "✅ Покрыто!", stillNeed: "Ещё",
+    income: "ВЫРУЧКА", varCosts: "ПЕРЕМЕННЫЕ РАСХОДЫ", margin: "МАРЖА", net: "ЧИСТЫЙ",
+    fixedCosts: "ФИКСИРОВАННЫЕ РАСХОДЫ МЕСЯЦА", carCredit: "Кредит за авто",
+    insurance: "Страховка авто", social: "Социалка + предприниматель",
+    platform: "Платформа Bolt/Uber", other: "Прочие расходы", total: "Всего",
+    myExpenses: "МОИ ДОПОЛНИТЕЛЬНЫЕ РАСХОДЫ", noExpenses: "Нет дополнительных расходов",
+    workDays: "РАБОЧИЕ ДНИ · ИЗ BOLT", noData: "Синхронизируй с Bolt для просмотра поездок",
+    myExpensesList: "МОИ РАСХОДЫ", noRecords: "Нет записей",
+    fuelSection: "⛽ АВТО И ТОПЛИВО", fuelPrice: "Цена топлива Kč/л",
+    fuelCons: "Расход л/100км", amort: "Амортизация Kč/км", goalSetting: "Дневная цель Kč",
+    monthlySection: "💳 ЕЖЕМЕСЯЧНЫЕ РАСХОДЫ", connectSection: "🔗 ПОДКЛЮЧЕНИЕ",
+    dataSection: "📦 ДАННЫЕ", langSection: "🌐 ЯЗЫК",
+    boltApi: "Bolt Fleet API", uberApi: "Uber API",
+    boltActive: "✅ Активно", uberSoon: "Скоро",
+    download: "Скачать резервную копию", restore: "Восстановить данные",
+    saveBtn: "✓ Сохранить настройки", logoutBtn: "Выйти из аккаунта",
+    driver: "Водитель", boltFleet: "Bolt Fleet · Водитель",
+    addModal: "Добавить расход", expName: "НАЗВАНИЕ РАСХОДА",
+    expAmount: "СУММА (Kč)", expDate: "ДАТА",
+    saveModal: "✓ Сохранить", cancelModal: "Отмена",
+    parking: "Парковка, мойка...", settingsSaved: "✓ Настройки сохранены",
+    expAdded: "✓ Расход добавлен", fillAll: "Заполни все поля",
+    allFleets: "BOLT · ВСЕ ФЛОТИЛИИ", myTrips: "BOLT · МОИ ПОЕЗДКИ",
+    byWeeks: "По неделям", compareMonth: "Сравнение с прошлым месяцем",
+    week: "Неделя", cashNote: "⚠️ Наличные не включены · только безналичные"
+  }
+};
+
+function t(key) {
+  const lang = state.lang || "uk";
+  return (LANG[lang] && LANG[lang][key]) ? LANG[lang][key] : (LANG.uk[key] || key);
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return t("goodMorning");
+  if (h < 18) return t("goodDay");
+  return t("goodEvening");
+}
+
+let state = {
+  user: null,
+  lang: "uk",
+  companyId: null,
+  boltData: { orders: [], drivers: [] },
+  expenses: [],
+  settings: {
+    fuelPrice: 41, fuelCons: 9, amort: 1.5,
+    monthlyCredit: 0, monthlyInsurance: 2000,
+    monthlySocial: 5000, monthlyPlatform: 0, monthlyOther: 1000,
+    dailyGoal: 1800,
+  },
+  lastSync: null,
+};
+
+// Використовуємо локальний час Праги (UTC+2 зима, UTC+2 літо)
+function toPragueDate(ts) {
+  // Прага = UTC+2 (влітку CEST)
+  const d = new Date((ts + 2 * 3600) * 1000);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function toLocalDate(ts) { return toPragueDate(ts); }
+function today() { return toPragueDate(Math.floor(Date.now() / 1000)); }
+function todayMonth() { return toPragueDate(Math.floor(Date.now() / 1000)).slice(0, 7); }
+function fmt(n) { return Math.round(n).toLocaleString("cs-CZ"); }
+function fmtD(n) { return (n >= 0 ? "+" : "") + fmt(n); }
+
+function saveState() { localStorage.setItem("taxi-state", JSON.stringify(state)); }
+function loadState() {
+  const s = localStorage.getItem("taxi-state");
+  if (s) { try { state = { ...state, ...JSON.parse(s) }; } catch(e) {} }
+}
+
+function doLogin() {
+  const name = document.getElementById("login-name").value.trim();
+  const pass = document.getElementById("login-pass").value;
+  const err = document.getElementById("login-error");
+  if (USERS[name] && USERS[name] === pass) {
+    state.user = name;
+    saveState();
+    showApp();
+  } else {
+    err.style.display = "block";
+    err.textContent = "Невірне ім'я або пароль";
+  }
+}
+
+function updateNavLabels() {
+  const el = id => document.getElementById(id);
+  if(el("nl-today")) el("nl-today").textContent = t("today");
+  if(el("nl-month")) el("nl-month").textContent = t("month");
+  if(el("nl-history")) el("nl-history").textContent = t("history");
+  if(el("nl-profile")) el("nl-profile").textContent = t("profile");
+  if(el("sync-lbl") && el("sync-lbl").textContent !== t("syncing")) {
+    el("sync-lbl").textContent = state.lastSync ? `${t("updated")} ${state.lastSync}` : t("syncBtn");
+  }
+  el("h-logo").textContent = isAdmin() ? t("allFleets") : t("myTrips");
+}
+
+function showApp() {
+  document.getElementById("login-screen").style.display = "none";
+  const app = document.getElementById("main-app");
+  app.style.display = "flex";
+  updateNavLabels();
+  document.getElementById("h-name").textContent = state.user;
+  renderAll();
+}
+
+function logout() {
+  state.user = null;
+  saveState();
+  document.getElementById("main-app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("login-name").value = "";
+  document.getElementById("login-pass").value = "";
+}
+
+// SYNC WITH BOLT
+async function syncBolt() {
+  const btn = document.getElementById("sync-btn");
+  const dot = document.getElementById("sync-dot");
+  const lbl = document.getElementById("sync-lbl");
+  btn.classList.add("loading");
+  dot.classList.add("syncing");
+  lbl.textContent = "Завантаження...";
+
+  try {
+    // Get orders — last 30 days, Worker handles both companies automatically
+    const now = Math.floor(Date.now() / 1000);
+    const start30 = now - 30 * 86400;
+    const ordResp = await fetch(`${WORKER}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start_ts: start30,
+        end_ts: now,
+      }),
+    }).then(r => r.json());
+
+    if (ordResp.orders && ordResp.orders.length > 0) {
+      if (isAdmin()) {
+        // Admin бачить всі поїздки
+        state.boltData.orders = ordResp.orders;
+      } else {
+        // Roman Yarema — фільтруємо по його точному driver_uuid
+        const ROMAN_UUID = "ead4f6a3-8c17-42a1-9fb3-277f6f892ee8";
+        state.boltData.orders = ordResp.orders.filter(o =>
+          o.driver_uuid === ROMAN_UUID
+        );
+      }
+    }
+
+    // Get drivers
+    const drvResp = await fetch(`${WORKER}/drivers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }).then(r => r.json());
+
+    if (drvResp.drivers) {
+      state.boltData.drivers = drvResp.drivers;
+    }
+
+    state.lastSync = new Date().toLocaleTimeString("uk", { hour: "2-digit", minute: "2-digit" });
+    saveState();
+    showToast("✅ Bolt дані оновлено!");
+    renderAll();
+
+  } catch (err) {
+    showToast("❌ Помилка синхронізації");
+    console.error(err);
+  } finally {
+    btn.classList.remove("loading");
+    dot.classList.remove("syncing");
+    lbl.textContent = state.lastSync ? `Оновлено ${state.lastSync}` : "Синхронізувати";
+  }
+}
+
+// CALCULATIONS
+function calcToday() {
+  const todayStr = today();
+  const orders = state.boltData.orders.filter(o => {
+    if (o.order_status !== "finished") return false;
+    const ts = o.order_finished_timestamp || o.order_created_timestamp;
+    if (!ts) return false;
+    const d = toLocalDate(ts);
+    return d === todayStr;
+  });
+  const grossEarnings = orders.reduce((s, o) => s + (o.order_price?.net_earnings || 0), 0);
+  const commission = orders.reduce((s, o) => s + (o.order_price?.commission || 0), 0);
+  const km = orders.reduce((s, o) => s + (o.ride_distance || 0), 0) / 1000;
+  const fuel = (km / 100) * state.settings.fuelCons * state.settings.fuelPrice;
+  const amort = km * state.settings.amort;
+  const todayExpenses = state.expenses.filter(e => e.date === todayStr).reduce((s, e) => s + e.amount, 0);
+  const net = grossEarnings - fuel - amort - todayExpenses;
+  return { grossEarnings, commission, km, fuel, amort, todayExpenses, net, trips: orders.length };
+}
+
+function calcMonth() {
+  const month = todayMonth();
+  const monthExpenses = state.expenses.filter(e => e.date?.startsWith(month)).reduce((s, e) => s + e.amount, 0);
+  const fixed = state.settings.monthlyCredit + state.settings.monthlyInsurance +
+    state.settings.monthlySocial + state.settings.monthlyPlatform + state.settings.monthlyOther;
+
+  const allOrders = state.boltData.orders.filter(o => {
+    if (o.order_status !== "finished") return false;
+    const ts = o.order_finished_timestamp || o.order_created_timestamp;
+    if (!ts) return false;
+    const d = toLocalDate(ts);
+    return d.slice(0, 7) === month;
+  });
+
+  const grossEarnings = allOrders.reduce((s, o) => s + (o.order_price?.net_earnings || 0), 0);
+  const km = allOrders.reduce((s, o) => s + (o.ride_distance || 0), 0) / 1000;
+  const fuel = (km / 100) * state.settings.fuelCons * state.settings.fuelPrice;
+  const amort = km * state.settings.amort;
+  const varCosts = fuel + amort + monthExpenses;
+  const margin = grossEarnings - varCosts;
+  const net = margin - fixed;
+  const pct = fixed > 0 ? Math.min(100, (margin / fixed) * 100) : 0;
+  return { grossEarnings, km, fuel, amort, varCosts, margin, fixed, net, pct, monthExpenses, trips: allOrders.length };
+}
+
+// RENDER TODAY
+function renderToday() {
+  const td = calcToday();
+  const goalPct = state.settings.dailyGoal > 0 ? Math.min(100, (td.net / state.settings.dailyGoal) * 100) : 0;
+  const goalLeft = Math.max(0, state.settings.dailyGoal - td.net);
+  const todayExp = state.expenses.filter(e => e.date === today());
+
+  document.getElementById("tab-today").innerHTML = `
+    <div class="hero">
+      <div class="hero-lbl">${t("todayEarnings")}</div>
+      <div class="hero-num">${fmtD(td.net)} Kč</div>
+      <div class="hero-sub">${td.trips} ${t("trips")} · ${fmt(td.km)} ${t("km")} · ${t("revenue")} ${fmt(td.grossEarnings)} Kč</div>
+      <div class="prog"><div class="prog-fill" style="width:${goalPct.toFixed(0)}%;"></div></div>
+      <div class="prog-labels">
+        <span style="color:#666;">${t("dailyGoal")}: ${fmt(state.settings.dailyGoal)} Kč</span>
+        <span style="color:${goalPct>=100?"#4CAF50":"#FFC400"};font-weight:700;">${Math.round(goalPct)}%</span>
+      </div>
+      <div class="${goalPct>=100?"be-badge":"be-badge wait"}">${goalPct>=100?t("goalDone"):t("goalWait")+": "+fmt(goalLeft)+" Kč"}</div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric metric-blue"><div class="m-lbl">${t("boltRevenue")}</div><div class="m-val" style="color:#4FC3F7;">+${fmt(td.grossEarnings)}</div><div class="m-sub">Kč</div></div>
+      <div class="metric metric-purple"><div class="m-lbl">${t("tripsCount")}</div><div class="m-val" style="color:#CE93D8;">${td.trips}</div><div class="m-sub">Bolt API</div></div>
+      <div class="metric metric-default"><div class="m-lbl">${t("mileage")}</div><div class="m-val" style="color:#fff;">${fmt(td.km)}</div><div class="m-sub">${t("km")}</div></div>
+      <div class="metric metric-red"><div class="m-lbl">${t("fuel")}</div><div class="m-val" style="color:#FF6B6B;">-${fmt(td.fuel)}</div><div class="m-sub">Kč</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("todayExpenses")}</div>
+      <div class="row-item"><span class="ri-l">${t("carAmort")}</span><span class="ri-r" style="color:#f44336;">-${fmt(td.amort)} Kč</span></div>
+      ${todayExp.map(e => `<div class="row-item"><span class="ri-l">${e.name}</span><span class="ri-r" style="color:#f44336;">-${fmt(e.amount)} Kč</span></div>`).join("")}
+      <div class="add-btn" onclick="openModal()">
+        <span class="add-lbl">${t("addExpense")}</span>
+        <span class="add-icon">+</span>
+      </div>
+    </div>
+
+    ${state.lastSync ? `<div class="worker-url">${t("dataFrom")} · ${state.lastSync}</div>` : `<div class="worker-url">${t("noData")}</div>`}
+  `;
+}
+
+// RENDER MONTH
+function renderMonth() {
+  const m = calcMonth();
+  const s = state.settings;
+  document.getElementById("tab-month").innerHTML = `
+    <div class="hero">
+      <div class="hero-lbl">${t("monthProfit")} · ${todayMonth()}</div>
+      <div class="hero-num">${fmtD(m.net)} Kč</div>
+      <div class="hero-sub">${fmt(m.km)} ${t("km")} · ${m.trips} ${t("trips")} · ${t("revenue")} ${fmt(m.grossEarnings)} Kč</div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("monthCoverage")}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:11px;color:#666;">${t("totalExpenses")}: ${fmt(m.fixed)} Kč</span>
+        <span style="font-size:11px;color:${m.pct>=100?"#4CAF50":"#FFC400"};font-weight:700;">${Math.round(m.pct)}%</span>
+      </div>
+      <div class="prog" style="margin-top:0;"><div class="prog-fill" style="width:${m.pct.toFixed(0)}%;background:${m.pct>=100?"#4CAF50":"linear-gradient(90deg,#FFC400,#FF9500)"};"></div></div>
+      <div class="prog-labels" style="margin-top:4px;">
+        <span style="color:#444;">0</span>
+        <span style="color:${m.pct>=100?"#4CAF50":"#FFC400"};font-weight:700;">${m.pct>=100?t("covered"):t("stillNeed")+" "+fmt(m.fixed-m.margin)+" Kč"}</span>
+        <span style="color:#444;">${fmt(m.fixed)}</span>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric metric-blue"><div class="m-lbl">${t("income")}</div><div class="m-val" style="color:#4FC3F7;">+${fmt(m.grossEarnings)}</div><div class="m-sub">Kč</div></div>
+      <div class="metric metric-red"><div class="m-lbl">${t("varCosts")}</div><div class="m-val" style="color:#FF6B6B;">-${fmt(m.varCosts)}</div><div class="m-sub">Kč</div></div>
+      <div class="metric metric-purple"><div class="m-lbl">${t("margin")}</div><div class="m-val" style="color:#CE93D8;">${fmt(m.margin)}</div><div class="m-sub">Kč</div></div>
+      <div class="metric metric-yellow"><div class="m-lbl">${t("net")}</div><div class="m-val" style="color:${m.net>=0?"#FFC400":"#FF453A"};">${fmtD(m.net)}</div><div class="m-sub">Kč</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("fixedCosts")}</div>
+      ${s.monthlyCredit>0?`<div class="row-item"><span class="ri-l">${t("carCredit")}</span><span class="ri-r" style="color:#f44336;">-${fmt(s.monthlyCredit)} Kč</span></div>`:""}
+      ${s.monthlyInsurance>0?`<div class="row-item"><span class="ri-l">${t("insurance")}</span><span class="ri-r" style="color:#f44336;">-${fmt(s.monthlyInsurance)} Kč</span></div>`:""}
+      ${s.monthlySocial>0?`<div class="row-item"><span class="ri-l">${t("social")}</span><span class="ri-r" style="color:#f44336;">-${fmt(s.monthlySocial)} Kč</span></div>`:""}
+      ${s.monthlyPlatform>0?`<div class="row-item"><span class="ri-l">${t("platform")}</span><span class="ri-r" style="color:#f44336;">-${fmt(s.monthlyPlatform)} Kč</span></div>`:""}
+      ${s.monthlyOther>0?`<div class="row-item"><span class="ri-l">${t("other")}</span><span class="ri-r" style="color:#f44336;">-${fmt(s.monthlyOther)} Kč</span></div>`:""}
+      <div style="display:flex;justify-content:space-between;padding-top:8px;">
+        <span style="font-size:13px;font-weight:700;color:#aaa;">${t("total")}</span>
+        <span style="font-size:13px;font-weight:700;color:#f44336;">-${fmt(m.fixed)} Kč</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("myExpenses")}</div>
+      ${state.expenses.filter(e=>e.date?.startsWith(todayMonth())).map(e=>`
+        <div class="row-item">
+          <span class="ri-l">${e.name} <span style="font-size:10px;color:#333;">${e.date}</span></span>
+          <span class="ri-r" style="color:#f44336;">-${fmt(e.amount)} Kč</span>
+        </div>`).join("") || `<div style="font-size:12px;color:#333;padding:4px 0;">${t("noExpenses")}</div>`}
+      <div class="add-btn" onclick="openModal()">
+        <span class="add-lbl">${t("addExpense")}</span>
+        <span class="add-icon">+</span>
+      </div>
+    </div>
+  `;
+}
+
+// RENDER HISTORY
+function renderHistory() {
+  const orders = state.boltData.orders.filter(o => o.order_status === "finished");
+  const byDay = {};
+  orders.forEach(o => {
+    const ts = o.order_finished_timestamp || o.order_created_timestamp;
+    if (!ts) return;
+    const d = toLocalDate(ts);
+    if (!byDay[d]) byDay[d] = { earn: 0, km: 0, trips: 0 };
+    byDay[d].earn += (o.order_price?.net_earnings || 0);
+    byDay[d].km += (o.ride_distance || 0) / 1000;
+    byDay[d].trips++;
+  });
+
+  const days = Object.keys(byDay).sort().reverse();
+  const maxEarn = Math.max(...days.map(d => byDay[d].earn), 1);
+
+  const daysHTML = days.length === 0
+    ? `<div style="text-align:center;padding:2rem;color:#333;font-size:13px;">${t("noData")}</div>`
+    : days.map(d => {
+        const day = byDay[d];
+        const s = state.settings;
+        const fuel = (day.km/100)*s.fuelCons*s.fuelPrice;
+        const amort = day.km*s.amort;
+        const exp = state.expenses.filter(e=>e.date===d).reduce((s,e)=>s+e.amount,0);
+        const net = day.earn - fuel - amort - exp;
+        const barW = Math.min(100, (day.earn/maxEarn)*100);
+        return `<div class="day-row">
+          <div>
+            <div class="day-date">${d.slice(5).replace("-",".")}</div>
+            <div class="day-sub">${day.trips} ${t("trips")} · ${fmt(day.km)} ${t("km")}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="mini-bar"><div class="mini-fill" style="width:${barW}%;background:${net>=0?"#FFC400":"#f44336"};"></div></div>
+            <div class="day-num" style="color:${net>=0?"#FFC400":"#f44336"}">${fmtD(net)}</div>
+          </div>
+        </div>`;
+      }).join("");
+
+  const allExp = state.expenses.sort((a,b)=>b.date?.localeCompare(a.date));
+
+  document.getElementById("tab-history").innerHTML = `
+    <div class="card">
+      <div class="card-ttl">${t("workDays")}</div>
+      ${daysHTML}
+    </div>
+    <div class="card">
+      <div class="card-ttl">${t("myExpensesList")}</div>
+      ${allExp.length === 0
+        ? `<div style="font-size:12px;color:#333;padding:4px 0;">${t("noRecords")}</div>`
+        : allExp.map(e=>`
+          <div class="day-row">
+            <div>
+              <div class="day-date">${e.name}</div>
+              <div class="day-sub">${e.date}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="day-num" style="color:#f44336;">-${fmt(e.amount)}</div>
+              <button onclick="deleteExpense('${e.id}')" style="background:transparent;border:none;color:#333;font-size:16px;cursor:pointer;">✕</button>
+            </div>
+          </div>`).join("")}
+      <div class="add-btn" onclick="openModal()">
+        <span class="add-lbl">${t("addExpense")}</span>
+        <span class="add-icon">+</span>
+      </div>
+    </div>
+  `;
+}
+
+// RENDER SETTINGS
+function renderSettings() {
+  const s = state.settings;
+  const langs = [{code:"uk",flag:"🇺🇦",name:"Українська"},{code:"cs",flag:"🇨🇿",name:"Čeština"},{code:"ru",flag:"🇷🇺",name:"Русский"}];
+  document.getElementById("tab-settings").innerHTML = `
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,196,0,.1);border:2px solid rgba(255,196,0,.4);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#FFC400;">${(state.user||"?").split(" ").map(w=>w[0]).join("").slice(0,2)}</div>
+      <div><div style="font-size:15px;font-weight:700;color:#fff;">${state.user}</div><div style="font-size:11px;color:rgba(255,255,255,.3);">${t("boltFleet")}</div></div>
+    </div>
+
+    <div class="settings-section">${t("langSection")}</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      ${langs.map(l=>`
+        <button onclick="setLang('${l.code}')" style="flex:1;padding:10px 6px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;transition:all .2s;
+          background:${state.lang===l.code?"rgba(255,196,0,.15)":"rgba(255,255,255,.04)"};
+          border:1px solid ${state.lang===l.code?"rgba(255,196,0,.4)":"rgba(255,255,255,.08)"};
+          color:${state.lang===l.code?"#FFC400":"rgba(255,255,255,.5)"};">
+          <div style="font-size:20px;margin-bottom:3px;">${l.flag}</div>
+          ${l.name}
+        </button>`).join("")}
+    </div>
+
+    <div class="settings-section">${t("fuelSection")}</div>
+    <div class="settings-group">
+      <div class="st-row"><span class="st-lbl">${t("fuelPrice")}</span><input class="st-inp" id="st-fuelPrice" type="number" inputmode="decimal" value="${s.fuelPrice}"></div>
+      <div class="st-row"><span class="st-lbl">${t("fuelCons")}</span><input class="st-inp" id="st-fuelCons" type="number" inputmode="decimal" value="${s.fuelCons}"></div>
+      <div class="st-row"><span class="st-lbl">${t("amort")}</span><input class="st-inp" id="st-amort" type="number" inputmode="decimal" value="${s.amort}" step="0.1"></div>
+      <div class="st-row"><span class="st-lbl">${t("goalSetting")}</span><input class="st-inp" id="st-goal" type="number" inputmode="numeric" value="${s.dailyGoal}"></div>
+    </div>
+
+    <div class="settings-section">${t("monthlySection")}</div>
+    <div class="settings-group">
+      <div class="st-row"><span class="st-lbl">${t("carCredit")}</span><input class="st-inp" id="st-credit" type="number" inputmode="numeric" value="${s.monthlyCredit}"></div>
+      <div class="st-row"><span class="st-lbl">${t("insurance")}</span><input class="st-inp" id="st-insurance" type="number" inputmode="numeric" value="${s.monthlyInsurance}"></div>
+      <div class="st-row"><span class="st-lbl">${t("social")}</span><input class="st-inp" id="st-social" type="number" inputmode="numeric" value="${s.monthlySocial}"></div>
+      <div class="st-row"><span class="st-lbl">${t("platform")}</span><input class="st-inp" id="st-platform" type="number" inputmode="numeric" value="${s.monthlyPlatform}"></div>
+      <div class="st-row"><span class="st-lbl">${t("other")}</span><input class="st-inp" id="st-other" type="number" inputmode="numeric" value="${s.monthlyOther}"></div>
+    </div>
+
+    <div class="settings-section">${t("connectSection")}</div>
+    <div class="settings-group">
+      <div class="menu-item"><div class="mi-icon">🔗</div><div class="mi-text">${t("boltApi")}</div><span class="status-badge sb-on">${t("boltActive")}</span></div>
+      <div class="menu-item"><div class="mi-icon">🔗</div><div class="mi-text">${t("uberApi")}</div><span class="status-badge sb-off">${t("uberSoon")}</span></div>
+    </div>
+
+    <div class="settings-section">${t("dataSection")}</div>
+    <div class="settings-group">
+      <div class="menu-item" onclick="exportData()"><div class="mi-icon">⬇️</div><div class="mi-text">${t("download")}</div><div class="mi-arr">›</div></div>
+      <div class="menu-item" onclick="document.getElementById('imp-file').click()"><div class="mi-icon">⬆️</div><div class="mi-text">${t("restore")}</div><div class="mi-arr">›</div></div>
+    </div>
+    <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
+
+    <button class="save-settings-btn" onclick="saveSettings()">${t("saveBtn")}</button>
+    <button class="logout-btn" onclick="logout()">${t("logoutBtn")}</button>
+    <div style="height:8px;"></div>
+  `;
+}
+
+function setLang(code) {
+  state.lang = code;
+  saveState();
+  updateNavLabels();
+  renderAll();
+}
+
+function saveSettings() {
+  state.settings = {
+    fuelPrice: parseFloat(document.getElementById("st-fuelPrice")?.value) || 41,
+    fuelCons: parseFloat(document.getElementById("st-fuelCons")?.value) || 9,
+    amort: parseFloat(document.getElementById("st-amort")?.value) || 1.5,
+    dailyGoal: parseInt(document.getElementById("st-goal")?.value) || 1800,
+    monthlyCredit: parseInt(document.getElementById("st-credit")?.value) || 0,
+    monthlyInsurance: parseInt(document.getElementById("st-insurance")?.value) || 2000,
+    monthlySocial: parseInt(document.getElementById("st-social")?.value) || 5000,
+    monthlyPlatform: parseInt(document.getElementById("st-platform")?.value) || 0,
+    monthlyOther: parseInt(document.getElementById("st-other")?.value) || 1000,
+  };
+  saveState();
+  showToast(t("settingsSaved"));
+  renderAll();
+}
+
+// EXPENSES
+function openModal() {
+  document.getElementById("exp-date").value = today();
+  document.getElementById("exp-name").value = "";
+  document.getElementById("exp-amount").value = "";
+  document.getElementById("exp-modal").style.display = "flex";
+}
+function closeModal(e) {
+  if (e.target.id === "exp-modal") document.getElementById("exp-modal").style.display = "none";
+}
+function saveExpense() {
+  const name = document.getElementById("exp-name").value.trim();
+  const amount = parseInt(document.getElementById("exp-amount").value) || 0;
+  const date = document.getElementById("exp-date").value;
+  if (!name || !amount) { showToast(t("fillAll")); return; }
+  state.expenses.push({ id: Date.now().toString(), name, amount, date });
+  saveState();
+  document.getElementById("exp-modal").style.display = "none";
+  showToast(t("expAdded"));
+  renderAll();
+}
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  saveState();
+  renderAll();
+}
+
+// TABS
+let currentTab = "today";
+function showTab(name) {
+  document.querySelectorAll(".tab-pane").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  document.getElementById("nav-" + name).classList.add("active");
+  currentTab = name;
+  document.getElementById("content").scrollTop = 0;
+  if (name === "today") renderToday();
+  else if (name === "month") renderMonth();
+  else if (name === "history") renderHistory();
+  else if (name === "settings") renderSettings();
+}
+
+function renderAll() {
+  if (currentTab === "today") renderToday();
+  else if (currentTab === "month") renderMonth();
+  else if (currentTab === "history") renderHistory();
+  else if (currentTab === "settings") renderSettings();
+}
+
+// EXPORT/IMPORT
+function exportData() {
+  const data = { state };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `taxi-backup-${today()}.json`;
+  a.click();
+}
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.state) { state = { ...state, ...data.state }; saveState(); renderAll(); showToast("✓ Дані відновлено"); }
+    } catch (err) { showToast("Помилка імпорту"); }
+  };
+  r.readAsText(file);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+// INIT
+loadState();
+if (state.user) {
+  showApp();
+} else {
+  document.getElementById("login-screen").style.display = "flex";
+}
+document.getElementById("login-pass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+</script>
+</body>
+</html>
