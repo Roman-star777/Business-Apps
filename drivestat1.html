@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="DriveStat">
+<meta name="theme-color" content="#0D0D18">
+<title>DriveStat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#0D0D18;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;color:#fff;overflow:hidden;}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+/* ── LOGIN ── */
+#login-screen{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 24px;background:linear-gradient(170deg,#0D0D18 0%,#10101F 100%);}
+.ln-top{text-align:center;margin-bottom:36px;}
+.ln-icon{font-size:56px;margin-bottom:14px;display:block;}
+.ln-brand{font-size:32px;font-weight:800;color:#fff;letter-spacing:-1px;}
+.ln-brand span{color:#FFC400;}
+.ln-slogan{font-size:13px;color:rgba(255,255,255,.35);margin-top:6px;letter-spacing:.02em;}
+
+.role-row{display:flex;gap:10px;width:100%;max-width:320px;margin-bottom:24px;}
+.role-btn{flex:1;padding:13px 8px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;transition:all .15s;}
+.role-btn.sel{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.4);color:#FFC400;}
+.role-icon{font-size:22px;display:block;margin-bottom:4px;}
+
+.ln-form{width:100%;max-width:320px;}
+.ln-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.14em;margin-bottom:6px;display:block;}
+.ln-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;padding:15px 16px;font-size:16px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none;outline:none;}
+.ln-inp:focus{border-color:#FFC400;background:rgba(255,196,0,.05);}
+.ln-btn{width:100%;padding:16px;background:rgba(255,196,0,.12);border:1.5px solid rgba(255,196,0,.4);border-radius:14px;color:#FFC400;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:2px;letter-spacing:.02em;}
+.ln-btn:active{transform:scale(.98);}
+.ln-err{font-size:12px;color:#FF453A;text-align:center;margin-top:8px;display:none;}
+.ln-ver{font-size:10px;color:rgba(255,255,255,.12);margin-top:28px;text-align:center;}
+
+/* ── MAIN APP ── */
+#main-app{display:none;height:100%;flex-direction:column;background:#0D0D18;}
+header{background:rgba(13,13,24,.95);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);}
+.h-brand{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:.22em;font-weight:700;}
+.h-name{font-size:18px;font-weight:700;color:#fff;margin-top:2px;letter-spacing:-.3px;}
+.h-sync{background:rgba(255,196,0,.08);border:1px solid rgba(255,196,0,.22);border-radius:20px;color:#FFC400;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.h-sync.loading{opacity:.4;pointer-events:none;}
+.sdot{width:6px;height:6px;border-radius:50%;background:#30D158;flex-shrink:0;}
+.sdot.spin{background:#FFC400;animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px 96px;}
+.tab-pane{display:none;padding-top:14px;}
+.tab-pane.active{display:block;}
+
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(13,13,24,.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid rgba(255,255,255,.07);display:flex;padding:8px 0 max(12px,env(safe-area-inset-bottom));z-index:50;}
+.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;}
+.nb-icon{font-size:22px;line-height:1;}
+.nb-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:500;letter-spacing:.02em;}
+.nb.active .nb-lbl{color:#FFC400;font-weight:700;}
+.nb-dot{width:4px;height:4px;border-radius:2px;background:#FFC400;display:none;}
+.nb.active .nb-dot{display:block;}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,rgba(10,132,255,.13) 0%,rgba(94,92,230,.13) 100%);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:18px 18px 16px;margin-bottom:10px;}
+.hero-lbl{font-size:10px;color:rgba(255,255,255,.38);font-weight:700;margin-bottom:6px;letter-spacing:.1em;}
+.hero-num{font-size:40px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1.5px;}
+.hero-kc{font-size:20px;font-weight:700;color:rgba(255,255,255,.5);}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:6px;}
+.prog{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin:14px 0 5px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#0A84FF,#5E5CE6);transition:width .6s;}
+.prog-row{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:10px;padding:5px 11px;font-size:11px;font-weight:700;margin-top:10px;}
+.badge-green{background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);color:#30D158;}
+.badge-yellow{background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.2);color:#FFC400;}
+
+/* ── METRIC TILES ── */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.tile{border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,.06);}
+.tile-blue{background:linear-gradient(135deg,rgba(10,132,255,.18),rgba(10,132,255,.06));}
+.tile-purple{background:linear-gradient(135deg,rgba(94,92,230,.18),rgba(94,92,230,.06));}
+.tile-red{background:linear-gradient(135deg,rgba(255,69,58,.16),rgba(255,69,58,.05));}
+.tile-dark{background:rgba(255,255,255,.04);}
+.tile-green{background:linear-gradient(135deg,rgba(48,209,88,.16),rgba(48,209,88,.05));}
+.tile-yellow{background:linear-gradient(135deg,rgba(255,196,0,.16),rgba(255,196,0,.05));}
+.t-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:4px;letter-spacing:.07em;}
+.t-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+.t-sub{font-size:10px;color:rgba(255,255,255,.2);margin-top:3px;}
+
+/* ── CARDS ── */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.card-ttl{font-size:10px;color:rgba(255,255,255,.28);font-weight:700;letter-spacing:.13em;margin-bottom:12px;}
+.row-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.row-item:last-child{border-bottom:none;}
+.ri-l{font-size:14px;color:rgba(255,255,255,.55);}
+.ri-r{font-size:14px;font-weight:700;}
+.add-btn{display:flex;justify-content:space-between;align-items:center;padding:9px 0 2px;cursor:pointer;}
+.add-lbl{font-size:14px;color:#FFC400;font-weight:700;}
+.add-ico{font-size:22px;color:#FFC400;line-height:1;}
+
+/* ── HISTORY ── */
+.day-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.day-row:last-child{border-bottom:none;}
+.day-date{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.day-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+.day-num{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.mbar{width:36px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-right:8px;}
+.mbar-fill{height:100%;border-radius:2px;}
+
+/* ── WEEKLY REPORT ── */
+.report-card{background:linear-gradient(135deg,rgba(255,196,0,.1),rgba(255,155,0,.06));border:1.5px solid rgba(255,196,0,.25);border-radius:20px;padding:18px;margin-bottom:10px;}
+.rep-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.rep-title{font-size:12px;color:rgba(255,196,0,.7);font-weight:700;letter-spacing:.1em;}
+.rep-week{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+.rep-num{font-size:36px;font-weight:800;color:#FFC400;letter-spacing:-1px;line-height:1;}
+.rep-kc{font-size:16px;color:rgba(255,196,0,.5);}
+.rep-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.rep-cell{text-align:center;}
+.rep-cell-lbl{font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.08em;margin-bottom:3px;}
+.rep-cell-val{font-size:15px;font-weight:800;color:#fff;}
+.rep-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,196,0,.08);}
+.rep-row:last-child{border-bottom:none;}
+.rep-rl{font-size:12px;color:rgba(255,255,255,.4);}
+.rep-rr{font-size:12px;font-weight:700;}
+.rep-share{width:100%;padding:13px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.3);border-radius:12px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px;letter-spacing:.02em;}
+.rep-share:active{transform:scale(.98);}
+
+/* ── SETTINGS ── */
+.st-section{font-size:10px;color:rgba(255,255,255,.22);font-weight:700;letter-spacing:.16em;margin:16px 0 8px;}
+.st-section:first-child{margin-top:0;}
+.st-group{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:10px;}
+.st-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.st-row:last-child{border-bottom:none;}
+.st-lbl{font-size:14px;color:rgba(255,255,255,.7);}
+.st-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#FFC400;padding:7px 11px;font-size:14px;font-family:inherit;width:110px;text-align:right;-webkit-appearance:none;outline:none;}
+.st-inp:focus{border-color:#FFC400;}
+.mi{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;}
+.mi:last-child{border-bottom:none;}
+.mi-ico{font-size:17px;width:22px;text-align:center;}
+.mi-txt{font-size:14px;color:rgba(255,255,255,.7);flex:1;}
+.mi-arr{font-size:14px;color:rgba(255,255,255,.2);}
+.sbadge{font-size:9px;padding:3px 9px;border-radius:6px;font-weight:700;}
+.sb-on{background:rgba(48,209,88,.12);color:#30D158;border:1px solid rgba(48,209,88,.25);}
+.sb-off{background:rgba(255,69,58,.1);color:#FF453A;border:1px solid rgba(255,69,58,.2);}
+.btn-save{width:100%;padding:15px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;}
+.btn-logout{width:100%;padding:13px;background:rgba(255,69,58,.07);border:1px solid rgba(255,69,58,.2);border-radius:12px;color:#FF453A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:#12121E;border:1px solid rgba(255,255,255,.1);border-radius:24px 24px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));width:100%;max-width:430px;}
+.modal-ttl{font-size:18px;font-weight:700;color:#fff;margin-bottom:18px;letter-spacing:-.3px;}
+.modal-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.13em;display:block;margin-bottom:6px;}
+.modal-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#FFC400;padding:14px 15px;font-size:16px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none;outline:none;}
+.modal-inp:focus{border-color:#FFC400;}
+.modal-row{display:flex;gap:8px;}
+.modal-save{flex:1;padding:15px;background:rgba(255,196,0,.12);border:1px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.modal-cancel{padding:15px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:rgba(255,255,255,.4);font-size:15px;cursor:pointer;font-family:inherit;}
+
+/* ── DRIVER CARDS (Admin) ── */
+.drv-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:13px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.drv-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.drv-name{font-size:14px;font-weight:700;color:#fff;}
+.drv-status{font-size:11px;font-weight:600;}
+.drv-earn{font-size:15px;font-weight:800;color:#FFC400;margin-left:auto;}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(255,196,0,.13);border:1px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;padding:11px 20px;font-size:13px;font-family:inherit;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-weight:700;backdrop-filter:blur(10px);}
+#toast.show{opacity:1;}
+.hint{font-size:11px;color:rgba(255,255,255,.15);text-align:center;padding:4px 0;}
+
+/* LANG PILLS */
+.lang-row{display:flex;gap:8px;margin-bottom:10px;}
+.lang-pill{flex:1;padding:11px 6px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);transition:all .15s;}
+.lang-pill.on{background:rgba(255,196,0,.12);border-color:rgba(255,196,0,.35);color:#FFC400;}
+.lang-flag{font-size:20px;display:block;margin-bottom:3px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="ln-top">
+    <span class="ln-icon">🚕</span>
+    <div class="ln-brand">Drive<span>Stat</span></div>
+    <div class="ln-slogan">Знай скільки ти реально заробив</div>
+  </div>
+
+  <div class="role-row">
+    <button class="role-btn sel" id="role-driver" onclick="selectRole('driver')">
+      <span class="role-icon">🧑‍✈️</span>Водій
+    </button>
+    <button class="role-btn" id="role-admin" onclick="selectRole('admin')">
+      <span class="role-icon">📊</span>Адмін
+    </button>
+  </div>
+
+  <div class="ln-form">
+    <label class="ln-lbl">ІМ'Я</label>
+    <input class="ln-inp" id="ln-name" type="text" placeholder="Roman Yarema" autocomplete="name">
+    <label class="ln-lbl">ПАРОЛЬ</label>
+    <input class="ln-inp" id="ln-pass" type="password" placeholder="••••••" autocomplete="current-password">
+    <button class="ln-btn" onclick="doLogin()">Увійти →</button>
+    <div class="ln-err" id="ln-err">Невірне ім'я або пароль</div>
+  </div>
+  <div class="ln-ver">DriveStat v2.0 · Bolt Fleet Integration</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <header>
+    <div>
+      <div class="h-brand" id="h-brand">BOLT · ВОДІЙ</div>
+      <div class="h-name" id="h-name">Водій</div>
+    </div>
+    <button class="h-sync" id="sync-btn" onclick="syncBolt()">
+      <div class="sdot" id="sdot"></div>
+      <span id="sync-lbl">Синхронізувати</span>
+    </button>
+  </header>
+
+  <div id="content">
+    <div class="tab-pane active" id="tab-today"></div>
+    <div class="tab-pane" id="tab-month"></div>
+    <div class="tab-pane" id="tab-history"></div>
+    <div class="tab-pane" id="tab-settings"></div>
+  </div>
+
+  <nav>
+    <button class="nb active" id="nav-today" onclick="showTab('today')">
+      <span class="nb-icon">🚕</span><span class="nb-lbl" id="nl-today">Сьогодні</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-month" onclick="showTab('month')">
+      <span class="nb-icon">📅</span><span class="nb-lbl" id="nl-month">Місяць</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-history" onclick="showTab('history')">
+      <span class="nb-icon">📋</span><span class="nb-lbl" id="nl-history">Звіти</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-settings" onclick="showTab('settings')">
+      <span class="nb-icon">⚙️</span><span class="nb-lbl" id="nl-profile">Профіль</span><div class="nb-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-ov" id="exp-modal" style="display:none;" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-ttl">Додати витрату</div>
+    <label class="modal-lbl">НАЗВА</label>
+    <input class="modal-inp" id="exp-name" type="text" placeholder="Парковка, мийка...">
+    <label class="modal-lbl">СУМА (Kč)</label>
+    <input class="modal-inp" id="exp-amount" type="number" inputmode="numeric" placeholder="0">
+    <label class="modal-lbl">ДАТА</label>
+    <input class="modal-inp" id="exp-date" type="date">
+    <div class="modal-row">
+      <button class="modal-save" onclick="saveExpense()">✓ Зберегти</button>
+      <button class="modal-cancel" onclick="document.getElementById('exp-modal').style.display='none'">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WORKER = "https://uber-bolt-proxy.romon-yarema.workers.dev";
+const USERS = {
+  "Roman Yarema": { pass: "taxi2026", role: "driver" },
+  "Admin":        { pass: "fleet2026", role: "admin" },
+  "Daniel":       { pass: "daniel2026", role: "driver" },
+  "Sergii":       { pass: "sergii2026", role: "driver" },
+};
+const ROMAN_UUID = "ead4f6a3-8c17-42a1-9fb3-277f6f892ee8";
+
+let selectedRole = "driver";
+
+function selectRole(r) {
+  selectedRole = r;
+  document.getElementById("role-driver").classList.toggle("sel", r === "driver");
+  document.getElementById("role-admin").classList.toggle("sel", r === "admin");
+}
+
+function isAdmin() { return state.role === "admin"; }
+
+// ── TRANSLATIONS ──
+const LANG = {
+  uk: {
+    today:"Сьогодні", month:"Місяць", history:"Звіти", profile:"Профіль",
+    todayEarnings:"ЗАРОБІТОК СЬОГОДНІ · BOLT", monthProfit:"ЧИСТИЙ ПРИБУТОК",
+    trips:"поїздок", km:"км", revenue:"виручка",
+    dailyGoal:"Ціль", toGoal:"До цілі",
+    goalDone:"✅ Ціль виконана!", goalWait:"⏳ До цілі",
+    boltRevenue:"BOLT ВИРУЧКА", tripsCount:"ПОЇЗДОК",
+    mileage:"ПРОБІГ", fuel:"ПАЛЬНЕ",
+    todayExpenses:"ВИТРАТИ СЬОГОДНІ", carAmort:"Амортизація авто",
+    addExpense:"+ Додати витрату", dataFrom:"Дані з Bolt",
+    monthCoverage:"ПОКРИТТЯ МІСЯЧНИХ ВИТРАТ", totalExpenses:"Всього витрат",
+    covered:"✅ Покрито!", stillNeed:"⏳ Ще",
+    income:"ВИРУЧКА", varCosts:"ЗМІННІ ВИТРАТИ", margin:"МАРЖА", net:"ЧИСТИЙ",
+    fixedCosts:"ФІКСОВАНІ ВИТРАТИ МІСЯЦЯ", carCredit:"Кредит за авто",
+    insurance:"Страховка авто", social:"Соціалка + підприємець",
+    platform:"Платформа Bolt", other:"Інші витрати", total:"Всього",
+    myExpenses:"МОЇ ДОДАТКОВІ ВИТРАТИ", noExpenses:"Немає витрат",
+    workDays:"РОБОЧІ ДНІ · BOLT", noData:"Синхронізуй з Bolt щоб побачити дані",
+    myExpensesList:"МОЇ ВИТРАТИ", noRecords:"Немає записів",
+    fuelSection:"⛽ АВТО І ПАЛИВО", fuelPrice:"Ціна пального Kč/л",
+    fuelCons:"Витрата л/100км", amort:"Амортизація Kč/км", goalSetting:"Денна ціль Kč",
+    monthlySection:"💳 ЩОМІСЯЧНІ ВИТРАТИ", connectSection:"🔗 ПІДКЛЮЧЕННЯ",
+    dataSection:"📦 ДАНІ", langSection:"🌐 МОВА",
+    boltApi:"Bolt Fleet API", uberApi:"Uber API",
+    boltActive:"✅ Активно", uberSoon:"Незабаром",
+    download:"Скачати резервну копію", restore:"Відновити дані",
+    saveBtn:"✓ Зберегти налаштування", logoutBtn:"Вийти з акаунту",
+    boltFleet:"DriveStat · Bolt Fleet",
+    settingsSaved:"✓ Налаштування збережено",
+    expAdded:"✓ Витрату додано", fillAll:"Заповни всі поля",
+    allFleets:"BOLT · ВСІ ФЛОТИЛІЇ", myTrips:"BOLT · МОЇ ПОЇЗДКИ",
+    weekReport:"ТИЖНЕВИЙ ЗВІТ", weekNet:"ЧИСТИЙ ЗА ТИЖДЕНЬ",
+    shareReport:"📤 Поділитися звітом", noWeekData:"Немає даних за цей тиждень",
+    updated:"Оновлено", syncBtn:"Синхронізувати", syncing:"Завантаження...",
+    taxReserve:"РЕЗЕРВА НА ПОДАТОК", taxHint:"Відклади",
+  },
+  cs: {
+    today:"Dnes", month:"Měsíc", history:"Výkazy", profile:"Profil",
+    todayEarnings:"VÝDĚLEK DNES · BOLT", monthProfit:"ČISTÝ ZISK",
+    trips:"jízd", km:"km", revenue:"výdělek",
+    dailyGoal:"Cíl", toGoal:"Do cíle",
+    goalDone:"✅ Cíl splněn!", goalWait:"⏳ Do cíle",
+    boltRevenue:"BOLT VÝDĚLEK", tripsCount:"JÍZD",
+    mileage:"NAJETÉ KM", fuel:"PALIVO",
+    todayExpenses:"VÝDAJE DNES", carAmort:"Odpis auta",
+    addExpense:"+ Přidat výdaj", dataFrom:"Data z Bolt",
+    monthCoverage:"POKRYTÍ MĚSÍČNÍCH NÁKLADŮ", totalExpenses:"Celkem výdajů",
+    covered:"✅ Pokryto!", stillNeed:"⏳ Ještě",
+    income:"PŘÍJEM", varCosts:"VARIABILNÍ NÁKLADY", margin:"MARŽE", net:"ČISTÝ",
+    fixedCosts:"FIXNÍ NÁKLADY MĚSÍCE", carCredit:"Splátka auta",
+    insurance:"Pojištění auta", social:"Sociální + zdravotní",
+    platform:"Platforma Bolt", other:"Ostatní výdaje", total:"Celkem",
+    myExpenses:"MÉ DODATEČNÉ VÝDAJE", noExpenses:"Žádné výdaje",
+    workDays:"PRACOVNÍ DNY · BOLT", noData:"Synchronizuj s Boltem pro zobrazení dat",
+    myExpensesList:"MÉ VÝDAJE", noRecords:"Žádné záznamy",
+    fuelSection:"⛽ AUTO A PALIVO", fuelPrice:"Cena paliva Kč/l",
+    fuelCons:"Spotřeba l/100km", amort:"Odpis Kč/km", goalSetting:"Denní cíl Kč",
+    monthlySection:"💳 MĚSÍČNÍ NÁKLADY", connectSection:"🔗 PŘIPOJENÍ",
+    dataSection:"📦 DATA", langSection:"🌐 JAZYK",
+    boltApi:"Bolt Fleet API", uberApi:"Uber API",
+    boltActive:"✅ Aktivní", uberSoon:"Brzy",
+    download:"Stáhnout zálohu", restore:"Obnovit data",
+    saveBtn:"✓ Uložit nastavení", logoutBtn:"Odhlásit se",
+    boltFleet:"DriveStat · Bolt Fleet",
+    settingsSaved:"✓ Nastavení uloženo",
+    expAdded:"✓ Výdaj přidán", fillAll:"Vyplň všechna pole",
+    allFleets:"BOLT · VŠECHNY FLOTILY", myTrips:"BOLT · MOJE JÍZDY",
+    weekReport:"TÝDENNÍ VÝKAZ", weekNet:"ČISTÝ ZA TÝDEN",
+    shareReport:"📤 Sdílet výkaz", noWeekData:"Žádná data za tento týden",
+    updated:"Aktualizováno", syncBtn:"Synchronizovat", syncing:"Načítání...",
+    taxReserve:"REZERVA NA DAŇ", taxHint:"Odlož",
+  },
+  ru: {
+    today:"Сегодня", month:"Месяц", history:"Отчёты", profile:"Профиль",
+    todayEarnings:"ЗАРАБОТОК СЕГОДНЯ · BOLT", monthProfit:"ЧИСТАЯ ПРИБЫЛЬ",
+    trips:"поездок", km:"км", revenue:"выручка",
+    dailyGoal:"Цель", toGoal:"До цели",
+    goalDone:"✅ Цель выполнена!", goalWait:"⏳ До цели",
+    boltRevenue:"BOLT ВЫРУЧКА", tripsCount:"ПОЕЗДОК",
+    mileage:"ПРОБЕГ", fuel:"ТОПЛИВО",
+    todayExpenses:"РАСХОДЫ СЕГОДНЯ", carAmort:"Амортизация авто",
+    addExpense:"+ Добавить расход", dataFrom:"Данные из Bolt",
+    monthCoverage:"ПОКРЫТИЕ МЕСЯЧНЫХ РАСХОДОВ", totalExpenses:"Всего расходов",
+    covered:"✅ Покрыто!", stillNeed:"⏳ Ещё",
+    income:"ВЫРУЧКА", varCosts:"ПЕРЕМЕННЫЕ РАСХОДЫ", margin:"МАРЖА", net:"ЧИСТЫЙ",
+    fixedCosts:"ФИКСИРОВАННЫЕ РАСХОДЫ", carCredit:"Кредит за авто",
+    insurance:"Страховка авто", social:"Соц. взносы",
+    platform:"Платформа Bolt", other:"Прочие расходы", total:"Итого",
+    myExpenses:"МОИ ДОПОЛНИТЕЛЬНЫЕ РАСХОДЫ", noExpenses:"Нет расходов",
+    workDays:"РАБОЧИЕ ДНИ · BOLT", noData:"Синхронизируй с Bolt для просмотра данных",
+    myExpensesList:"МОИ РАСХОДЫ", noRecords:"Нет записей",
+    fuelSection:"⛽ АВТО И ТОПЛИВО", fuelPrice:"Цена топлива Kč/л",
+    fuelCons:"Расход л/100км", amort:"Амортизация Kč/км", goalSetting:"Дневная цель Kč",
+    monthlySection:"💳 ЕЖЕМЕСЯЧНЫЕ РАСХОДЫ", connectSection:"🔗 ПОДКЛЮЧЕНИЕ",
+    dataSection:"📦 ДАННЫЕ", langSection:"🌐 ЯЗЫК",
+    boltApi:"Bolt Fleet API", uberApi:"Uber API",
+    boltActive:"✅ Активно", uberSoon:"Скоро",
+    download:"Скачать резервную копию", restore:"Восстановить данные",
+    saveBtn:"✓ Сохранить настройки", logoutBtn:"Выйти из аккаунта",
+    boltFleet:"DriveStat · Bolt Fleet",
+    settingsSaved:"✓ Настройки сохранены",
+    expAdded:"✓ Расход добавлен", fillAll:"Заполни все поля",
+    allFleets:"BOLT · ВСЕ ФЛОТИЛИИ", myTrips:"BOLT · МОИ ПОЕЗДКИ",
+    weekReport:"НЕДЕЛЬНЫЙ ОТЧЁТ", weekNet:"ЧИСТЫЙ ЗА НЕДЕЛЮ",
+    shareReport:"📤 Поделиться отчётом", noWeekData:"Нет данных за эту неделю",
+    updated:"Обновлено", syncBtn:"Синхронизировать", syncing:"Загрузка...",
+    taxReserve:"РЕЗЕРВ НА НАЛОГ", taxHint:"Отложи",
+  }
+};
+
+function t(k) {
+  const l = state.lang || "uk";
+  return (LANG[l] && LANG[l][k]) ? LANG[l][k] : (LANG.uk[k] || k);
+}
+
+let state = {
+  user: null, role: "driver", lang: "uk",
+  boltData: { orders: [], drivers: [] },
+  expenses: [],
+  settings: {
+    fuelPrice: 41, fuelCons: 9, amort: 1.5,
+    monthlyCredit: 0, monthlyInsurance: 2000,
+    monthlySocial: 5000, monthlyPlatform: 0, monthlyOther: 1000,
+    dailyGoal: 1800,
+  },
+  lastSync: null,
+};
+
+function toPragueDate(ts) {
+  const d = new Date((ts + 2 * 3600) * 1000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+function today() { return toPragueDate(Math.floor(Date.now()/1000)); }
+function todayMonth() { return today().slice(0,7); }
+function fmt(n) { return Math.round(n).toLocaleString("cs-CZ"); }
+function fmtD(n) { return (n>=0?"+":"")+fmt(n); }
+function getWeekNum(dateStr) {
+  const d = new Date(dateStr);
+  const jan1 = new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+}
+function currentWeekStr() {
+  const now = new Date();
+  const jan1 = new Date(now.getFullYear(),0,1);
+  const wk = Math.ceil(((now-jan1)/86400000+jan1.getDay()+1)/7);
+  return `${now.getFullYear()}-W${String(wk).padStart(2,'0')}`;
+}
+
+function saveState() { localStorage.setItem("drivestat-v2",JSON.stringify(state)); }
+function loadState() {
+  const s = localStorage.getItem("drivestat-v2");
+  if(s){try{state={...state,...JSON.parse(s)};}catch(e){}}
+}
+
+// ── LOGIN ──
+function doLogin() {
+  const name = document.getElementById("ln-name").value.trim();
+  const pass = document.getElementById("ln-pass").value;
+  const err  = document.getElementById("ln-err");
+  const u = USERS[name];
+  if (u && u.pass === pass && u.role === selectedRole) {
+    state.user = name;
+    state.role = u.role;
+    saveState();
+    showApp();
+  } else {
+    err.style.display = "block";
+    err.textContent = "Невірне ім'я або пароль";
+  }
+}
+
+function showApp() {
+  document.getElementById("login-screen").style.display = "none";
+  const app = document.getElementById("main-app");
+  app.style.display = "flex";
+  updateNav();
+  document.getElementById("h-name").textContent = state.user;
+  document.getElementById("h-brand").textContent = isAdmin() ? t("allFleets") : t("myTrips");
+  renderAll();
+}
+
+function logout() {
+  state.user = null;
+  saveState();
+  document.getElementById("main-app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("ln-name").value = "";
+  document.getElementById("ln-pass").value = "";
+}
+
+function updateNav() {
+  const e = id => document.getElementById(id);
+  if(e("nl-today"))   e("nl-today").textContent   = t("today");
+  if(e("nl-month"))   e("nl-month").textContent   = t("month");
+  if(e("nl-history")) e("nl-history").textContent = t("history");
+  if(e("nl-profile")) e("nl-profile").textContent = t("profile");
+  if(e("h-brand"))    e("h-brand").textContent    = isAdmin() ? t("allFleets") : t("myTrips");
+  const lbl = e("sync-lbl");
+  if(lbl && lbl.textContent !== t("syncing"))
+    lbl.textContent = state.lastSync ? `${t("updated")} ${state.lastSync}` : t("syncBtn");
+}
+
+// ── SYNC ──
+async function syncBolt() {
+  const btn = document.getElementById("sync-btn");
+  const dot = document.getElementById("sdot");
+  const lbl = document.getElementById("sync-lbl");
+  btn.classList.add("loading");
+  dot.classList.add("spin");
+  lbl.textContent = t("syncing");
+  try {
+    const now = Math.floor(Date.now()/1000);
+    const resp = await fetch(`${WORKER}/orders`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ start_ts: now-30*86400, end_ts: now }),
+    }).then(r=>r.json());
+
+    if (resp.orders && resp.orders.length > 0) {
+      state.boltData.orders = isAdmin() ? resp.orders
+        : resp.orders.filter(o => o.driver_uuid === ROMAN_UUID);
+    }
+    const drv = await fetch(`${WORKER}/drivers`,{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({}),
+    }).then(r=>r.json());
+    if(drv.drivers) state.boltData.drivers = drv.drivers;
+
+    state.lastSync = new Date().toLocaleTimeString("uk",{hour:"2-digit",minute:"2-digit"});
+    saveState();
+    showToast("✅ Bolt дані оновлено!");
+    renderAll();
+  } catch(e) {
+    showToast("❌ Помилка синхронізації");
+  } finally {
+    btn.classList.remove("loading");
+    dot.classList.remove("spin");
+    document.getElementById("sync-lbl").textContent = state.lastSync ? `${t("updated")} ${state.lastSync}` : t("syncBtn");
+  }
+}
+
+// ── CALC ──
+function calcToday() {
+  const td = today();
+  const orders = state.boltData.orders.filter(o => {
+    if(o.order_status !== "finished") return false;
+    const ts = o.order_finished_timestamp || o.order_created_timestamp;
+    return ts && toPragueDate(ts) === td;
+  });
+  const gross = orders.reduce((s,o)=>s+(o.order_price?.net_earnings||0),0);
+  const km    = orders.reduce((s,o)=>s+(o.ride_distance||0),0)/1000;
+  const fuel  = (km/100)*state.settings.fuelCons*state.settings.fuelPrice;
+  const amort = km*state.settings.amort;
+  const exp   = state.expenses.filter(e=>e.date===td).reduce((s,e)=>s+e.amount,0);
+  const net   = gross-fuel-amort-exp;
+  return { gross, km, fuel, amort, exp, net, trips: orders.length };
+}
+
+function calcMonth() {
+  const mo = todayMonth();
+  const exp = state.expenses.filter(e=>e.date?.startsWith(mo)).reduce((s,e)=>s+e.amount,0);
+  const fixed = state.settings.monthlyCredit+state.settings.monthlyInsurance+
+    state.settings.monthlySocial+state.settings.monthlyPlatform+state.settings.monthlyOther;
+  const orders = state.boltData.orders.filter(o=>{
+    if(o.order_status!=="finished") return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return ts && toPragueDate(ts).slice(0,7)===mo;
+  });
+  const gross = orders.reduce((s,o)=>s+(o.order_price?.net_earnings||0),0);
+  const km    = orders.reduce((s,o)=>s+(o.ride_distance||0),0)/1000;
+  const fuel  = (km/100)*state.settings.fuelCons*state.settings.fuelPrice;
+  const amort = km*state.settings.amort;
+  const var_  = fuel+amort+exp;
+  const margin= gross-var_;
+  const net   = margin-fixed;
+  const pct   = fixed>0?Math.min(100,(margin/fixed)*100):0;
+  return { gross, km, fuel, amort, var_, margin, fixed, net, pct, exp, trips:orders.length };
+}
+
+function calcWeek() {
+  const wStr = currentWeekStr();
+  const year = parseInt(wStr.slice(0,4));
+  const wNum = parseInt(wStr.slice(6));
+  const orders = state.boltData.orders.filter(o=>{
+    if(o.order_status!=="finished") return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(!ts) return false;
+    const d = toPragueDate(ts);
+    return getWeekNum(d)===wNum && new Date(d).getFullYear()===year;
+  });
+  const gross = orders.reduce((s,o)=>s+(o.order_price?.net_earnings||0),0);
+  const km    = orders.reduce((s,o)=>s+(o.ride_distance||0),0)/1000;
+  const fuel  = (km/100)*state.settings.fuelCons*state.settings.fuelPrice;
+  const amort = km*state.settings.amort;
+  const weekDays = [...new Set(orders.map(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return toPragueDate(ts);
+  }))].length;
+  const expW  = state.expenses.filter(e=>{
+    if(!e.date) return false;
+    return getWeekNum(e.date)===wNum && new Date(e.date).getFullYear()===year;
+  }).reduce((s,e)=>s+e.amount,0);
+  const net   = gross-fuel-amort-expW;
+  const tax   = Math.round(net*0.06);
+  return { gross, km, fuel, amort, expW, net, tax, trips:orders.length, days:weekDays, wStr };
+}
+
+// ── RENDER TODAY ──
+function renderToday() {
+  const td = calcToday();
+  const pct = state.settings.dailyGoal>0 ? Math.min(100,(td.net/state.settings.dailyGoal)*100) : 0;
+  const left = Math.max(0,state.settings.dailyGoal-td.net);
+  const todayExp = state.expenses.filter(e=>e.date===today());
+  const taxR = Math.round(Math.max(0,td.net)*0.06);
+
+  document.getElementById("tab-today").innerHTML = `
+    <div class="hero">
+      <div class="hero-lbl">${t("todayEarnings")}</div>
+      <div class="hero-num">${fmtD(td.net)} <span class="hero-kc">Kč</span></div>
+      <div class="hero-sub">${td.trips} ${t("trips")} · ${fmt(td.km)} ${t("km")} · ${t("revenue")} ${fmt(td.gross)} Kč</div>
+      <div class="prog"><div class="prog-fill" style="width:${pct.toFixed(0)}%"></div></div>
+      <div class="prog-row">
+        <span>${t("dailyGoal")}: ${fmt(state.settings.dailyGoal)} Kč</span>
+        <span style="color:${pct>=100?"#30D158":"#FFC400"};font-weight:700;">${Math.round(pct)}%</span>
+      </div>
+      <div class="badge ${pct>=100?"badge-green":"badge-yellow"}">${pct>=100?t("goalDone"):t("goalWait")+": "+fmt(left)+" Kč"}</div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile tile-blue"><div class="t-lbl">${t("boltRevenue")}</div><div class="t-val" style="color:#4FC3F7;">+${fmt(td.gross)}</div><div class="t-sub">Kč</div></div>
+      <div class="tile tile-purple"><div class="t-lbl">${t("tripsCount")}</div><div class="t-val" style="color:#CE93D8;">${td.trips}</div><div class="t-sub">Bolt API</div></div>
+      <div class="tile tile-dark"><div class="t-lbl">${t("mileage")}</div><div class="t-val" style="color:#fff;">${fmt(td.km)}</div><div class="t-sub">${t("km")}</div></div>
+      <div class="tile tile-red"><div class="t-lbl">${t("fuel")}</div><div class="t-val" style="color:#FF6B6B;">-${fmt(td.fuel)}</div><div class="t-sub">Kč</div></div>
+    </div>
+
+    ${taxR>0?`<div class="card" style="border-color:rgba(191,90,242,.2);background:rgba(191,90,242,.06);">
+      <div class="card-ttl" style="color:rgba(191,90,242,.6);">${t("taxReserve")} · 6%</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:14px;color:rgba(255,255,255,.5);">${t("taxHint")} на daň z příjmu</span>
+        <span style="font-size:22px;font-weight:800;color:#BF5AF2;">-${fmt(taxR)} Kč</span>
+      </div>
+    </div>`:""}
+
+    <div class="card">
+      <div class="card-ttl">${t("todayExpenses")}</div>
+      <div class="row-item"><span class="ri-l">${t("carAmort")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(td.amort)} Kč</span></div>
+      ${todayExp.map(e=>`
+        <div class="row-item">
+          <span class="ri-l">${e.name}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="ri-r" style="color:#FF453A;">-${fmt(e.amount)} Kč</span>
+            <button onclick="deleteExpense('${e.id}')" style="background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#FF453A;font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+          </div>
+        </div>`).join("")}
+      <div class="add-btn" onclick="openModal()"><span class="add-lbl">${t("addExpense")}</span><span class="add-ico">+</span></div>
+    </div>
+    ${state.lastSync?`<div class="hint">${t("dataFrom")} · ${state.lastSync}</div>`:`<div class="hint">${t("noData")}</div>`}
+  `;
+}
+
+// ── RENDER MONTH ──
+function renderMonth() {
+  const m = calcMonth();
+  const s = state.settings;
+  document.getElementById("tab-month").innerHTML = `
+    <div class="hero">
+      <div class="hero-lbl">${t("monthProfit")} · ${todayMonth()}</div>
+      <div class="hero-num">${fmtD(m.net)} <span class="hero-kc">Kč</span></div>
+      <div class="hero-sub">${fmt(m.km)} ${t("km")} · ${m.trips} ${t("trips")} · ${t("revenue")} ${fmt(m.gross)} Kč</div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("monthCoverage")}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:12px;color:rgba(255,255,255,.4);">${t("totalExpenses")}: ${fmt(m.fixed)} Kč</span>
+        <span style="font-size:12px;color:${m.pct>=100?"#30D158":"#FFC400"};font-weight:700;">${Math.round(m.pct)}%</span>
+      </div>
+      <div class="prog" style="margin-top:0;"><div class="prog-fill" style="width:${m.pct.toFixed(0)}%;background:${m.pct>=100?"#30D158":"linear-gradient(90deg,#FFC400,#FF9500)"};"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:rgba(255,255,255,.25);">
+        <span>0</span>
+        <span style="color:${m.pct>=100?"#30D158":"#FFC400"};font-weight:700;">${m.pct>=100?t("covered"):t("stillNeed")+" "+fmt(m.fixed-m.margin)+" Kč"}</span>
+        <span>${fmt(m.fixed)}</span>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile tile-blue"><div class="t-lbl">${t("income")}</div><div class="t-val" style="color:#4FC3F7;">+${fmt(m.gross)}</div><div class="t-sub">Kč</div></div>
+      <div class="tile tile-red"><div class="t-lbl">${t("varCosts")}</div><div class="t-val" style="color:#FF6B6B;">-${fmt(m.var_)}</div><div class="t-sub">Kč</div></div>
+      <div class="tile tile-purple"><div class="t-lbl">${t("margin")}</div><div class="t-val" style="color:#CE93D8;">${fmt(m.margin)}</div><div class="t-sub">Kč</div></div>
+      <div class="tile tile-yellow"><div class="t-lbl">${t("net")}</div><div class="t-val" style="color:${m.net>=0?"#FFC400":"#FF453A"};">${fmtD(m.net)}</div><div class="t-sub">Kč</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("fixedCosts")}</div>
+      ${s.monthlyCredit>0?`<div class="row-item"><span class="ri-l">${t("carCredit")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(s.monthlyCredit)} Kč</span></div>`:""}
+      ${s.monthlyInsurance>0?`<div class="row-item"><span class="ri-l">${t("insurance")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(s.monthlyInsurance)} Kč</span></div>`:""}
+      ${s.monthlySocial>0?`<div class="row-item"><span class="ri-l">${t("social")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(s.monthlySocial)} Kč</span></div>`:""}
+      ${s.monthlyPlatform>0?`<div class="row-item"><span class="ri-l">${t("platform")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(s.monthlyPlatform)} Kč</span></div>`:""}
+      ${s.monthlyOther>0?`<div class="row-item"><span class="ri-l">${t("other")}</span><span class="ri-r" style="color:#FF453A;">-${fmt(s.monthlyOther)} Kč</span></div>`:""}
+      <div style="display:flex;justify-content:space-between;padding-top:9px;margin-top:2px;border-top:1px solid rgba(255,255,255,.07);">
+        <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.5);">${t("total")}</span>
+        <span style="font-size:14px;font-weight:800;color:#FF453A;">-${fmt(m.fixed)} Kč</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("myExpenses")}</div>
+      ${state.expenses.filter(e=>e.date?.startsWith(todayMonth())).map(e=>`
+        <div class="row-item">
+          <span class="ri-l">${e.name} <span style="font-size:10px;color:rgba(255,255,255,.2);">${e.date}</span></span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="ri-r" style="color:#FF453A;">-${fmt(e.amount)} Kč</span>
+            <button onclick="deleteExpense('${e.id}')" style="background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#FF453A;font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
+          </div>
+        </div>`).join("")||`<div style="font-size:13px;color:rgba(255,255,255,.2);padding:4px 0;">${t("noExpenses")}</div>`}
+      <div class="add-btn" onclick="openModal()"><span class="add-lbl">${t("addExpense")}</span><span class="add-ico">+</span></div>
+    </div>
+  `;
+}
+
+// ── RENDER HISTORY + WEEKLY REPORT ──
+function renderHistory() {
+  const w = calcWeek();
+  const orders = state.boltData.orders.filter(o=>o.order_status==="finished");
+  const byDay = {};
+  orders.forEach(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(!ts) return;
+    const d=toPragueDate(ts);
+    if(!byDay[d]) byDay[d]={earn:0,km:0,trips:0};
+    byDay[d].earn+=(o.order_price?.net_earnings||0);
+    byDay[d].km+=(o.ride_distance||0)/1000;
+    byDay[d].trips++;
+  });
+  const days = Object.keys(byDay).sort().reverse();
+  const maxE = Math.max(...days.map(d=>byDay[d].earn),1);
+
+  const daysHTML = days.length===0
+    ? `<div style="text-align:center;padding:2rem;color:rgba(255,255,255,.15);font-size:13px;">${t("noData")}</div>`
+    : days.map(d=>{
+        const day=byDay[d];
+        const s=state.settings;
+        const net=day.earn-(day.km/100)*s.fuelCons*s.fuelPrice-day.km*s.amort-state.expenses.filter(e=>e.date===d).reduce((s,e)=>s+e.amount,0);
+        const bw=Math.min(100,(day.earn/maxE)*100);
+        return `<div class="day-row">
+          <div><div class="day-date">${d.slice(5).replace("-",".")}</div>
+          <div class="day-sub">${day.trips} ${t("trips")} · ${fmt(day.km)} ${t("km")}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mbar"><div class="mbar-fill" style="width:${bw}%;background:${net>=0?"#FFC400":"#FF453A"};"></div></div>
+            <div class="day-num" style="color:${net>=0?"#FFC400":"#FF453A"};">${fmtD(net)}</div>
+          </div>
+        </div>`;
+      }).join("");
+
+  const allExp = [...state.expenses].sort((a,b)=>b.date?.localeCompare(a.date));
+
+  document.getElementById("tab-history").innerHTML = `
+    <div class="report-card">
+      <div class="rep-header">
+        <div>
+          <div class="rep-title">${t("weekReport")}</div>
+          <div class="rep-week">${w.wStr} · ${w.days} ${t("trips").replace("поїздок","днів").replace("jízd","dní").replace("поездок","дней")}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px;color:rgba(255,196,0,.5);margin-bottom:2px;">${t("weekNet")}</div>
+          <div class="rep-num">${fmtD(w.net)} <span class="rep-kc">Kč</span></div>
+        </div>
+      </div>
+      <div class="rep-grid">
+        <div class="rep-cell"><div class="rep-cell-lbl">${t("boltRevenue")}</div><div class="rep-cell-val" style="color:#4FC3F7;">+${fmt(w.gross)}</div></div>
+        <div class="rep-cell"><div class="rep-cell-lbl">${t("tripsCount")}</div><div class="rep-cell-val" style="color:#CE93D8;">${w.trips}</div></div>
+        <div class="rep-cell"><div class="rep-cell-lbl">${t("mileage")}</div><div class="rep-cell-val">${fmt(w.km)}</div></div>
+      </div>
+      <div class="rep-row"><span class="rep-rl">${t("fuel")}</span><span class="rep-rr" style="color:#FF6B6B;">-${fmt(w.fuel)} Kč</span></div>
+      <div class="rep-row"><span class="rep-rl">${t("carAmort")}</span><span class="rep-rr" style="color:#FF6B6B;">-${fmt(w.amort)} Kč</span></div>
+      <div class="rep-row"><span class="rep-rl">${t("myExpenses")}</span><span class="rep-rr" style="color:#FF6B6B;">-${fmt(w.expW)} Kč</span></div>
+      <div class="rep-row" style="border-top:1px solid rgba(255,196,0,.15);margin-top:4px;padding-top:8px;">
+        <span class="rep-rl" style="color:rgba(191,90,242,.7);">${t("taxReserve")} (6%)</span>
+        <span class="rep-rr" style="color:#BF5AF2;">-${fmt(w.tax)} Kč</span>
+      </div>
+      <button class="rep-share" onclick="shareWeekReport()">📤 ${t("shareReport")}</button>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("workDays")}</div>
+      ${daysHTML}
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">${t("myExpensesList")}</div>
+      ${allExp.length===0
+        ?`<div style="font-size:13px;color:rgba(255,255,255,.2);padding:4px 0;">${t("noRecords")}</div>`
+        :allExp.map(e=>`
+          <div class="day-row">
+            <div><div class="day-date">${e.name}</div><div class="day-sub">${e.date}</div></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="day-num" style="color:#FF453A;">-${fmt(e.amount)}</div>
+              <button onclick="deleteExpense('${e.id}')" style="background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);border-radius:8px;color:#FF453A;font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+          </div>`).join("")}
+      <div class="add-btn" onclick="openModal()"><span class="add-lbl">${t("addExpense")}</span><span class="add-ico">+</span></div>
+    </div>
+  `;
+}
+
+// ── SHARE WEEK REPORT ──
+function shareWeekReport() {
+  const w = calcWeek();
+  const txt =
+`📊 DriveStat · ${t("weekReport")}
+👤 ${state.user} · ${w.wStr}
+━━━━━━━━━━━━━━━━━━━━
+
+💵 ${t("boltRevenue")}: +${fmt(w.gross)} Kč
+🚗 ${t("tripsCount")}: ${w.trips}
+📍 ${t("mileage")}: ${fmt(w.km)} km
+
+⛽ ${t("fuel")}: -${fmt(w.fuel)} Kč
+🔧 ${t("carAmort")}: -${fmt(w.amort)} Kč
+
+━━━━━━━━━━━━━━━━━━━━
+💰 ${t("weekNet")}: ${fmtD(w.net)} Kč
+📋 ${t("taxReserve")}: -${fmt(w.tax)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat · Bolt Fleet Tracker`;
+
+  navigator.clipboard.writeText(txt).catch(()=>{
+    const ta=document.createElement("textarea");
+    ta.value=txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+  });
+  showToast("✅ Звіт скопійовано!");
+}
+
+// ── RENDER SETTINGS ──
+function renderSettings() {
+  const s = state.settings;
+  const langs = [{code:"uk",flag:"🇺🇦",name:"Укр"},{code:"cs",flag:"🇨🇿",name:"Čes"},{code:"ru",flag:"🇷🇺",name:"Рус"}];
+  document.getElementById("tab-settings").innerHTML = `
+    <div class="card" style="display:flex;align-items:center;gap:14px;padding:16px;">
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,196,0,.1);border:2px solid rgba(255,196,0,.35);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#FFC400;flex-shrink:0;">${(state.user||"?").split(" ").map(w=>w[0]).join("").slice(0,2)}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fff;">${state.user}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:2px;">${t("boltFleet")} · ${isAdmin()?"Admin":"Driver"}</div>
+      </div>
+    </div>
+
+    <div class="st-section">${t("langSection")}</div>
+    <div class="lang-row">
+      ${langs.map(l=>`<button onclick="setLang('${l.code}')" class="lang-pill ${state.lang===l.code?"on":""}"><span class="lang-flag">${l.flag}</span>${l.name}</button>`).join("")}
+    </div>
+
+    <div class="st-section">${t("fuelSection")}</div>
+    <div class="st-group">
+      <div class="st-row"><span class="st-lbl">${t("fuelPrice")}</span><input class="st-inp" id="st-fuel" type="number" inputmode="decimal" value="${s.fuelPrice}"></div>
+      <div class="st-row"><span class="st-lbl">${t("fuelCons")}</span><input class="st-inp" id="st-cons" type="number" inputmode="decimal" value="${s.fuelCons}"></div>
+      <div class="st-row"><span class="st-lbl">${t("amort")}</span><input class="st-inp" id="st-amort" type="number" inputmode="decimal" value="${s.amort}" step="0.1"></div>
+      <div class="st-row"><span class="st-lbl">${t("goalSetting")}</span><input class="st-inp" id="st-goal" type="number" inputmode="numeric" value="${s.dailyGoal}"></div>
+    </div>
+
+    <div class="st-section">${t("monthlySection")}</div>
+    <div class="st-group">
+      <div class="st-row"><span class="st-lbl">${t("carCredit")}</span><input class="st-inp" id="st-credit" type="number" inputmode="numeric" value="${s.monthlyCredit}"></div>
+      <div class="st-row"><span class="st-lbl">${t("insurance")}</span><input class="st-inp" id="st-ins" type="number" inputmode="numeric" value="${s.monthlyInsurance}"></div>
+      <div class="st-row"><span class="st-lbl">${t("social")}</span><input class="st-inp" id="st-soc" type="number" inputmode="numeric" value="${s.monthlySocial}"></div>
+      <div class="st-row"><span class="st-lbl">${t("platform")}</span><input class="st-inp" id="st-plat" type="number" inputmode="numeric" value="${s.monthlyPlatform}"></div>
+      <div class="st-row"><span class="st-lbl">${t("other")}</span><input class="st-inp" id="st-other" type="number" inputmode="numeric" value="${s.monthlyOther}"></div>
+    </div>
+
+    <div class="st-section">${t("connectSection")}</div>
+    <div class="st-group">
+      <div class="mi"><div class="mi-ico">🔗</div><div class="mi-txt">${t("boltApi")}</div><span class="sbadge sb-on">${t("boltActive")}</span></div>
+      <div class="mi"><div class="mi-ico">🔗</div><div class="mi-txt">${t("uberApi")}</div><span class="sbadge sb-off">${t("uberSoon")}</span></div>
+    </div>
+
+    <div class="st-section">${t("dataSection")}</div>
+    <div class="st-group">
+      <div class="mi" onclick="exportData()"><div class="mi-ico">⬇️</div><div class="mi-txt">${t("download")}</div><div class="mi-arr">›</div></div>
+      <div class="mi" onclick="document.getElementById('imp-file').click()"><div class="mi-ico">⬆️</div><div class="mi-txt">${t("restore")}</div><div class="mi-arr">›</div></div>
+    </div>
+    <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
+
+    <button class="btn-save" onclick="saveSettings()">${t("saveBtn")}</button>
+    <button class="btn-logout" onclick="logout()">${t("logoutBtn")}</button>
+    <div style="height:10px;"></div>
+  `;
+}
+
+function setLang(code) {
+  state.lang = code;
+  saveState();
+  updateNav();
+  renderAll();
+}
+
+function saveSettings() {
+  state.settings = {
+    fuelPrice: parseFloat(document.getElementById("st-fuel")?.value)||41,
+    fuelCons:  parseFloat(document.getElementById("st-cons")?.value)||9,
+    amort:     parseFloat(document.getElementById("st-amort")?.value)||1.5,
+    dailyGoal: parseInt(document.getElementById("st-goal")?.value)||1800,
+    monthlyCredit:    parseInt(document.getElementById("st-credit")?.value)||0,
+    monthlyInsurance: parseInt(document.getElementById("st-ins")?.value)||2000,
+    monthlySocial:    parseInt(document.getElementById("st-soc")?.value)||5000,
+    monthlyPlatform:  parseInt(document.getElementById("st-plat")?.value)||0,
+    monthlyOther:     parseInt(document.getElementById("st-other")?.value)||1000,
+  };
+  saveState();
+  showToast(t("settingsSaved"));
+  renderAll();
+}
+
+// ── EXPENSES ──
+function openModal() {
+  document.getElementById("exp-date").value = today();
+  document.getElementById("exp-name").value = "";
+  document.getElementById("exp-amount").value = "";
+  document.getElementById("exp-modal").style.display = "flex";
+}
+function closeModal(e) {
+  if(e.target.id==="exp-modal") document.getElementById("exp-modal").style.display="none";
+}
+function saveExpense() {
+  const name = document.getElementById("exp-name").value.trim();
+  const amount = parseInt(document.getElementById("exp-amount").value)||0;
+  const date = document.getElementById("exp-date").value;
+  if(!name||!amount){showToast(t("fillAll"));return;}
+  state.expenses.push({id:Date.now().toString(),name,amount,date});
+  saveState();
+  document.getElementById("exp-modal").style.display="none";
+  showToast(t("expAdded"));
+  renderAll();
+}
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter(e=>e.id!==id);
+  saveState();
+  renderAll();
+}
+
+// ── EXPORT/IMPORT ──
+function exportData() {
+  const b = new Blob([JSON.stringify({state},null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = `drivestat-backup-${today()}.json`;
+  a.click();
+}
+function importData(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.state){state={...state,...d.state};saveState();renderAll();showToast("✓ Дані відновлено");}
+    }catch(e){showToast("Помилка імпорту");}
+  };
+  r.readAsText(file);
+}
+
+// ── TABS ──
+let currentTab = "today";
+function showTab(name) {
+  document.querySelectorAll(".tab-pane").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".nb").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  document.getElementById("nav-"+name).classList.add("active");
+  currentTab = name;
+  document.getElementById("content").scrollTop = 0;
+  if(name==="today")    renderToday();
+  else if(name==="month")   renderMonth();
+  else if(name==="history") renderHistory();
+  else if(name==="settings") renderSettings();
+}
+function renderAll() {
+  if(currentTab==="today")    renderToday();
+  else if(currentTab==="month")    renderMonth();
+  else if(currentTab==="history")  renderHistory();
+  else if(currentTab==="settings") renderSettings();
+}
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),2500);
+}
+
+// ── INIT ──
+loadState();
+document.getElementById("ln-pass").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+if(state.user) { showApp(); }
+else { document.getElementById("login-screen").style.display="flex"; }
+</script>
+</body>
+</html>
