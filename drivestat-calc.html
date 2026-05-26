@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DriveStat · Калькулятор виплат</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:#0D0D18;color:#fff;min-height:100vh;padding:20px 14px 100px;-webkit-text-size-adjust:100%;}
+.wrap{max-width:420px;margin:0 auto;}
+
+.header{text-align:center;margin-bottom:28px;}
+.header-icon{font-size:42px;margin-bottom:8px;}
+.header-brand{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.header-brand span{color:#FFC400;}
+.header-sub{font-size:13px;color:rgba(255,255,255,.3);margin-top:4px;}
+
+.sec-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:.16em;margin:0 0 8px 2px;}
+
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:4px 0;margin-bottom:12px;}
+
+.row{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:12px;}
+.row:last-child{border-bottom:none;}
+.row-ico{font-size:20px;width:26px;flex-shrink:0;text-align:center;}
+.row-info{flex:1;min-width:0;}
+.row-name{font-size:14px;font-weight:600;color:#fff;}
+.row-hint{font-size:11px;color:rgba(255,255,255,.28);margin-top:2px;}
+.inp{width:110px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#FFC400;padding:10px 12px;font-size:15px;font-weight:700;font-family:inherit;text-align:right;outline:none;-webkit-appearance:none;}
+.inp:focus{border-color:#FFC400;background:rgba(255,196,0,.06);}
+.inp-green{color:#30D158;}
+.inp-green:focus{border-color:#30D158;background:rgba(48,209,88,.05);}
+.inp-name{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;padding:10px 14px;font-size:15px;font-weight:600;font-family:inherit;outline:none;-webkit-appearance:none;}
+.inp-name:focus{border-color:rgba(255,255,255,.3);}
+.inp-week{width:130px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:rgba(255,255,255,.7);padding:10px 12px;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none;}
+.inp-week:focus{border-color:rgba(255,255,255,.3);}
+
+/* Extra cost rows */
+.extra-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:8px;}
+.extra-row:last-child{border-bottom:none;}
+.extra-name-inp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.8);padding:9px 12px;font-size:13px;font-family:inherit;outline:none;}
+.extra-name-inp:focus{border-color:rgba(255,255,255,.2);}
+.extra-amt-inp{width:90px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#FF6B6B;padding:9px 10px;font-size:13px;font-weight:700;font-family:inherit;text-align:right;outline:none;-webkit-appearance:none;}
+.extra-amt-inp:focus{border-color:rgba(255,69,58,.3);}
+.del-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.2);color:#FF453A;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.add-extra-btn{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;}
+.add-extra-lbl{font-size:14px;font-weight:700;color:rgba(255,196,0,.7);}
+.add-extra-ico{font-size:20px;color:rgba(255,196,0,.7);}
+
+/* RESULT */
+.result-card{border-radius:20px;padding:20px;margin-bottom:12px;overflow:hidden;position:relative;}
+.result-positive{background:linear-gradient(135deg,rgba(48,209,88,.12),rgba(48,209,88,.05));border:1.5px solid rgba(48,209,88,.25);}
+.result-negative{background:linear-gradient(135deg,rgba(255,69,58,.12),rgba(255,69,58,.05));border:1.5px solid rgba(255,69,58,.25);}
+.result-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;margin-bottom:8px;}
+.result-lbl-pos{color:rgba(48,209,88,.7);}
+.result-lbl-neg{color:rgba(255,69,58,.7);}
+.result-num{font-size:42px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.result-sub{font-size:12px;margin-top:6px;opacity:.55;}
+
+.breakdown{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:4px 0;margin-bottom:12px;}
+.br-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.br-row:last-child{border-bottom:none;}
+.br-lbl{font-size:13px;color:rgba(255,255,255,.55);}
+.br-val{font-size:14px;font-weight:700;}
+.br-total{background:rgba(255,255,255,.04);}
+.br-total .br-lbl{font-size:14px;font-weight:700;color:rgba(255,255,255,.8);}
+.br-total .br-val{font-size:16px;font-weight:800;}
+
+/* FLEET BOX */
+.fleet-box{background:rgba(10,132,255,.07);border:1px solid rgba(10,132,255,.2);border-radius:16px;padding:14px 16px;margin-bottom:12px;}
+.fleet-box-ttl{font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(10,132,255,.6);margin-bottom:10px;}
+.fleet-row{display:flex;justify-content:space-between;padding:5px 0;}
+.fleet-lbl{font-size:13px;color:rgba(255,255,255,.4);}
+.fleet-val{font-size:13px;font-weight:700;}
+
+/* WARN BOX */
+.warn-box{background:rgba(255,196,0,.07);border:1px solid rgba(255,196,0,.2);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:rgba(255,196,0,.8);line-height:1.5;}
+
+/* COPY BTN */
+.copy-btn{width:100%;padding:16px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.35);border-radius:16px;color:#FFC400;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:8px;}
+.copy-btn:active{transform:scale(.98);}
+.copy-btn-green{background:rgba(48,209,88,.1);border-color:rgba(48,209,88,.35);color:#30D158;}
+
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(48,209,88,.15);border:1px solid rgba(48,209,88,.3);border-radius:14px;color:#30D158;padding:12px 22px;font-size:13px;font-weight:700;z-index:99;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(10px);}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-icon">🚕</div>
+    <div class="header-brand">Drive<span>Stat</span></div>
+    <div class="header-sub">Калькулятор виплат водію</div>
+  </div>
+
+  <!-- ІНФО -->
+  <div class="sec-lbl">👤 ВОДІЙ</div>
+  <div class="card">
+    <div class="row">
+      <div class="row-ico">👤</div>
+      <div class="row-info"><div class="row-name">Ім'я водія</div></div>
+      <input class="inp-name" id="drv-name" type="text" placeholder="Roman">
+    </div>
+    <div class="row">
+      <div class="row-ico">📅</div>
+      <div class="row-info"><div class="row-name">Тиждень</div></div>
+      <input class="inp-week" id="drv-week" type="text" placeholder="2026-W21">
+    </div>
+  </div>
+
+  <!-- BOLT ВИРУЧКА -->
+  <div class="sec-lbl">⚡ BOLT — ВИРУЧКА ВОДІЯ</div>
+  <div class="card">
+    <div class="row">
+      <div class="row-ico">💵</div>
+      <div class="row-info">
+        <div class="row-name">Готівка (cash)</div>
+        <div class="row-hint">Водій отримав особисто від пасажирів</div>
+      </div>
+      <input class="inp inp-green" id="bolt-cash" type="number" inputmode="numeric" placeholder="0" oninput="calc()">
+    </div>
+    <div class="row">
+      <div class="row-ico">💳</div>
+      <div class="row-info">
+        <div class="row-name">На карту флоту (безнал)</div>
+        <div class="row-hint">Прийшло на рахунок флотилії від Bolt</div>
+      </div>
+      <input class="inp" id="bolt-card" type="number" inputmode="numeric" placeholder="0" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- ВІДРАХУВАННЯ З КАРТИ ФЛОТУ -->
+  <div class="sec-lbl">🏦 ВІДРАХУВАННЯ З КАРТИ ФЛОТУ</div>
+  <div class="card" id="deductions-card">
+    <div class="row" id="rent-row">
+      <div class="row-ico">🚙</div>
+      <div class="row-info">
+        <div class="row-name">Оренда авто</div>
+        <div class="row-hint">За тиждень</div>
+      </div>
+      <input class="inp" id="rent" type="number" inputmode="numeric" placeholder="0" oninput="calc()">
+    </div>
+    <!-- Додаткові відрахування -->
+    <div id="extra-list"></div>
+    <div class="add-extra-btn" onclick="addExtra()">
+      <span class="add-extra-lbl">+ Додати відрахування</span>
+      <span class="add-extra-ico">+</span>
+    </div>
+  </div>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <div id="result-section" style="display:none;">
+
+    <!-- Блок флоту — що прийшло і що відраховано -->
+    <div class="fleet-box">
+      <div class="fleet-box-ttl">📊 РАХУНОК ФЛОТУ</div>
+      <div class="fleet-row">
+        <span class="fleet-lbl">Надійшло від Bolt (безнал)</span>
+        <span class="fleet-val" style="color:#4FC3F7;" id="r-card-in">+0 Kč</span>
+      </div>
+      <div class="fleet-row">
+        <span class="fleet-lbl">Всього відрахувань</span>
+        <span class="fleet-val" style="color:#FF6B6B;" id="r-deductions">-0 Kč</span>
+      </div>
+      <div class="fleet-row" style="border-top:1px solid rgba(10,132,255,.15);padding-top:8px;margin-top:4px;">
+        <span class="fleet-lbl" style="font-weight:700;color:rgba(255,255,255,.7);">Залишок на рахунку</span>
+        <span class="fleet-val" id="r-fleet-balance">0 Kč</span>
+      </div>
+    </div>
+
+    <!-- Попередження якщо карти не вистачає -->
+    <div class="warn-box" id="warn-box" style="display:none;">
+      ⚠️ <strong>Карти не вистачає!</strong> На рахунок флоту надійшло менше ніж відрахування. Різниця <span id="warn-diff"></span> Kč буде покрита з готівки водія.
+    </div>
+
+    <!-- Розбивка для водія -->
+    <div class="breakdown">
+      <div class="br-row">
+        <span class="br-lbl">💵 Готівка (залишається водію)</span>
+        <span class="br-val" style="color:#30D158;" id="r-cash-final">+0 Kč</span>
+      </div>
+      <div class="br-row">
+        <span class="br-lbl">💳 Переказ флотом водію</span>
+        <span class="br-val" style="color:#4FC3F7;" id="r-transfer">0 Kč</span>
+      </div>
+      <div class="br-row br-total">
+        <span class="br-lbl">💰 ВИПЛАТА ВОДІЮ</span>
+        <span class="br-val" id="r-payout">0 Kč</span>
+      </div>
+    </div>
+
+    <!-- Головна картка результату -->
+    <div class="result-card" id="result-card">
+      <div class="result-lbl" id="result-lbl">ВИПЛАТА НА РУКИ</div>
+      <div class="result-num" id="result-num">0 Kč</div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+
+    <!-- Кнопки -->
+    <button class="copy-btn" onclick="copyReport()">📤 Скопіювати звіт для водія</button>
+    <div style="height:8px;"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let extras = [];
+let extraId = 0;
+
+function getWeek() {
+  const now = new Date();
+  const jan1 = new Date(now.getFullYear(), 0, 1);
+  const wk = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${now.getFullYear()}-W${String(wk).padStart(2,'0')}`;
+}
+
+document.getElementById("drv-week").value = getWeek();
+
+function fmt(n) {
+  return Math.round(Math.abs(n)).toLocaleString('cs-CZ');
+}
+
+function addExtra() {
+  const id = ++extraId;
+  extras.push({ id, name: '', amount: 0 });
+  renderExtras();
+}
+
+function removeExtra(id) {
+  extras = extras.filter(e => e.id !== id);
+  renderExtras();
+  calc();
+}
+
+function renderExtras() {
+  const list = document.getElementById('extra-list');
+  list.innerHTML = extras.map(e => `
+    <div class="extra-row" id="ex-${e.id}">
+      <input class="extra-name-inp" type="text" placeholder="Назва (напр. DPH, штраф...)"
+        value="${e.name}" oninput="updateExtra(${e.id},'name',this.value)">
+      <input class="extra-amt-inp" type="number" inputmode="numeric" placeholder="0"
+        value="${e.amount||''}" oninput="updateExtra(${e.id},'amount',this.value)">
+      <button class="del-btn" onclick="removeExtra(${e.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateExtra(id, field, value) {
+  const ex = extras.find(e => e.id === id);
+  if (!ex) return;
+  ex[field] = field === 'amount' ? (parseFloat(value) || 0) : value;
+  calc();
+}
+
+function calc() {
+  const cash      = parseFloat(document.getElementById('bolt-cash').value)  || 0;
+  const card      = parseFloat(document.getElementById('bolt-card').value)  || 0;
+  const rent      = parseFloat(document.getElementById('rent').value)       || 0;
+  const extraSum  = extras.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalDeductions = rent + extraSum;
+  const totalEarned = cash + card;
+
+  if (totalEarned === 0 && totalDeductions === 0) {
+    document.getElementById('result-section').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('result-section').style.display = 'block';
+
+  // Fleet account: received card, deducted costs
+  const fleetBalance = card - totalDeductions;
+
+  // If fleetBalance >= 0: fleet sends fleetBalance to driver; driver keeps all cash
+  // If fleetBalance < 0: fleet has 0 to send; deficit taken from driver's cash
+  let cashFinal, transfer, payout;
+  if (fleetBalance >= 0) {
+    cashFinal = cash;
+    transfer = fleetBalance;
+    payout = cash + transfer;
+  } else {
+    // card wasn't enough — deficit comes from driver's cash
+    const deficit = Math.abs(fleetBalance);
+    cashFinal = Math.max(0, cash - deficit);
+    transfer = 0;
+    payout = cashFinal;
+  }
+
+  // Fleet block
+  document.getElementById('r-card-in').textContent    = `+${fmt(card)} Kč`;
+  document.getElementById('r-deductions').textContent = `-${fmt(totalDeductions)} Kč`;
+  const balEl = document.getElementById('r-fleet-balance');
+  balEl.textContent = `${fleetBalance >= 0 ? '+' : '-'}${fmt(fleetBalance)} Kč`;
+  balEl.style.color = fleetBalance >= 0 ? '#30D158' : '#FF453A';
+
+  // Warning
+  const warnBox = document.getElementById('warn-box');
+  if (fleetBalance < 0) {
+    warnBox.style.display = 'block';
+    document.getElementById('warn-diff').textContent = fmt(Math.abs(fleetBalance));
+  } else {
+    warnBox.style.display = 'none';
+  }
+
+  // Breakdown
+  document.getElementById('r-cash-final').textContent  = `+${fmt(cashFinal)} Kč`;
+  const transferEl = document.getElementById('r-transfer');
+  if (transfer > 0) {
+    transferEl.textContent = `+${fmt(transfer)} Kč`;
+    transferEl.style.color = '#4FC3F7';
+  } else {
+    transferEl.textContent = `0 Kč`;
+    transferEl.style.color = 'rgba(255,255,255,.2)';
+  }
+  const payoutEl = document.getElementById('r-payout');
+  payoutEl.textContent = `${payout >= 0 ? '+' : '-'}${fmt(payout)} Kč`;
+  payoutEl.style.color = payout > 0 ? '#FFC400' : '#FF453A';
+
+  // Main result card
+  const card2 = document.getElementById('result-card');
+  const lbl = document.getElementById('result-lbl');
+  const num = document.getElementById('result-num');
+  const sub = document.getElementById('result-sub');
+  card2.className = `result-card ${payout >= 0 ? 'result-positive' : 'result-negative'}`;
+  lbl.className = `result-lbl ${payout >= 0 ? 'result-lbl-pos' : 'result-lbl-neg'}`;
+  lbl.textContent = 'ВИПЛАТА НА РУКИ';
+  num.style.color = payout >= 0 ? '#30D158' : '#FF453A';
+  num.textContent = `${payout >= 0 ? '+' : ''}${fmt(payout) + (payout<0?'-':'')} Kč`;
+
+  // Fix sign for negative
+  if (payout < 0) {
+    num.textContent = `-${fmt(payout)} Kč`;
+  } else {
+    num.textContent = `+${fmt(payout)} Kč`;
+  }
+
+  const cashInfo = cash > 0 ? `Готівка: +${fmt(cashFinal)} Kč` : '';
+  const transferInfo = transfer > 0 ? `Переказ: +${fmt(transfer)} Kč` : '';
+  sub.textContent = [cashInfo, transferInfo].filter(Boolean).join(' · ');
+}
+
+function copyReport() {
+  const name        = document.getElementById('drv-name').value.trim() || 'Водій';
+  const week        = document.getElementById('drv-week').value.trim();
+  const cash        = parseFloat(document.getElementById('bolt-cash').value)  || 0;
+  const card        = parseFloat(document.getElementById('bolt-card').value)  || 0;
+  const rent        = parseFloat(document.getElementById('rent').value)       || 0;
+  const extraSum    = extras.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalDeductions = rent + extraSum;
+  const fleetBalance = card - totalDeductions;
+  let cashFinal, transfer, payout;
+  if (fleetBalance >= 0) {
+    cashFinal = cash; transfer = fleetBalance; payout = cash + transfer;
+  } else {
+    const deficit = Math.abs(fleetBalance);
+    cashFinal = Math.max(0, cash - deficit); transfer = 0; payout = cashFinal;
+  }
+
+  const extraLines = extras.filter(e=>e.amount>0)
+    .map(e=>`🔸 ${e.name||'Інше'}: -${fmt(e.amount)} Kč`)
+    .join('\n');
+
+  const transferLine = transfer > 0
+    ? `💳 Переказ від флоту: +${fmt(transfer)} Kč`
+    : `⚠️ Переказу немає (карта не покрила витрати)`;
+
+  const txt =
+`🚕 DriveStat · ВИПЛАТА ВОДІЯ
+👤 ${name} · ${week}
+━━━━━━━━━━━━━━━━━━━━
+
+💵 Готівка (cash): +${fmt(cash)} Kč
+💳 Безнал на флот: +${fmt(card)} Kč
+📊 Загальна виручка: +${fmt(cash + card)} Kč
+
+🏦 ВІДРАХУВАННЯ З КАРТИ ФЛОТУ:
+🚙 Оренда авто: -${fmt(rent)} Kč${extraLines ? '\n' + extraLines : ''}
+📉 Всього: -${fmt(totalDeductions)} Kč
+
+━━━━━━━━━━━━━━━━━━━━
+💵 Готівка залишається: +${fmt(cashFinal)} Kč
+${transferLine}
+━━━━━━━━━━━━━━━━━━━━
+💰 ВИПЛАТА НА РУКИ: +${fmt(payout)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat`;
+
+  navigator.clipboard.writeText(txt).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  showToast('✅ Звіт скопійовано!');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
