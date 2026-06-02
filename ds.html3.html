@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>DriveStat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#000;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;color:#fff;overflow:hidden;}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+/* ── LOGIN ── */
+#login-screen{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 24px;background:#000;}
+.ln-top{text-align:center;margin-bottom:32px;}
+.ln-icon{font-size:52px;display:block;margin-bottom:12px;}
+.ln-brand{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.5px;}
+.ln-brand span{color:#FFC400;}
+.ln-slogan{font-size:13px;color:rgba(255,255,255,.3);margin-top:6px;}
+.role-row{display:flex;gap:10px;width:100%;max-width:320px;margin-bottom:22px;}
+.role-btn{flex:1;padding:13px 8px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;transition:all .15s;}
+.role-btn.sel{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.4);color:#FFC400;}
+.role-icon{font-size:20px;display:block;margin-bottom:4px;}
+.ln-form{width:100%;max-width:320px;}
+.ln-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.14em;margin-bottom:6px;display:block;}
+.ln-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;padding:15px 16px;font-size:16px;font-family:inherit;margin-bottom:12px;outline:none;-webkit-appearance:none;}
+.ln-inp:focus{border-color:#FFC400;}
+.ln-btn{width:100%;padding:16px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+.ln-err{font-size:12px;color:#FF453A;text-align:center;margin-top:8px;display:none;}
+.ln-ver{font-size:10px;color:rgba(255,255,255,.1);margin-top:24px;text-align:center;}
+
+/* ── MAIN ── */
+#main-app{display:none;height:100%;flex-direction:column;}
+header{background:rgba(0,0,0,.97);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);}
+.h-brand{font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.2em;font-weight:700;}
+.h-name{font-size:18px;font-weight:700;color:#fff;margin-top:1px;letter-spacing:-.3px;}
+.h-sync{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:rgba(255,255,255,.5);padding:7px 13px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.h-sync.syncing{opacity:.5;pointer-events:none;}
+.sdot{width:6px;height:6px;border-radius:50%;background:#34D399;flex-shrink:0;}
+.sdot.spin{background:#FFC400;animation:blink .7s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab-pane{display:none;padding:14px 14px 100px;}
+.tab-pane.active{display:block;}
+
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(0,0,0,.97);backdrop-filter:blur(30px);border-top:1px solid rgba(255,255,255,.07);display:flex;padding:8px 0 max(12px,env(safe-area-inset-bottom));z-index:50;}
+.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;font-family:inherit;}
+.nb-icon{font-size:22px;}
+.nb-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:500;}
+.nb.active .nb-lbl{color:#FFC400;font-weight:700;}
+.nb-dot{width:4px;height:4px;border-radius:2px;background:#FFC400;display:none;}
+.nb.active .nb-dot{display:block;}
+
+/* ── CARDS ── */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;margin-bottom:10px;overflow:hidden;}
+.card-pad{padding:14px 16px;}
+.row-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.row-item:last-child{border-bottom:none;}
+.ri-l{font-size:14px;color:rgba(255,255,255,.55);}
+.ri-r{font-size:14px;font-weight:700;}
+.sec-lbl{font-size:10px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.14em;margin:14px 0 8px 2px;}
+.sec-lbl:first-child{margin-top:0;}
+
+/* ── PULSE RING ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;padding:16px 0 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:22px;margin-bottom:10px;}
+.ring-outer{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;}
+.ring-svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.r-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:8;}
+.r-track{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:377;}
+.ring-center{text-align:center;z-index:1;}
+.ring-pct{font-size:34px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
+.ring-sub{font-size:9px;color:rgba(255,255,255,.3);margin-top:3px;letter-spacing:.05em;}
+.ring-gross{margin-top:12px;text-align:center;}
+.ring-gross-lbl{font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.1em;margin-bottom:3px;}
+.ring-gross-num{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.5px;}
+.ring-badge{margin-top:10px;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;}
+.rb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#F59E0B;}
+.rb-ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34D399;}
+
+/* ── INSIGHT ── */
+.insight{background:rgba(245,158,11,.05);border-left:2px solid #F59E0B;border-radius:0 12px 12px 0;padding:10px 14px;margin-bottom:10px;}
+.ins-txt{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;}
+.ins-b{color:#fff;font-weight:600;}
+
+/* ── TODAY ── */
+.today-card{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.13);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.tc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.tc-lbl{font-size:10px;font-weight:700;color:rgba(52,211,153,.55);letter-spacing:.1em;}
+.tc-badge{font-size:10px;font-weight:600;color:#34D399;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.18);border-radius:7px;padding:3px 8px;}
+.tc-num{font-size:36px;font-weight:700;color:#34D399;letter-spacing:-1.5px;line-height:1;}
+.tc-kc{font-size:18px;color:rgba(52,211,153,.4);}
+.tc-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:5px;}
+.tc-prog{height:4px;background:rgba(52,211,153,.1);border-radius:2px;overflow:hidden;margin-top:10px;}
+.tc-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#34D399,#10B981);}
+
+/* ── SWIPE CARDS ── */
+.swipe-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.sw-ttl{font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.1em;}
+.sw-hint{font-size:10px;color:rgba(255,255,255,.1);}
+.swipe-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;padding-bottom:2px;}
+.swipe-row::-webkit-scrollbar{display:none;}
+.sw{flex-shrink:0;width:120px;border-radius:16px;padding:13px 14px;border:1px solid rgba(255,255,255,.07);}
+.sw-week{background:rgba(251,191,36,.07);}
+.sw-hour{background:rgba(99,102,241,.08);}
+.sw-tax{background:rgba(139,92,246,.07);}
+.swl{font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.07em;margin-bottom:5px;}
+.swv{font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1;}
+.sws{font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;}
+
+/* ── COST BARS ── */
+.cst-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.cst-hdr{display:flex;justify-content:space-between;margin-bottom:12px;}
+.cst-ttl{font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;}
+.cst-tot{font-size:12px;font-weight:700;color:#FF453A;}
+.cst-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cst-row:last-child{margin-bottom:0;}
+.cst-name{font-size:11px;color:rgba(255,255,255,.35);width:80px;flex-shrink:0;}
+.cst-bar{flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.cst-fill{height:100%;border-radius:2px;}
+.cst-val{font-size:11px;font-weight:600;color:#FF6B6B;width:46px;text-align:right;flex-shrink:0;}
+
+/* ── REPORTS TAB ── */
+.rep-hero{background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(94,92,230,.1));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;margin-bottom:10px;}
+.rh-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:6px;}
+.rh-num{font-size:34px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
+.rh-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:5px;}
+.rh-prog{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-top:12px;}
+.rh-fill{height:100%;border-radius:2px;}
+.rh-prow{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.25);margin-top:4px;}
+
+.week-card{background:rgba(255,196,0,.07);border:1px solid rgba(255,196,0,.15);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.wc-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.wc-lbl{font-size:10px;font-weight:700;color:rgba(255,196,0,.55);letter-spacing:.1em;}
+.wc-num{font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.wc-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,196,0,.08);}
+.wc-row:last-child{border-bottom:none;}
+.wc-l{font-size:13px;color:rgba(255,255,255,.45);}
+.wc-r{font-size:13px;font-weight:700;}
+.wc-prog{height:3px;background:rgba(255,196,0,.1);border-radius:2px;overflow:hidden;margin:10px 0 5px;}
+.wc-fill{height:100%;border-radius:2px;}
+.wc-meta{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.2);}
+
+.days-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;margin-bottom:10px;}
+.days-ttl{padding:12px 16px 8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;border-bottom:1px solid rgba(255,255,255,.05);}
+.day-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.day-row:last-child{border-bottom:none;}
+.day-date{font-size:13px;font-weight:600;color:#fff;width:32px;flex-shrink:0;}
+.day-bar{flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.day-fill{height:100%;border-radius:2px;}
+.day-trips{font-size:10px;color:rgba(255,255,255,.2);width:32px;text-align:center;flex-shrink:0;}
+.day-earn{font-size:12px;font-weight:700;text-align:right;width:52px;flex-shrink:0;}
+
+.share-btn{width:100%;padding:15px;background:rgba(255,196,0,.08);border:1.5px solid rgba(255,196,0,.2);border-radius:16px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+.share-btn:active{transform:scale(.98);}
+
+/* ── PROFILE TAB ── */
+.usr-card{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px;margin-bottom:14px;}
+.usr-av{width:46px;height:46px;border-radius:50%;background:rgba(255,196,0,.1);border:2px solid rgba(255,196,0,.3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#FFC400;flex-shrink:0;}
+.usr-name{font-size:16px;font-weight:700;}
+.usr-role{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+
+.lang-row{display:flex;gap:8px;margin-bottom:14px;}
+.lang-pill{flex:1;padding:11px 6px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);text-align:center;}
+.lang-pill.on{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#FFC400;}
+.lang-flag{font-size:18px;display:block;margin-bottom:3px;}
+
+.st-group{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+.st-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.st-row:last-child{border-bottom:none;}
+.st-lbl{font-size:14px;color:rgba(255,255,255,.7);}
+.st-hint{font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;}
+.st-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#FFC400;padding:8px 12px;font-size:14px;font-family:inherit;width:100px;text-align:right;outline:none;-webkit-appearance:none;}
+.st-inp:focus{border-color:#FFC400;}
+.tog{position:relative;width:44px;height:26px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.1);border-radius:13px;transition:.2s;}
+.tog-sl:before{content:"";position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.tog input:checked+.tog-sl{background:#30D158;}
+.tog input:checked+.tog-sl:before{transform:translateX(18px);}
+
+/* Dynamic lists */
+.dyn-list{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+.dyn-item{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.dyn-item:last-child{border-bottom:none;}
+.dyn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dyn-name{flex:1;font-size:13px;color:rgba(255,255,255,.65);}
+.dyn-amt{font-size:13px;font-weight:700;flex-shrink:0;}
+.dyn-del{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0;border:none;background:rgba(255,69,58,.1);color:#FF453A;}
+.add-strip{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-top:1px solid rgba(255,255,255,.05);}
+.add-lbl-txt{font-size:13px;font-weight:700;color:rgba(255,196,0,.7);}
+.add-lbl-ico{font-size:20px;color:rgba(255,196,0,.7);}
+
+/* add inline */
+.add-inline{display:flex;gap:6px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);}
+.add-inline.col{flex-direction:column;}
+.ai-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;flex:1;min-width:0;}
+.ai-amt{width:80px;color:#FFC400;flex-shrink:0;}
+.ai-btn{width:36px;height:36px;border-radius:10px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.25);color:#FFC400;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ai-btn-green{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:#34D399;}
+
+.btn-save{width:100%;padding:15px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;}
+.btn-logout{width:100%;padding:13px;background:rgba(255,69,58,.07);border:1px solid rgba(255,69,58,.18);border-radius:12px;color:#FF453A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:#111;border:1px solid rgba(255,255,255,.1);border-radius:24px 24px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));width:100%;max-width:430px;}
+.modal-ttl{font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;}
+.modal-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.13em;display:block;margin-bottom:6px;}
+.modal-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;padding:14px 15px;font-size:16px;font-family:inherit;margin-bottom:12px;outline:none;-webkit-appearance:none;}
+.modal-inp:focus{border-color:#FFC400;}
+.modal-row{display:flex;gap:8px;}
+.modal-save{flex:1;padding:15px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.modal-cancel{padding:15px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:rgba(255,255,255,.4);font-size:15px;cursor:pointer;font-family:inherit;}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(34,211,153,.12);border:1px solid rgba(52,211,153,.25);border-radius:14px;color:#34D399;padding:11px 20px;font-size:13px;z-index:300;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;font-weight:700;backdrop-filter:blur(10px);}
+#toast.show{opacity:1;}
+.hint-txt{font-size:10px;color:rgba(255,255,255,.15);text-align:center;padding:4px 0 8px;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="ln-top">
+    <span class="ln-icon">🚕</span>
+    <div class="ln-brand">Drive<span>Stat</span></div>
+    <div class="ln-slogan">Знай скільки ти реально заробив</div>
+  </div>
+  <div class="role-row">
+    <button class="role-btn sel" id="role-driver" onclick="selectRole('driver')">
+      <span class="role-icon">🧑‍✈️</span>Водій
+    </button>
+    <button class="role-btn" id="role-admin" onclick="selectRole('admin')">
+      <span class="role-icon">📊</span>Адмін
+    </button>
+  </div>
+  <div class="ln-form">
+    <label class="ln-lbl">ІМ'Я</label>
+    <input class="ln-inp" id="ln-name" type="text" placeholder="Roman Yarema" autocomplete="name">
+    <label class="ln-lbl">ПАРОЛЬ</label>
+    <input class="ln-inp" id="ln-pass" type="password" placeholder="••••••">
+    <button class="ln-btn" onclick="doLogin()">Увійти →</button>
+    <div class="ln-err" id="ln-err">Невірне ім'я або пароль</div>
+  </div>
+  <div class="ln-ver">DriveStat v3.0</div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="main-app">
+  <header>
+    <div>
+      <div class="h-brand" id="h-brand">BOLT · ВОДІЙ</div>
+      <div class="h-name" id="h-name">Водій</div>
+    </div>
+    <button class="h-sync" id="sync-btn" onclick="syncBolt()">
+      <div class="sdot" id="sdot"></div>
+      <span id="sync-lbl">Синхронізувати</span>
+    </button>
+  </header>
+
+  <div id="content">
+    <div class="tab-pane active" id="tab-dash"></div>
+    <div class="tab-pane" id="tab-reports"></div>
+    <div class="tab-pane" id="tab-profile"></div>
+  </div>
+
+  <nav>
+    <button class="nb active" id="nav-dash" onclick="showTab('dash')">
+      <span class="nb-icon">📊</span><span class="nb-lbl">Дашборд</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-reports" onclick="showTab('reports')">
+      <span class="nb-icon">📈</span><span class="nb-lbl">Звіти</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-profile" onclick="showTab('profile')">
+      <span class="nb-icon">👤</span><span class="nb-lbl">Профіль</span><div class="nb-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-ov" id="modal" style="display:none;" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-ttl" id="modal-ttl">Додати</div>
+    <label class="modal-lbl" id="modal-name-lbl">НАЗВА</label>
+    <input class="modal-inp" id="modal-name" type="text" placeholder="Назва...">
+    <label class="modal-lbl">СУМА (Kč)</label>
+    <input class="modal-inp" id="modal-amt" type="number" inputmode="numeric" placeholder="0">
+    <label class="modal-lbl" id="modal-date-lbl">ДАТА</label>
+    <input class="modal-inp" id="modal-date" type="date">
+    <div class="modal-row">
+      <button class="modal-save" id="modal-save-btn" onclick="saveModal()">✓ Зберегти</button>
+      <button class="modal-cancel" onclick="closeModal()">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── USERS ──
+const USERS = {
+  "Roman Yarema": { pass:"taxi2026",  role:"driver" },
+  "Admin":        { pass:"fleet2026", role:"admin"  },
+  "Daniel":       { pass:"daniel2026",role:"driver" },
+  "Sergii":       { pass:"sergii2026",role:"driver" },
+};
+const WORKER = "https://uber-bolt-proxy.romon-yarema.workers.dev";
+const MY_UUID = "ead4f6a3-8c17-42a1-9fb3-277f6f892ee8";
+
+let selectedRole = "driver";
+let _modalCtx = null;
+
+// ── STATE ──
+let state = {
+  user: null, role:"driver", lang:"uk",
+  boltData:{ orders:[] },
+  monthlyFixedCosts: [
+    {id:"m1", name:"Страховка авто", amount:2000},
+    {id:"m2", name:"Соціалка OSVČ",  amount:5000},
+  ],
+  weeklyFixedCosts: [],
+  recurringIncome: [],
+  oneTimeIncome: [],
+  oneTimeExpenses: [],
+  odometerLog: [],   // [{id, date, value}] — повні показники одометра
+  settings:{
+    fuelEnabled: true,
+    fuelPrice:41, fuelCons:9,
+    amort:1.5,
+    dailyGoal:1800,
+    boltCommission:25,
+    dphEnabled:false,
+    incomeTaxEnabled:false,
+    incomeTaxRate:15,
+    boltKmEnabled: true,  // true=Bolt API км, false=ручний одометр
+  },
+  lastSync:null,
+};
+
+// ── HELPERS ──
+function fmt(n){ return Math.round(Math.abs(n||0)).toLocaleString('cs-CZ'); }
+function fmtS(n){ return (n>=0?"+":"-")+fmt(n); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function todayMonth(){ return today().slice(0,7); }
+function getWeekRange(){
+  const d=new Date(); const day=d.getDay()||7;
+  const mon=new Date(d); mon.setDate(d.getDate()-day+1);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return [mon.toISOString().slice(0,10), sun.toISOString().slice(0,10)];
+}
+function toPragueDate(ts){
+  const d=new Date((ts+7200)*1000);
+  return d.toISOString().slice(0,10);
+}
+function daysLeftInMonth(){
+  const n=new Date(); const last=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();
+  return Math.max(1, last-n.getDate()+1);
+}
+function save(){ localStorage.setItem('ds3', JSON.stringify(state)); }
+function load(){
+  try{
+    const s=localStorage.getItem('ds3');
+    if(s){
+      const p=JSON.parse(s);
+      state={...state,...p};
+      // migrate old otherIncome → oneTimeIncome
+      if(p.otherIncome&&p.otherIncome.length>0&&(!p.oneTimeIncome||p.oneTimeIncome.length===0)){
+        state.oneTimeIncome=p.otherIncome;
+      }
+    }
+  }catch(e){}
+}
+function isAdmin(){ return state.role==='admin'; }
+
+// ── TRANSLATIONS (simplified) ──
+const T = {
+  uk:{ dash:"Дашборд", reports:"Звіти", profile:"Профіль",
+       monthCovered:"місяць покрито", grossEarned:"ЗАГАЛЬНИЙ ДОХІД",
+       todayLbl:"СЬОГОДНІ", goalDone:"✅ Ціль виконана", goalWait:"⏳ До цілі",
+       weekLbl:"ТИЖДЕНЬ (чистий)", hourLbl:"ДОХІД / ГОД", taxLbl:"РЕЗЕРВА",
+       afterFuel:"після бензину та аморт.", avgHour:"Kč середній",
+       reserveTax:"Kč резерв",
+       costMonth:"ВИТРАТИ МІСЯЦЯ", monthReport:"МІСЯЦЬ",
+       weekReport:"ЦЬОГО ТИЖНЯ", daysHist:"ДНІ", shareBtn:"📤 Поділитися звітом",
+       boltIncome:"Bolt дохід", otherIncome:"Інші доходи",
+       fuel:"Авто + пальне", amortCost:"Амортизація",
+       weeklyFC:"Тижневі витрати", monthlyFC:"Місячні витрати",
+       noData:"Синхронізуй щоб побачити дані",
+       settingsSaved:"✓ Збережено", added:"✓ Додано", deleted:"✓ Видалено",
+       fillAll:"Заповни всі поля",
+  },
+  cs:{ dash:"Dnes", reports:"Výkazy", profile:"Profil",
+       monthCovered:"měsíc pokryto", grossEarned:"CELKOVÝ PŘÍJEM",
+       todayLbl:"DNES", goalDone:"✅ Cíl splněn", goalWait:"⏳ Do cíle",
+       weekLbl:"TÝDEN (čistý)", hourLbl:"PŘÍJEM / HOD", taxLbl:"REZERVA",
+       afterFuel:"po odečtu paliva a odpisu", avgHour:"Kč průměrně",
+       reserveTax:"Kč rezerva",
+       costMonth:"NÁKLADY MĚSÍCE", monthReport:"MĚSÍC",
+       weekReport:"TENTO TÝDEN", daysHist:"DNY", shareBtn:"📤 Sdílet výkaz",
+       boltIncome:"Bolt příjem", otherIncome:"Ostatní příjmy",
+       fuel:"Auto + palivo", amortCost:"Odpis",
+       weeklyFC:"Týdenní náklady", monthlyFC:"Měsíční náklady",
+       noData:"Synchronizuj pro zobrazení dat",
+       settingsSaved:"✓ Uloženo", added:"✓ Přidáno", deleted:"✓ Smazáno",
+       fillAll:"Vyplň všechna pole",
+  },
+  ru:{ dash:"Сегодня", reports:"Отчёты", profile:"Профиль",
+       monthCovered:"месяц покрыто", grossEarned:"ОБЩИЙ ДОХОД",
+       todayLbl:"СЕГОДНЯ", goalDone:"✅ Цель выполнена", goalWait:"⏳ До цели",
+       weekLbl:"НЕДЕЛЯ (чистый)", hourLbl:"ДОХОД / ЧАС", taxLbl:"РЕЗЕРВ",
+       afterFuel:"после бензина и амортиз.", avgHour:"Kč средний",
+       reserveTax:"Kč резерв",
+       costMonth:"РАСХОДЫ МЕСЯЦА", monthReport:"МЕСЯЦ",
+       weekReport:"ЭТА НЕДЕЛЯ", daysHist:"ДНИ", shareBtn:"📤 Поделиться отчётом",
+       boltIncome:"Bolt доход", otherIncome:"Другие доходы",
+       fuel:"Авто + бензин", amortCost:"Амортизация",
+       weeklyFC:"Еженедельные расходы", monthlyFC:"Ежемесячные расходы",
+       noData:"Синхронизируй для просмотра данных",
+       settingsSaved:"✓ Сохранено", added:"✓ Добавлено", deleted:"✓ Удалено",
+       fillAll:"Заполни все поля",
+  }
+};
+function t(k){ const l=state.lang||'uk'; return (T[l]&&T[l][k])||T.uk[k]||k; }
+
+// ── CALC ──
+function ordersForMonth(mo){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return ts && toPragueDate(ts).slice(0,7)===mo;
+  });
+}
+function ordersForWeek(from,to){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(!ts) return false;
+    const d=toPragueDate(ts);
+    return d>=from && d<=to;
+  });
+}
+function ordersForDay(day){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return ts && toPragueDate(ts)===day;
+  });
+}
+
+// ── ODOMETER HELPERS ──
+function getOdometerKmForPeriod(from, to){
+  // Sort log by date
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(log.length<2) return 0;
+  // Find entries covering the period
+  const inPeriod=log.filter(e=>e.date>=from&&e.date<=to);
+  if(inPeriod.length===0) return 0;
+  if(inPeriod.length===1){
+    // Find the entry just before the period start
+    const before=log.filter(e=>e.date<from).pop();
+    if(!before) return 0;
+    return Math.max(0, inPeriod[inPeriod.length-1].value - before.value);
+  }
+  return Math.max(0, inPeriod[inPeriod.length-1].value - inPeriod[0].value);
+}
+function getOdometerKmForDay(day){
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const idx=log.findIndex(e=>e.date===day);
+  if(idx<0) return 0;
+  if(idx===0) return 0;
+  return Math.max(0, log[idx].value - log[idx-1].value);
+}
+function getOdometerKmForMonth(mo){
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const inMo=log.filter(e=>e.date.startsWith(mo));
+  if(inMo.length===0) return 0;
+  const before=log.filter(e=>e.date<inMo[0].date).pop();
+  const start=before?before.value:inMo[0].value;
+  return Math.max(0, inMo[inMo.length-1].value - start);
+}
+
+function calcVarCosts(km){
+  const s=state.settings;
+  const fuel = s.fuelEnabled ? (km/100)*s.fuelCons*s.fuelPrice : 0;
+  const amort = (s.amort>0) ? km*s.amort : 0;
+  return {fuel, amort, total:fuel+amort};
+}
+
+// Get km for a period based on current mode
+function getKm(mode, ...args){
+  const s=state.settings;
+  if(s.boltKmEnabled){
+    // km already calculated from orders — passed in directly
+    return args[0]||0;
+  } else {
+    if(mode==='day')   return getOdometerKmForDay(args[0]);
+    if(mode==='week')  return getOdometerKmForPeriod(args[0],args[1]);
+    if(mode==='month') return getOdometerKmForMonth(args[0]);
+    return 0;
+  }
+}
+
+function calcMonth(mo){
+  mo=mo||todayMonth(); const s=state.settings;
+  const orders=ordersForMonth(mo);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForMonth(mo);
+  const vc=calcVarCosts(km);
+
+  const recurringInc=(state.recurringIncome||[]).reduce((a,e)=>a+e.amount,0);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date?.startsWith(mo)).reduce((a,e)=>a+e.amount,0);
+  const oneTimeExp=(state.oneTimeExpenses||[]).filter(e=>e.date?.startsWith(mo)).reduce((a,e)=>a+e.amount,0);
+  const gross=boltGross+recurringInc+oneTimeInc;
+
+  const fixedMonthly=(state.monthlyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const weeksInMonth=4.33;
+  const fixedWeekly=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0)*weeksInMonth;
+  const dph=s.dphEnabled ? boltGross*(s.boltCommission/100)*0.21 : 0;
+  const totalFixed=fixedMonthly+fixedWeekly+dph;
+  const totalVar=vc.total+oneTimeExp;
+  const totalCosts=totalFixed+totalVar;
+
+  const netBeforeTax=gross-totalCosts;
+  const incomeTax=s.incomeTaxEnabled&&netBeforeTax>0 ? netBeforeTax*(s.incomeTaxRate/100) : 0;
+  const net=netBeforeTax-incomeTax;
+  const pct=totalFixed>0 ? (gross/totalFixed)*100 : 0;
+
+  // kph = boltGross / active hours
+  const activeMin=orders.reduce((a,o)=>{
+    const s2=o.order_created_timestamp||0, e2=o.order_finished_timestamp||0;
+    return a+(e2>s2?(e2-s2)/60:0);
+  },0);
+  const activeHours=activeMin/60;
+
+  const dailyTarget=Math.round(Math.max(0,totalFixed-gross+totalVar)/daysLeftInMonth());
+
+  return {gross,boltGross,recurringInc,oneTimeInc,oneTimeExp,km,boltKm,vc,
+    fixedMonthly,fixedWeekly,dph,totalFixed,totalVar,totalCosts,
+    incomeTax,net,pct,activeHours,dailyTarget,trips:orders.length,mo};
+}
+
+function calcWeek(){
+  const [from,to]=getWeekRange();
+  const orders=ordersForWeek(from,to);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const s=state.settings;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForPeriod(from,to);
+  const vc=calcVarCosts(km);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date>=from&&e.date<=to).reduce((a,e)=>a+e.amount,0);
+  const weeklyFixed=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const gross=boltGross+oneTimeInc;
+  const netVarOnly=gross-vc.total;
+  const netFull=gross-vc.total-weeklyFixed;
+  const pct=weeklyFixed>0 ? Math.min(100,(gross-vc.total)/weeklyFixed*100) : 100;
+  return {gross,boltGross,oneTimeInc,km,vc,weeklyFixed,netVarOnly,netFull,pct,trips:orders.length,from,to};
+}
+
+function calcToday(){
+  const d=today(); const s=state.settings;
+  const orders=ordersForDay(d);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForDay(d);
+  const vc=calcVarCosts(km);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date===d).reduce((a,e)=>a+e.amount,0);
+  const exp=(state.oneTimeExpenses||[]).filter(e=>e.date===d).reduce((a,e)=>a+e.amount,0);
+  const net=boltGross+oneTimeInc-vc.total-exp;
+  const pct=s.dailyGoal>0?Math.min(100,(net/s.dailyGoal)*100):0;
+  return {boltGross,oneTimeInc,km,vc,exp,net,pct,trips:orders.length,goal:s.dailyGoal};
+}
+
+// ── LOGIN ──
+function selectRole(r){
+  selectedRole=r;
+  document.getElementById('role-driver').classList.toggle('sel',r==='driver');
+  document.getElementById('role-admin').classList.toggle('sel',r==='admin');
+}
+function doLogin(){
+  const name=document.getElementById('ln-name').value.trim();
+  const pass=document.getElementById('ln-pass').value;
+  const u=USERS[name];
+  if(u&&u.pass===pass&&u.role===selectedRole){
+    state.user=name; state.role=u.role; save(); showApp();
+  } else {
+    const el=document.getElementById('ln-err');
+    el.style.display='block'; el.textContent='Невірне ім\'я або пароль';
+  }
+}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  const app=document.getElementById('main-app'); app.style.display='flex';
+  document.getElementById('h-name').textContent=state.user;
+  document.getElementById('h-brand').textContent=isAdmin()?'BOLT · ФЛОТ':'BOLT · МОЇ ПОЇЗДКИ';
+  renderAll();
+}
+function logout(){ state.user=null; save(); location.reload(); }
+
+// ── SYNC ──
+async function syncBolt(){
+  const btn=document.getElementById('sync-btn');
+  const dot=document.getElementById('sdot');
+  const lbl=document.getElementById('sync-lbl');
+  btn.classList.add('syncing'); dot.classList.add('spin'); lbl.textContent='Завантаження...';
+  try{
+    const now=Math.floor(Date.now()/1000);
+    const r=await fetch(`${WORKER}/orders`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({start_ts:now-30*86400,end_ts:now})}).then(r=>r.json());
+    if(r.orders?.length){
+      state.boltData.orders = isAdmin() ? r.orders : r.orders.filter(o=>o.driver_uuid===MY_UUID);
+    }
+    state.lastSync=new Date().toLocaleTimeString('uk',{hour:'2-digit',minute:'2-digit'});
+    save(); showToast('✅ Bolt дані оновлено!'); renderAll();
+  }catch(e){ showToast('❌ Помилка синхронізації'); }
+  finally{
+    btn.classList.remove('syncing'); dot.classList.remove('spin');
+    lbl.textContent=state.lastSync?`Оновлено ${state.lastSync}`:'Синхронізувати';
+  }
+}
+
+// ── RENDER DASH ──
+function renderDash(){
+  const m=calcMonth(); const td=calcToday(); const w=calcWeek();
+  const s=state.settings;
+
+  // Pulse ring
+  const pct=Math.round(m.pct);
+  const over100=pct>=100;
+  const ringPct=Math.min(100,m.pct);
+  const dashoffset=377*(1-ringPct/100);
+  const ringColor=pct>=100?'#34D399':pct>=50?'#FFC400':'#FF453A';
+  const taxReserve=s.dphEnabled||s.incomeTaxEnabled ? m.dph+m.incomeTax : 0;
+
+  // Individual cost bars
+  const bars=[];
+  if(s.fuelEnabled && m.vc.fuel>0) bars.push({name:t('fuel'), val:m.vc.fuel, color:'#FB923C'});
+  if(s.amort>0 && m.vc.amort>0)   bars.push({name:t('amortCost'), val:m.vc.amort, color:'#FBBF24'});
+  (state.monthlyFixedCosts||[]).forEach(c=>bars.push({name:c.name, val:c.amount, color:'#FF453A'}));
+  (state.weeklyFixedCosts||[]).forEach(c=>bars.push({name:c.name, val:c.amount*4.33, color:'#F87171'}));
+  if(m.dph>0) bars.push({name:'ПДВ 21%', val:m.dph, color:'#A78BFA'});
+  if(m.incomeTax>0) bars.push({name:'Податок '+s.incomeTaxRate+'%', val:m.incomeTax, color:'#818CF8'});
+  const maxBar=Math.max(...bars.map(b=>b.val),1);
+
+  const insight= pct>=100
+    ? `Місяць <span class="ins-b">покрито на ${pct}%</span>. Все понад норму — твій чистий прибуток! 🎉`
+    : `Заробляй <span class="ins-b">${fmt(m.dailyTarget)} Kč/день</span> — закриєш місяць. Залишилось ${daysLeftInMonth()} днів.`;
+
+  document.getElementById('tab-dash').innerHTML = `
+    <!-- PULSE RING -->
+    <div class="ring-wrap">
+      <div class="ring-outer">
+        <svg class="ring-svg" viewBox="0 0 130 130">
+          <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${ringColor}"/>
+            <stop offset="100%" stop-color="${ringColor}88"/>
+          </linearGradient></defs>
+          <circle class="r-bg" cx="65" cy="65" r="60"/>
+          <circle class="r-track" cx="65" cy="65" r="60" stroke="url(#rg)" stroke-dashoffset="${dashoffset.toFixed(1)}"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" style="color:${ringColor};">${pct}%</div>
+          <div class="ring-sub">${t('monthCovered')}</div>
+        </div>
+      </div>
+      <div class="ring-gross">
+        <div class="ring-gross-lbl">${t('grossEarned')}</div>
+        <div class="ring-gross-num">+${fmt(m.gross)} Kč</div>
+      </div>
+      <div class="ring-badge ${over100?'rb-ok':'rb-warn'}">
+        ${over100?`🎉 Перевиконано +${fmt(m.gross-m.totalFixed)} Kč`:`⏳ Ще ${fmt(m.totalFixed-m.gross+m.totalVar)} Kč`}
+      </div>
+    </div>
+
+    <!-- INSIGHT -->
+    <div class="insight"><div class="ins-txt">${insight}</div></div>
+
+    <!-- TODAY -->
+    <div class="today-card">
+      <div class="tc-hdr">
+        <span class="tc-lbl">${t('todayLbl')}</span>
+        <span class="tc-badge">${td.pct>=100?t('goalDone'):t('goalWait')+': '+fmt(td.goal-td.net)+' Kč'}</span>
+      </div>
+      <div class="tc-num">${fmtS(td.net)} <span class="tc-kc">Kč</span></div>
+      <div class="tc-sub">${td.trips} поїздок · ${fmt(td.km)} км · ціль ${fmt(td.goal)} Kč</div>
+      <div class="tc-prog"><div class="tc-fill" style="width:${td.pct.toFixed(0)}%;"></div></div>
+    </div>
+
+    <!-- SWIPE KEY CARDS -->
+    <div class="swipe-hdr"><span class="sw-ttl">КЛЮЧОВІ ЦИФРИ</span><span class="sw-hint">← свайп →</span></div>
+    <div class="swipe-row">
+      <div class="sw sw-week">
+        <div class="swl">${t('weekLbl')}</div>
+        <div class="swv" style="color:${w.netVarOnly>=0?'#FCD34D':'#FF453A'};">${w.netVarOnly>=0?'+':''}${fmt(w.netVarOnly)}</div>
+        <div class="sws">Kč</div>
+      </div>
+      ${taxReserve>0?`<div class="sw sw-tax">
+        <div class="swl">${t('taxLbl')}</div>
+        <div class="swv" style="color:#A78BFA;">${fmt(taxReserve)}</div>
+        <div class="sws">${t('reserveTax')}</div>
+      </div>`:''}
+      <div class="sw" style="background:rgba(255,255,255,.04);">
+        <div class="swl">ЦІЛЬ НА СЬОГОДНІ</div>
+        <div class="swv" style="color:#F59E0B;">${fmt(m.dailyTarget)}</div>
+        <div class="sws">Kč · ${m.daysLeft||daysLeftInMonth()} дн.</div>
+      </div>
+    </div>
+
+    <!-- COST BARS -->
+    ${bars.length>0?`<div class="cst-card">
+      <div class="cst-hdr"><span class="cst-ttl">${t('costMonth')}</span><span class="cst-tot">-${fmt(m.totalCosts)} Kč</span></div>
+      ${bars.map(b=>`<div class="cst-row">
+        <span class="cst-name">${b.name}</span>
+        <div class="cst-bar"><div class="cst-fill" style="width:${Math.min(100,(b.val/maxBar)*100).toFixed(0)}%;background:${b.color};"></div></div>
+        <span class="cst-val">-${fmt(b.val)}</span>
+      </div>`).join('')}
+    </div>`:''}
+
+    ${state.lastSync?`<div class="hint-txt">Дані з Bolt · ${state.lastSync}</div>`:`<div class="hint-txt">${t('noData')}</div>`}
+  `;
+}
+
+// ── RENDER REPORTS ──
+function renderReports(){
+  const m=calcMonth(); const w=calcWeek();
+
+  // Days grouped
+  const byDay={};
+  state.boltData.orders.filter(o=>o.order_status==='finished').forEach(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp; if(!ts) return;
+    const d=toPragueDate(ts);
+    if(!byDay[d]) byDay[d]={bolt:0,other:0,km:0,trips:0};
+    byDay[d].bolt+=(o.order_price?.net_earnings||0);
+    byDay[d].km+=(o.ride_distance||0)/1000;
+    byDay[d].trips++;
+  });
+  (state.oneTimeIncome||[]).forEach(e=>{
+    if(!e.date) return;
+    if(!byDay[e.date]) byDay[e.date]={bolt:0,other:0,km:0,trips:0};
+    byDay[e.date].other+=e.amount;
+  });
+  const days=Object.keys(byDay).sort().reverse().slice(0,30);
+  const maxTotal=Math.max(...days.map(d=>byDay[d].bolt+byDay[d].other),1);
+
+  const pct=Math.min(100,m.pct);
+  const progColor=pct>=100?'#34D399':pct>=50?'#FFC400':'#FF453A';
+  const wFrom=w.from.slice(5).replace('-','.');
+  const wTo=w.to.slice(5).replace('-','.');
+
+  // ── YEAR/MONTH HISTORY ──
+  // Collect all months from orders + oneTimeIncome
+  const allMonths=new Set();
+  state.boltData.orders.filter(o=>o.order_status==='finished').forEach(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(ts) allMonths.add(toPragueDate(ts).slice(0,7));
+  });
+  (state.oneTimeIncome||[]).forEach(e=>{ if(e.date) allMonths.add(e.date.slice(0,7)); });
+  (state.oneTimeExpenses||[]).forEach(e=>{ if(e.date) allMonths.add(e.date.slice(0,7)); });
+
+  const monthsSorted=[...allMonths].sort().reverse();
+  const byYear={};
+  monthsSorted.forEach(mo=>{
+    const yr=mo.slice(0,4);
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(mo);
+  });
+  const years=Object.keys(byYear).sort().reverse();
+
+  const monthNames={
+    '01':'Січень','02':'Лютий','03':'Березень','04':'Квітень',
+    '05':'Травень','06':'Червень','07':'Липень','08':'Серпень',
+    '09':'Вересень','10':'Жовтень','11':'Листопад','12':'Грудень'
+  };
+
+  const histHTML = years.length===0 ? '' : `
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;margin:14px 0 8px 2px;">📅 ІСТОРІЯ</div>
+    ${years.map(yr=>`
+      <div class="card" style="margin-bottom:8px;overflow:hidden;">
+        <div onclick="toggleYear('${yr}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;cursor:pointer;">
+          <span style="font-size:15px;font-weight:700;color:#fff;">${yr}</span>
+          <span id="yr-arrow-${yr}" style="font-size:16px;color:rgba(255,255,255,.25);transition:transform .2s;">⌄</span>
+        </div>
+        <div id="yr-body-${yr}" style="display:none;">
+          ${byYear[yr].map(mo=>{
+            const mc=calcMonth(mo);
+            const moName=monthNames[mo.slice(5)]||mo.slice(5);
+            const col=mc.net>=0?'#34D399':'#FF453A';
+            return `
+            <div style="border-top:1px solid rgba(255,255,255,.05);">
+              <div onclick="toggleMonth('${mo}')" style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px 11px 20px;cursor:pointer;">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#fff;">${moName} ${mo.slice(0,4)}</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;">${mc.trips} поїздок · ${fmt(mc.km)} км</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:14px;font-weight:700;color:${col};">${fmtS(mc.net)} Kč</span>
+                  <span id="mo-arrow-${mo}" style="font-size:14px;color:rgba(255,255,255,.2);">›</span>
+                </div>
+              </div>
+              <div id="mo-body-${mo}" style="display:none;padding:0 16px 12px 20px;">
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Bolt дохід</span><span style="font-size:12px;font-weight:600;color:#4FC3F7;">+${fmt(mc.boltGross)} Kč</span></div>
+                ${mc.recurringInc>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Постійні доходи</span><span style="font-size:12px;font-weight:600;color:#34D399;">+${fmt(mc.recurringInc)} Kč</span></div>`:''}
+                ${mc.oneTimeInc>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Разові доходи</span><span style="font-size:12px;font-weight:600;color:#34D399;">+${fmt(mc.oneTimeInc)} Kč</span></div>`:''}
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Всього витрат</span><span style="font-size:12px;font-weight:600;color:#FF6B6B;">-${fmt(mc.totalCosts)} Kč</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0 2px;"><span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);">Чистий</span><span style="font-size:13px;font-weight:800;color:${col};">${fmtS(mc.net)} Kč</span></div>
+                <button onclick="downloadMonthReport('${mo}')" style="width:100%;margin-top:8px;padding:9px;background:rgba(255,196,0,.08);border:1px solid rgba(255,196,0,.2);border-radius:10px;color:#FFC400;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ Скачати звіт ${moName}</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('tab-reports').innerHTML = `
+    <!-- MONTH HERO -->
+    <div class="rep-hero">
+      <div class="rh-lbl">${t('monthReport')} · ${todayMonth()}</div>
+      <div class="rh-num" style="color:${m.net>=0?'#fff':'#FF453A'};">${fmtS(m.net)} <span style="font-size:16px;color:rgba(255,255,255,.3);">Kč</span></div>
+      <div class="rh-sub">${fmt(m.km)} км · ${m.trips} поїздок · Bolt ${fmt(m.boltGross)} Kč${m.recurringInc>0?` · Пост. +${fmt(m.recurringInc)} Kč`:''}${m.oneTimeInc>0?` · Разові +${fmt(m.oneTimeInc)} Kč`:''}</div>
+      <div class="rh-prog"><div class="rh-fill" style="width:${pct.toFixed(0)}%;background:${progColor};"></div></div>
+      <div class="rh-prow">
+        <span>0</span>
+        <span style="color:${progColor};font-weight:700;">${Math.round(m.pct)}%</span>
+        <span>${fmt(m.totalFixed)}</span>
+      </div>
+    </div>
+
+    <!-- WEEK CARD -->
+    <div class="week-card">
+      <div class="wc-hdr">
+        <div>
+          <div class="wc-lbl">${t('weekReport')}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;">${wFrom} – ${wTo}</div>
+        </div>
+        <div class="wc-num" style="color:${w.netFull>=0?'#FCD34D':'#FF453A'};">${fmtS(w.netFull)} <span style="font-size:12px;color:rgba(255,196,0,.4);">Kč</span></div>
+      </div>
+      ${w.weeklyFixed>0?`<div class="wc-prog"><div class="wc-fill" style="width:${w.pct.toFixed(0)}%;background:${w.pct>=100?'#34D399':'#FFC400'};"></div></div>
+      <div class="wc-meta"><span>0</span><span style="color:${w.pct>=100?'#34D399':'#FFC400'};font-weight:600;">${Math.round(w.pct)}%</span><span>${fmt(w.weeklyFixed)} Kč</span></div>`:''}
+      <div style="margin-top:8px;">
+        <div class="wc-row"><span class="wc-l">Bolt дохід</span><span class="wc-r" style="color:#4FC3F7;">+${fmt(w.boltGross)} Kč</span></div>
+        ${w.oneTimeInc>0?`<div class="wc-row"><span class="wc-l">Інші доходи</span><span class="wc-r" style="color:#34D399;">+${fmt(w.oneTimeInc)} Kč</span></div>`:''}
+        ${w.vc.fuel>0?`<div class="wc-row"><span class="wc-l">Пальне</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.vc.fuel)} Kč</span></div>`:''}
+        ${w.vc.amort>0?`<div class="wc-row"><span class="wc-l">Амортизація</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.vc.amort)} Kč</span></div>`:''}
+        ${w.weeklyFixed>0?`<div class="wc-row"><span class="wc-l">Тижневі витрати</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.weeklyFixed)} Kč</span></div>`:''}
+        <div class="wc-row" style="border-top:1px solid rgba(255,196,0,.15);margin-top:4px;padding-top:8px;">
+          <span class="wc-l" style="font-weight:700;color:rgba(255,255,255,.7);">Чистий</span>
+          <span class="wc-r" style="color:${w.netFull>=0?'#34D399':'#FF453A'};">${fmtS(w.netFull)} Kč</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAYS with dual bars -->
+    <div class="days-card">
+      <div class="days-ttl">${t('daysHist')}</div>
+      ${days.length===0?`<div style="padding:16px;font-size:13px;color:rgba(255,255,255,.2);text-align:center;">${t('noData')}</div>`:
+        days.map(d=>{
+          const day=byDay[d];
+          const total=day.bolt+day.other;
+          const vc2=calcVarCosts(day.km);
+          const net2=total-vc2.total;
+          const boltW=Math.min(100,(day.bolt/maxTotal)*100);
+          const otherW=Math.min(100-boltW,(day.other/maxTotal)*100);
+          const col=net2>=0?'#34D399':'#FF453A';
+          return `<div class="day-row">
+            <span class="day-date">${d.slice(5).replace('-','.')}</span>
+            <div class="day-bar" style="display:flex;gap:1px;">
+              ${day.bolt>0?`<div style="height:100%;width:${boltW.toFixed(0)}%;background:#34D399;border-radius:2px;flex-shrink:0;min-width:2px;"></div>`:''}
+              ${day.other>0?`<div style="height:100%;width:${otherW.toFixed(0)}%;background:#818CF8;border-radius:2px;flex-shrink:0;min-width:2px;"></div>`:''}
+            </div>
+            <span class="day-trips" style="color:rgba(255,255,255,.2);">${day.trips||''}</span>
+            <span class="day-earn" style="color:${col};">${fmtS(net2)}</span>
+          </div>`;
+        }).join('')}
+      ${days.some(d=>byDay[d].other>0)?`
+      <div style="display:flex;gap:12px;padding:8px 16px;border-top:1px solid rgba(255,255,255,.05);">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);"><div style="width:10px;height:4px;background:#34D399;border-radius:2px;"></div>Bolt</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);"><div style="width:10px;height:4px;background:#818CF8;border-radius:2px;"></div>Інші доходи</div>
+      </div>`:''}
+    </div>
+
+    <!-- SHARE -->
+    <button class="share-btn" onclick="shareReport()">${t('shareBtn')}</button>
+
+    ${histHTML}
+  `;
+}
+
+// ── ACCORDION TOGGLES ──
+function toggleYear(yr){
+  const body=document.getElementById('yr-body-'+yr);
+  const arrow=document.getElementById('yr-arrow-'+yr);
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  arrow.style.transform=open?'rotate(180deg)':'';
+}
+function toggleMonth(mo){
+  const body=document.getElementById('mo-body-'+mo);
+  const arrow=document.getElementById('mo-arrow-'+mo);
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  arrow.textContent=open?'⌄':'›';
+}
+
+// ── DOWNLOAD MONTHLY REPORT ──
+function downloadMonthReport(mo){
+  const mc=calcMonth(mo);
+  const monthNames={
+    '01':'Січень','02':'Лютий','03':'Березень','04':'Квітень',
+    '05':'Травень','06':'Червень','07':'Липень','08':'Серпень',
+    '09':'Вересень','10':'Жовтень','11':'Листопад','12':'Грудень'
+  };
+  const moName=monthNames[mo.slice(5)]||mo;
+  const txt=
+`📊 DriveStat · Місячний звіт
+👤 ${state.user} · ${moName} ${mo.slice(0,4)}
+━━━━━━━━━━━━━━━━━━━━
+
+💵 ДОХОДИ:
+⚡ Bolt: +${fmt(mc.boltGross)} Kč
+${mc.recurringInc>0?`🔄 Постійні: +${fmt(mc.recurringInc)} Kč\n`:''}${mc.oneTimeInc>0?`💰 Разові: +${fmt(mc.oneTimeInc)} Kč\n`:''}📊 Загальний дохід: +${fmt(mc.gross)} Kč
+
+💸 ВИТРАТИ:
+${state.settings.fuelEnabled?`⛽ Авто + пальне: -${fmt(mc.vc.fuel)} Kč\n`:''}${mc.vc.amort>0?`🔧 Амортизація: -${fmt(mc.vc.amort)} Kč\n`:''}${(state.monthlyFixedCosts||[]).map(c=>`📋 ${c.name}: -${fmt(c.amount)} Kč`).join('\n')}
+${(state.weeklyFixedCosts||[]).map(c=>`📆 ${c.name} (×4): -${fmt(c.amount*4)} Kč`).join('\n')}
+${mc.dph>0?`🧾 ПДВ 21%: -${fmt(mc.dph)} Kč\n`:''}${mc.incomeTax>0?`📋 Податок: -${fmt(mc.incomeTax)} Kč\n`:''}📉 Всього витрат: -${fmt(mc.totalCosts)} Kč
+
+━━━━━━━━━━━━━━━━━━━━
+🚗 ${mc.trips} поїздок · ${fmt(mc.km)} км
+${mc.kph>0?`⏱ Дохід/год: ${fmt(mc.kph)} Kč\n`:''}━━━━━━━━━━━━━━━━━━━━
+💰 ЧИСТИЙ: ${fmtS(mc.net)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat · ${new Date().toLocaleDateString('uk')}`;
+
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`DriveStat_${moName}_${mo.slice(0,4)}.txt`;
+  a.click();
+  showToast('✅ Звіт скачано!');
+}
+
+// ── SHARE ──
+function shareReport(){
+  const w=calcWeek();
+  const [from,to]=getWeekRange();
+  const wFrom=from.slice(5).replace('-','.');
+  const wTo=to.slice(5).replace('-','.');
+  const txt=
+`📊 DriveStat · Тижневий звіт
+👤 ${state.user} · ${wFrom}–${wTo}
+━━━━━━━━━━━━━━━━━━━━
+
+⚡ Bolt дохід: +${fmt(w.boltGross)} Kč
+${w.vc.fuel>0?`⛽ Пальне: -${fmt(w.vc.fuel)} Kč\n`:''}${w.vc.amort>0?`🔧 Амортизація: -${fmt(w.vc.amort)} Kč\n`:''}${w.weeklyFixed>0?`🚙 Тижневі витрати: -${fmt(w.weeklyFixed)} Kč\n`:''}
+━━━━━━━━━━━━━━━━━━━━
+💰 Чистий: ${fmtS(w.netFull)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat`;
+  navigator.clipboard.writeText(txt).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=txt;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  showToast('✅ Звіт скопійовано!');
+}
+
+// ── RENDER PROFILE ──
+function renderProfile(){
+  const s=state.settings;
+  const langs=[{c:'uk',f:'🇺🇦',n:'Укр'},{c:'cs',f:'🇨🇿',n:'Čes'},{c:'ru',f:'🇷🇺',n:'Рус'}];
+
+  document.getElementById('tab-profile').innerHTML = `
+    <!-- USER -->
+    <div class="usr-card">
+      <div class="usr-av">${(state.user||'?').split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+      <div><div class="usr-name">${state.user}</div><div class="usr-role">DriveStat · ${isAdmin()?'Admin':'Driver'}</div></div>
+    </div>
+
+    <!-- LANG -->
+    <div class="sec-lbl">🌐 МОВА</div>
+    <div class="lang-row">
+      ${langs.map(l=>`<button onclick="setLang('${l.c}')" class="lang-pill${state.lang===l.c?' on':''}"><span class="lang-flag">${l.f}</span>${l.n}</button>`).join('')}
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="sec-lbl">⚙️ НАЛАШТУВАННЯ</div>
+    <div class="st-group">
+      <div class="st-row"><div><div class="st-lbl">Денна ціль</div></div><input class="st-inp" id="st-goal" type="number" inputmode="numeric" value="${s.dailyGoal}"></div>
+      <div class="st-row"><div><div class="st-lbl">Комісія Bolt (%)</div></div><input class="st-inp" id="st-comm" type="number" inputmode="numeric" value="${s.boltCommission}"></div>
+    </div>
+
+    <div class="sec-lbl">⛽ АВТО ТА ПАЛЬНЕ</div>
+    <div class="st-group">
+      <div class="st-row">
+        <div><div class="st-lbl">Пробіг з Bolt API</div><div class="st-hint">${s.boltKmEnabled?'Автоматично з поїздок Bolt':'Ручний ввід одометра'}</div></div>
+        <label class="tog"><input type="checkbox" id="tog-boltKm" ${s.boltKmEnabled?'checked':''} onchange="toggleBoltKm(this.checked)"><span class="tog-sl"></span></label>
+      </div>
+      <div class="st-row">
+        <div><div class="st-lbl">Розрахунок пального</div><div class="st-hint">По км автоматично</div></div>
+        <label class="tog"><input type="checkbox" id="tog-fuel" ${s.fuelEnabled?'checked':''} onchange="toggleFuel(this.checked)"><span class="tog-sl"></span></label>
+      </div>
+      ${s.fuelEnabled?`
+      <div class="st-row"><div class="st-lbl">Ціна пального Kč/л</div><input class="st-inp" id="st-fprice" type="number" inputmode="decimal" value="${s.fuelPrice}"></div>
+      <div class="st-row"><div class="st-lbl">Витрата л/100км</div><input class="st-inp" id="st-fcons" type="number" inputmode="decimal" value="${s.fuelCons}"></div>`:''}
+      <div class="st-row"><div><div class="st-lbl">Амортизація Kč/км</div><div class="st-hint">0 = не враховувати</div></div><input class="st-inp" id="st-amort" type="number" inputmode="decimal" value="${s.amort}" step="0.1"></div>
+    </div>
+
+    ${!s.boltKmEnabled ? `
+    <div class="sec-lbl">🚗 ПОКАЗНИКИ ОДОМЕТРА</div>
+    <div class="dyn-list" style="border-color:rgba(99,102,241,.15);">
+      <div style="padding:8px 14px 6px;font-size:10px;color:rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.05);">Вводь повний показник одометра щодня — додаток сам рахує пробіг</div>
+      ${(state.odometerLog||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).map((e,i,arr)=>{
+        const prev=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+        const idx=prev.findIndex(x=>x.id===e.id);
+        const diff=idx>0 ? Math.max(0,e.value-prev[idx-1].value) : 0;
+        return `<div class="dyn-item">
+          <div class="dyn-dot" style="background:#818CF8;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${e.date}</div>
+            ${diff>0?`<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">+${fmt(diff)} км за день</div>`:''}
+          </div>
+          <span class="dyn-amt" style="color:#818CF8;">${fmt(e.value)} км</span>
+          <button class="dyn-del" style="background:rgba(99,102,241,.1);color:#818CF8;border-color:rgba(99,102,241,.2);" onclick="delOdometer('${e.id}')">✕</button>
+        </div>`;
+      }).join('')}
+      <div class="add-inline">
+        <input class="ai-inp" id="odo-date" type="date" value="${today()}" style="width:110px;font-size:12px;flex-shrink:0;">
+        <input class="ai-inp" id="odo-val" type="number" inputmode="numeric" placeholder="напр. 45230 км" style="flex:1;">
+        <button class="ai-btn" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#818CF8;" onclick="addOdometer()">+</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="sec-lbl">🧾 ПОДАТКИ</div>
+    <div class="st-group">
+      <div class="st-row">
+        <div><div class="st-lbl">ПДВ 21%</div><div class="st-hint">На комісію Bolt</div></div>
+        <label class="tog"><input type="checkbox" id="tog-dph" ${s.dphEnabled?'checked':''} onchange="toggleDph(this.checked)"><span class="tog-sl"></span></label>
+      </div>
+      <div class="st-row">
+        <div><div class="st-lbl">Подохідний податок</div><div class="st-hint">Резерва від чистого</div></div>
+        <label class="tog"><input type="checkbox" id="tog-tax" ${s.incomeTaxEnabled?'checked':''} onchange="toggleTax(this.checked)"><span class="tog-sl"></span></label>
+      </div>
+      ${s.incomeTaxEnabled?`<div class="st-row"><div class="st-lbl">Ставка %</div><input class="st-inp" id="st-taxrate" type="number" inputmode="numeric" value="${s.incomeTaxRate}"></div>`:''}
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">✓ Зберегти налаштування</button>
+
+    <!-- ══ ПОСТІЙНІ ДОХОДИ ══ -->
+    <div class="sec-lbl" style="color:rgba(52,211,153,.5);">🔄 ПОСТІЙНІ ДОХОДИ (щомісяця)</div>
+    <div class="dyn-list" style="border-color:rgba(52,211,153,.12);margin-bottom:4px;">
+      <div style="padding:8px 14px;font-size:10px;color:rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.05);">Ці суми додаються автоматично кожен місяць</div>
+      ${(state.recurringIncome||[]).map(e=>`
+        <div class="dyn-item">
+          <div class="dyn-dot" style="background:#34D399;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${e.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">щомісяця</div>
+          </div>
+          <span class="dyn-amt" style="color:#34D399;">+${fmt(e.amount)} Kč</span>
+          <button class="dyn-del" style="background:rgba(52,211,153,.1);color:#34D399;border-color:rgba(52,211,153,.2);" onclick="delRecurring('${e.id}')">✕</button>
+        </div>`).join('')}
+      <div class="add-inline">
+        <input class="ai-inp" id="rec-name" type="text" placeholder="Uber щомісяця, оренда...">
+        <input class="ai-inp ai-amt" id="rec-amt" type="number" inputmode="numeric" placeholder="Kč">
+        <button class="ai-btn ai-btn-green" onclick="addRecurring()">+</button>
+      </div>
+    </div>
+
+    <!-- ══ РАЗОВІ ДОХОДИ ══ -->
+    <div class="sec-lbl" style="color:rgba(52,211,153,.4);">💰 РАЗОВІ ДОХОДИ (з датою)</div>
+    <div class="dyn-list" style="border-color:rgba(52,211,153,.1);">
+      ${(state.oneTimeIncome||[]).slice().reverse().slice(0,10).map(e=>`
+        <div class="dyn-item">
+          <div class="dyn-dot" style="background:#10B981;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${e.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">${e.date}</div>
+          </div>
+          <span class="dyn-amt" style="color:#34D399;">+${fmt(e.amount)} Kč</span>
+          <button class="dyn-del" style="background:rgba(52,211,153,.1);color:#34D399;border-color:rgba(52,211,153,.2);" onclick="delOneTimeIncome('${e.id}')">✕</button>
+        </div>`).join('')}
+      <div class="add-inline" style="flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <input class="ai-inp" id="inc-name" type="text" placeholder="Uber, готівка..." style="flex:1;">
+          <input class="ai-inp ai-amt" id="inc-amt" type="number" inputmode="numeric" placeholder="Kč">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input class="ai-inp" id="inc-date" type="date" value="${today()}" style="flex:1;color:rgba(52,211,153,.7);font-size:12px;">
+          <button class="ai-btn ai-btn-green" onclick="addOneTimeIncome()" style="flex-shrink:0;">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ МІСЯЧНІ ВИТРАТИ ══ -->
+    <div class="sec-lbl">📅 МІСЯЧНІ ВИТРАТИ</div>
+    <div class="dyn-list">
+      ${(state.monthlyFixedCosts||[]).map(c=>`
+        <div class="dyn-item">
+          <div class="dyn-dot" style="background:#FF453A;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${c.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">щомісяця</div>
+          </div>
+          <span class="dyn-amt" style="color:#FF6B6B;">-${fmt(c.amount)} Kč</span>
+          <button class="dyn-del" onclick="delMonthly('${c.id}')">✕</button>
+        </div>`).join('')}
+      <div class="add-inline">
+        <input class="ai-inp" id="mc-name" type="text" placeholder="Страховка, OSVČ...">
+        <input class="ai-inp ai-amt" id="mc-amt" type="number" inputmode="numeric" placeholder="Kč">
+        <button class="ai-btn" onclick="addMonthly()">+</button>
+      </div>
+    </div>
+
+    <!-- ══ ТИЖНЕВІ ВИТРАТИ ══ -->
+    <div class="sec-lbl" style="color:rgba(251,146,60,.6);">📆 ТИЖНЕВІ ВИТРАТИ</div>
+    <div class="dyn-list" style="border-color:rgba(251,146,60,.15);">
+      ${(state.weeklyFixedCosts||[]).map(c=>`
+        <div class="dyn-item">
+          <div class="dyn-dot" style="background:#FB923C;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${c.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">щотижня</div>
+          </div>
+          <span class="dyn-amt" style="color:#FB923C;">-${fmt(c.amount)} Kč</span>
+          <button class="dyn-del" onclick="delWeekly('${c.id}')">✕</button>
+        </div>`).join('')}
+      <div class="add-inline">
+        <input class="ai-inp" id="wc-name" type="text" placeholder="Оренда авто...">
+        <input class="ai-inp ai-amt" id="wc-amt" type="number" inputmode="numeric" placeholder="Kč">
+        <button class="ai-btn" style="background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.25);color:#FB923C;" onclick="addWeekly()">+</button>
+      </div>
+    </div>
+
+    <!-- ══ РАЗОВІ ВИТРАТИ ══ -->
+    <div class="sec-lbl" style="color:rgba(255,69,58,.5);">🔴 РАЗОВІ ВИТРАТИ</div>
+    <div class="dyn-list" style="border-color:rgba(255,69,58,.12);">
+      ${(state.oneTimeExpenses||[]).slice().reverse().map(e=>`
+        <div class="dyn-item">
+          <div class="dyn-dot" style="background:#FF453A;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="dyn-name">${e.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">${e.date}</div>
+          </div>
+          <span class="dyn-amt" style="color:#FF6B6B;">-${fmt(e.amount)} Kč</span>
+          <button class="dyn-del" onclick="delOneTime('${e.id}')">✕</button>
+        </div>`).join('')}
+      <div class="add-inline" style="flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <input class="ai-inp" id="exp-name" type="text" placeholder="Мийка, штраф..." style="flex:1;">
+          <input class="ai-inp ai-amt" id="exp-amt" type="number" inputmode="numeric" placeholder="Kč">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input class="ai-inp" id="exp-date" type="date" value="${today()}" style="flex:1;color:rgba(255,100,100,.7);font-size:12px;">
+          <button class="ai-btn" style="flex-shrink:0;" onclick="addOneTime()">+</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-logout" onclick="logout()">Вийти з акаунту</button>
+    <div style="height:4px;"></div>
+  `;
+}
+
+// ── SETTINGS ACTIONS ──
+function setLang(c){ state.lang=c; save(); renderProfile(); renderDash(); }
+function toggleFuel(v){ state.settings.fuelEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleDph(v){ state.settings.dphEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleTax(v){ state.settings.incomeTaxEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleBoltKm(v){ state.settings.boltKmEnabled=v; save(); renderProfile(); renderDash(); }
+
+function addOdometer(){
+  const d=document.getElementById('odo-date')?.value||today();
+  const v=parseInt(document.getElementById('odo-val')?.value)||0;
+  if(!v){showToast(t('fillAll'));return;}
+  if(!state.odometerLog)state.odometerLog=[];
+  // Replace if same date exists
+  state.odometerLog=state.odometerLog.filter(e=>e.date!==d);
+  state.odometerLog.push({id:Date.now()+'',date:d,value:v});
+  save();showToast(t('added'));renderProfile();
+}
+function delOdometer(id){
+  state.odometerLog=(state.odometerLog||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+
+function saveSettings(){
+  const g=id=>document.getElementById(id);
+  state.settings.dailyGoal   = parseInt(g('st-goal')?.value)||1800;
+  state.settings.boltCommission=parseInt(g('st-comm')?.value)||25;
+  state.settings.amort       = parseFloat(g('st-amort')?.value)||0;
+  if(state.settings.fuelEnabled){
+    state.settings.fuelPrice = parseFloat(g('st-fprice')?.value)||41;
+    state.settings.fuelCons  = parseFloat(g('st-fcons')?.value)||9;
+  }
+  if(state.settings.incomeTaxEnabled)
+    state.settings.incomeTaxRate=parseInt(g('st-taxrate')?.value)||15;
+  save(); showToast(t('settingsSaved')); renderAll();
+}
+
+// ── DYNAMIC LISTS ──
+function addMonthly(){
+  const n=document.getElementById('mc-name')?.value.trim();
+  const a=parseInt(document.getElementById('mc-amt')?.value)||0;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.monthlyFixedCosts)state.monthlyFixedCosts=[];
+  state.monthlyFixedCosts.push({id:Date.now()+'',name:n,amount:a});
+  save();showToast(t('added'));renderProfile();
+}
+function delMonthly(id){
+  state.monthlyFixedCosts=(state.monthlyFixedCosts||[]).filter(c=>c.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addWeekly(){
+  const n=document.getElementById('wc-name')?.value.trim();
+  const a=parseInt(document.getElementById('wc-amt')?.value)||0;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.weeklyFixedCosts)state.weeklyFixedCosts=[];
+  state.weeklyFixedCosts.push({id:Date.now()+'',name:n,amount:a});
+  save();showToast(t('added'));renderProfile();
+}
+function delWeekly(id){
+  state.weeklyFixedCosts=(state.weeklyFixedCosts||[]).filter(c=>c.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addRecurring(){
+  const n=document.getElementById('rec-name')?.value.trim();
+  const a=parseInt(document.getElementById('rec-amt')?.value)||0;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.recurringIncome)state.recurringIncome=[];
+  state.recurringIncome.push({id:Date.now()+'',name:n,amount:a});
+  save();showToast(t('added'));renderProfile();
+}
+function delRecurring(id){
+  state.recurringIncome=(state.recurringIncome||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addOneTimeIncome(){
+  const n=document.getElementById('inc-name')?.value.trim();
+  const a=parseInt(document.getElementById('inc-amt')?.value)||0;
+  const d=document.getElementById('inc-date')?.value||today();
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.oneTimeIncome)state.oneTimeIncome=[];
+  state.oneTimeIncome.push({id:Date.now()+'',name:n,amount:a,date:d});
+  save();showToast(t('added'));renderProfile();
+}
+function delOneTimeIncome(id){
+  state.oneTimeIncome=(state.oneTimeIncome||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+// keep old names for compatibility
+function addIncome(){ addOneTimeIncome(); }
+function delIncome(id){ delOneTimeIncome(id); }
+function addOneTime(){
+  const n=document.getElementById('exp-name')?.value.trim();
+  const a=parseInt(document.getElementById('exp-amt')?.value)||0;
+  const d=document.getElementById('exp-date')?.value||today();
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.oneTimeExpenses)state.oneTimeExpenses=[];
+  state.oneTimeExpenses.push({id:Date.now()+'',name:n,amount:a,date:d});
+  save();showToast(t('added'));renderProfile();
+}
+function delOneTime(id){
+  state.oneTimeExpenses=(state.oneTimeExpenses||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+
+// ── MODAL (unused now but kept for future) ──
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+function closeModalBg(e){ if(e.target.id==='modal') closeModal(); }
+function saveModal(){ closeModal(); }
+
+// ── TABS ──
+let curTab='dash';
+function showTab(name){
+  document.querySelectorAll('.tab-pane').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  curTab=name;
+  document.getElementById('content').scrollTop=0;
+  if(name==='dash') renderDash();
+  else if(name==='reports') renderReports();
+  else if(name==='profile') renderProfile();
+}
+function renderAll(){
+  if(curTab==='dash') renderDash();
+  else if(curTab==='reports') renderReports();
+  else if(curTab==='profile') renderProfile();
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+load();
+document.getElementById('ln-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+if(state.user) showApp();
+</script>
+</body>
+</html>
