@@ -472,11 +472,20 @@ function calc() {
 
 calc();
 
-// iOS Safari fix — touch events on non-interactive elements
+// iOS Safari fix — rozlišení tap vs scroll
 document.querySelectorAll('.card-opt, .cc, .mt').forEach(el => {
+  let startX = 0, startY = 0;
+  el.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, {passive: true});
   el.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    this.click();
+    const dx = Math.abs(e.changedTouches[0].clientX - startX);
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    if (dx < 10 && dy < 10) {
+      e.preventDefault();
+      this.click();
+    }
   }, {passive: false});
 });
 </script>
