@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>DriveStat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#000;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;color:#fff;overflow:hidden;}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+/* ── LOGIN ── */
+#login-screen{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 24px;background:#000;}
+.ln-top{text-align:center;margin-bottom:32px;}
+.ln-icon{font-size:52px;display:block;margin-bottom:12px;}
+.ln-brand{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.5px;}
+.ln-brand span{color:#FFC400;}
+.ln-slogan{font-size:13px;color:rgba(255,255,255,.3);margin-top:6px;}
+.role-row{display:flex;gap:10px;width:100%;max-width:320px;margin-bottom:22px;}
+.role-btn{flex:1;padding:13px 8px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;transition:all .15s;}
+.role-btn.sel{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.4);color:#FFC400;}
+.role-icon{font-size:20px;display:block;margin-bottom:4px;}
+.ln-form{width:100%;max-width:320px;}
+.ln-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.14em;margin-bottom:6px;display:block;}
+.ln-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;padding:15px 16px;font-size:16px;font-family:inherit;margin-bottom:12px;outline:none;-webkit-appearance:none;}
+.ln-inp:focus{border-color:#FFC400;}
+.ln-btn{width:100%;padding:16px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+.ln-err{font-size:12px;color:#FF453A;text-align:center;margin-top:8px;display:none;}
+.ln-ver{font-size:10px;color:rgba(255,255,255,.1);margin-top:24px;text-align:center;}
+
+/* ── MAIN ── */
+#main-app{display:none;height:100%;flex-direction:column;}
+header{background:rgba(0,0,0,.97);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);}
+.h-brand{font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.2em;font-weight:700;}
+.h-name{font-size:18px;font-weight:700;color:#fff;margin-top:1px;letter-spacing:-.3px;}
+.h-sync{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:rgba(255,255,255,.5);padding:7px 13px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.h-sync.syncing{opacity:.5;pointer-events:none;}
+.sdot{width:6px;height:6px;border-radius:50%;background:#34D399;flex-shrink:0;}
+.sdot.spin{background:#FFC400;animation:blink .7s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab-pane{display:none;padding:14px 14px 100px;}
+.tab-pane.active{display:block;}
+
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(0,0,0,.97);backdrop-filter:blur(30px);border-top:1px solid rgba(255,255,255,.07);display:flex;padding:8px 0 max(12px,env(safe-area-inset-bottom));z-index:50;}
+.nb{flex:1;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;font-family:inherit;}
+.nb-icon{font-size:22px;}
+.nb-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:500;}
+.nb.active .nb-lbl{color:#FFC400;font-weight:700;}
+.nb-dot{width:4px;height:4px;border-radius:2px;background:#FFC400;display:none;}
+.nb.active .nb-dot{display:block;}
+
+/* ── CARDS ── */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;margin-bottom:10px;overflow:hidden;}
+.card-pad{padding:14px 16px;}
+.row-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.row-item:last-child{border-bottom:none;}
+.ri-l{font-size:14px;color:rgba(255,255,255,.55);}
+.ri-r{font-size:14px;font-weight:700;}
+.sec-lbl{font-size:10px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.14em;margin:14px 0 8px 2px;}
+.sec-lbl:first-child{margin-top:0;}
+
+/* ── PULSE RING ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;padding:16px 0 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:22px;margin-bottom:10px;}
+.ring-outer{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;}
+.ring-svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.r-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:8;}
+.r-track{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:377;}
+.ring-center{text-align:center;z-index:1;}
+.ring-pct{font-size:34px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
+.ring-sub{font-size:9px;color:rgba(255,255,255,.3);margin-top:3px;letter-spacing:.05em;}
+.ring-gross{margin-top:12px;text-align:center;}
+.ring-gross-lbl{font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.1em;margin-bottom:3px;}
+.ring-gross-num{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.5px;}
+.ring-badge{margin-top:10px;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;}
+.rb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#F59E0B;}
+.rb-ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34D399;}
+
+/* ── INSIGHT ── */
+.insight{background:rgba(245,158,11,.05);border-left:2px solid #F59E0B;border-radius:0 12px 12px 0;padding:10px 14px;margin-bottom:10px;}
+.ins-txt{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;}
+.ins-b{color:#fff;font-weight:600;}
+
+/* ── TODAY ── */
+.today-card{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.13);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.tc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.tc-lbl{font-size:10px;font-weight:700;color:rgba(52,211,153,.55);letter-spacing:.1em;}
+.tc-badge{font-size:10px;font-weight:600;color:#34D399;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.18);border-radius:7px;padding:3px 8px;}
+.tc-num{font-size:36px;font-weight:700;color:#34D399;letter-spacing:-1.5px;line-height:1;}
+.tc-kc{font-size:18px;color:rgba(52,211,153,.4);}
+.tc-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:5px;}
+.tc-prog{height:4px;background:rgba(52,211,153,.1);border-radius:2px;overflow:hidden;margin-top:10px;}
+.tc-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#34D399,#10B981);}
+
+/* ── SWIPE CARDS ── */
+.swipe-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.sw-ttl{font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.1em;}
+.sw-hint{font-size:10px;color:rgba(255,255,255,.1);}
+.swipe-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;padding-bottom:2px;}
+.swipe-row::-webkit-scrollbar{display:none;}
+.sw{flex-shrink:0;width:120px;border-radius:16px;padding:13px 14px;border:1px solid rgba(255,255,255,.07);}
+.sw-week{background:rgba(251,191,36,.07);}
+.sw-hour{background:rgba(99,102,241,.08);}
+.sw-tax{background:rgba(139,92,246,.07);}
+.swl{font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.07em;margin-bottom:5px;}
+.swv{font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1;}
+.sws{font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;}
+
+/* ── COST BARS ── */
+.cst-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.cst-hdr{display:flex;justify-content:space-between;margin-bottom:12px;}
+.cst-ttl{font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;}
+.cst-tot{font-size:12px;font-weight:700;color:#FF453A;}
+.cst-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cst-row:last-child{margin-bottom:0;}
+.cst-name{font-size:11px;color:rgba(255,255,255,.35);width:80px;flex-shrink:0;}
+.cst-bar{flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.cst-fill{height:100%;border-radius:2px;}
+.cst-val{font-size:11px;font-weight:600;color:#FF6B6B;width:46px;text-align:right;flex-shrink:0;}
+
+/* ── REPORTS TAB ── */
+.rep-hero{background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(94,92,230,.1));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;margin-bottom:10px;}
+.rh-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:6px;}
+.rh-num{font-size:34px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
+.rh-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:5px;}
+.rh-prog{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-top:12px;}
+.rh-fill{height:100%;border-radius:2px;}
+.rh-prow{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.25);margin-top:4px;}
+
+.week-card{background:rgba(255,196,0,.07);border:1px solid rgba(255,196,0,.15);border-radius:18px;padding:14px 16px;margin-bottom:10px;}
+.wc-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.wc-lbl{font-size:10px;font-weight:700;color:rgba(255,196,0,.55);letter-spacing:.1em;}
+.wc-num{font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.wc-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,196,0,.08);}
+.wc-row:last-child{border-bottom:none;}
+.wc-l{font-size:13px;color:rgba(255,255,255,.45);}
+.wc-r{font-size:13px;font-weight:700;}
+.wc-prog{height:3px;background:rgba(255,196,0,.1);border-radius:2px;overflow:hidden;margin:10px 0 5px;}
+.wc-fill{height:100%;border-radius:2px;}
+.wc-meta{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.2);}
+
+.days-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;margin-bottom:10px;}
+.days-ttl{padding:12px 16px 8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;border-bottom:1px solid rgba(255,255,255,.05);}
+.day-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.day-row:last-child{border-bottom:none;}
+.day-date{font-size:13px;font-weight:600;color:#fff;width:32px;flex-shrink:0;}
+.day-bar{flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.day-fill{height:100%;border-radius:2px;}
+.day-trips{font-size:10px;color:rgba(255,255,255,.2);width:32px;text-align:center;flex-shrink:0;}
+.day-earn{font-size:12px;font-weight:700;text-align:right;width:52px;flex-shrink:0;}
+
+.share-btn{width:100%;padding:15px;background:rgba(255,196,0,.08);border:1.5px solid rgba(255,196,0,.2);border-radius:16px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+.share-btn:active{transform:scale(.98);}
+
+/* ── PROFILE TAB ── */
+.usr-card{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px;margin-bottom:14px;}
+.usr-av{width:46px;height:46px;border-radius:50%;background:rgba(255,196,0,.1);border:2px solid rgba(255,196,0,.3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#FFC400;flex-shrink:0;}
+.usr-name{font-size:16px;font-weight:700;}
+.usr-role{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+
+.lang-row{display:flex;gap:8px;margin-bottom:14px;}
+.lang-pill{flex:1;padding:11px 6px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);text-align:center;}
+.lang-pill.on{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#FFC400;}
+.lang-flag{font-size:18px;display:block;margin-bottom:3px;}
+
+.st-group{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+.st-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.st-row:last-child{border-bottom:none;}
+.st-lbl{font-size:14px;color:rgba(255,255,255,.7);}
+.st-hint{font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;}
+.st-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#FFC400;padding:8px 12px;font-size:14px;font-family:inherit;width:100px;text-align:right;outline:none;-webkit-appearance:none;}
+.st-inp:focus{border-color:#FFC400;}
+.tog{position:relative;width:44px;height:26px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.1);border-radius:13px;transition:.2s;}
+.tog-sl:before{content:"";position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.tog input:checked+.tog-sl{background:#30D158;}
+.tog input:checked+.tog-sl:before{transform:translateX(18px);}
+
+/* Dynamic lists */
+.dyn-list{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+.dyn-item{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.dyn-item:last-child{border-bottom:none;}
+.dyn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dyn-name{flex:1;font-size:13px;color:rgba(255,255,255,.65);}
+.dyn-amt{font-size:13px;font-weight:700;flex-shrink:0;}
+.dyn-del{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0;border:none;background:rgba(255,69,58,.1);color:#FF453A;}
+.add-strip{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-top:1px solid rgba(255,255,255,.05);}
+.add-lbl-txt{font-size:13px;font-weight:700;color:rgba(255,196,0,.7);}
+.add-lbl-ico{font-size:20px;color:rgba(255,196,0,.7);}
+
+/* add inline */
+.add-inline{display:flex;gap:6px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);}
+.add-inline.col{flex-direction:column;}
+.ai-inp{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;flex:1;min-width:0;}
+.ai-amt{width:80px;color:#FFC400;flex-shrink:0;}
+.ai-btn{width:36px;height:36px;border-radius:10px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.25);color:#FFC400;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ai-btn-green{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:#34D399;}
+
+.btn-save{width:100%;padding:15px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;}
+.btn-logout{width:100%;padding:13px;background:rgba(255,69,58,.07);border:1px solid rgba(255,69,58,.18);border-radius:12px;color:#FF453A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;}
+
+/* ── ONBOARDING ── */
+#onboarding{position:fixed;inset:0;background:#000;z-index:500;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 24px;}
+.ob-steps{display:flex;gap:6px;margin-bottom:32px;}
+.ob-step{width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.1);}
+.ob-step.done{background:#FFC400;}
+.ob-step.active{background:#FFC400;opacity:.5;}
+.ob-icon{font-size:48px;margin-bottom:14px;}
+.ob-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.3px;margin-bottom:8px;text-align:center;}
+.ob-sub{font-size:13px;color:rgba(255,255,255,.35);text-align:center;line-height:1.6;margin-bottom:28px;max-width:300px;}
+.ob-form{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;}
+.ob-inp-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;}
+.ob-inp-ico{font-size:20px;flex-shrink:0;}
+.ob-inp-body{flex:1;min-width:0;}
+.ob-inp-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.1em;margin-bottom:4px;}
+.ob-inp{width:100%;background:transparent;border:none;color:#FFC400;font-size:16px;font-weight:700;font-family:inherit;outline:none;padding:0;}
+.ob-btn{width:100%;padding:16px;background:rgba(255,196,0,.12);border:1.5px solid rgba(255,196,0,.4);border-radius:14px;color:#FFC400;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;max-width:320px;margin-top:6px;}
+.ob-skip{font-size:12px;color:rgba(255,255,255,.2);margin-top:14px;cursor:pointer;text-decoration:underline;}
+.ob-list{width:100%;max-width:320px;display:flex;flex-direction:column;gap:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;}
+.ob-list-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.ob-list-item:last-child{border-bottom:none;}
+.ob-li-name{flex:1;font-size:13px;color:rgba(255,255,255,.7);}
+.ob-li-amt{font-size:13px;font-weight:700;color:#FF6B6B;}
+.ob-li-del{font-size:14px;color:rgba(255,69,58,.4);cursor:pointer;background:none;border:none;padding:0;}
+.ob-add-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.05);}
+.ob-add-inp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;}
+.ob-add-amt{width:80px;color:#FFC400;}
+.ob-add-btn{width:36px;height:36px;border-radius:10px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.25);color:#FFC400;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+
+/* ── ALERT CARD ── */
+.alert-card{margin-bottom:10px;border-radius:18px;padding:14px 16px;overflow:hidden;}
+.ac-warn{background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.28);}
+.ac-danger{background:linear-gradient(135deg,rgba(255,69,58,.14),rgba(255,69,58,.06));border:1.5px solid rgba(255,69,58,.3);}
+.ac-ok{background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(52,211,153,.04));border:1.5px solid rgba(52,211,153,.22);}
+.ac-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ac-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;}
+.ac-date-pill{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;}
+.ac-rows{display:flex;flex-direction:column;gap:1px;margin-bottom:10px;}
+.ac-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.ac-row:last-child{border-bottom:none;}
+.ac-name{font-size:13px;color:rgba(255,255,255,.55);}
+.ac-amt{font-size:13px;font-weight:700;}
+.ac-divider{height:1px;background:rgba(255,255,255,.07);margin:8px 0;}
+.ac-totals{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;}
+.ac-t-col{display:flex;flex-direction:column;gap:2px;}
+.ac-t-lbl{font-size:9px;color:rgba(255,255,255,.3);}
+.ac-t-val{font-size:16px;font-weight:800;letter-spacing:-.5px;}
+.ac-tip{border-radius:9px;padding:7px 10px;font-size:11px;font-weight:700;line-height:1.4;}
+.ac-tip-danger{background:rgba(255,69,58,.1);color:#FF453A;}
+.ac-tip-warn{background:rgba(245,158,11,.1);color:#F59E0B;}
+.ac-tip-ok{background:rgba(52,211,153,.1);color:#34D399;}
+
+/* ── WEEK COMPARE ── */
+.wk-compare{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;margin-bottom:10px;}
+.wkc-hdr{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;cursor:pointer;}
+.wkc-ttl{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:.12em;}
+.wkc-val{font-size:12px;font-weight:700;}
+.wkc-body{padding:0 16px 14px;}
+.wkc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.wkc-row:last-child{border-bottom:none;}
+.wkc-lbl{font-size:13px;color:rgba(255,255,255,.45);}
+.wkc-vals{display:flex;gap:16px;align-items:center;}
+.wkc-cur{font-size:13px;font-weight:700;}
+.wkc-prev{font-size:11px;color:rgba(255,255,255,.25);}
+.wkc-diff{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;}
+.diff-pos{background:rgba(52,211,153,.1);color:#34D399;}
+.diff-neg{background:rgba(255,69,58,.1);color:#FF453A;}
+
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:#111;border:1px solid rgba(255,255,255,.1);border-radius:24px 24px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));width:100%;max-width:430px;}
+.modal-ttl{font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;}
+.modal-lbl{font-size:10px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.13em;display:block;margin-bottom:6px;}
+.modal-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;padding:14px 15px;font-size:16px;font-family:inherit;margin-bottom:12px;outline:none;-webkit-appearance:none;}
+.modal-inp:focus{border-color:#FFC400;}
+.modal-row{display:flex;gap:8px;}
+.modal-save{flex:1;padding:15px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.3);border-radius:14px;color:#FFC400;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.modal-cancel{padding:15px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:rgba(255,255,255,.4);font-size:15px;cursor:pointer;font-family:inherit;}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(34,211,153,.12);border:1px solid rgba(52,211,153,.25);border-radius:14px;color:#34D399;padding:11px 20px;font-size:13px;z-index:300;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;font-weight:700;backdrop-filter:blur(10px);}
+#toast.show{opacity:1;}
+.hint-txt{font-size:10px;color:rgba(255,255,255,.15);text-align:center;padding:4px 0 8px;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="ln-top">
+    <span class="ln-icon">🚕</span>
+    <div class="ln-brand">Drive<span>Stat</span></div>
+    <div class="ln-slogan">Знай скільки ти реально заробив</div>
+  </div>
+  <div class="role-row">
+    <button class="role-btn sel" id="role-driver" onclick="selectRole('driver')">
+      <span class="role-icon">🧑‍✈️</span>Водій
+    </button>
+    <button class="role-btn" id="role-admin" onclick="selectRole('admin')">
+      <span class="role-icon">📊</span>Адмін
+    </button>
+  </div>
+  <div class="ln-form">
+    <label class="ln-lbl">ІМ'Я</label>
+    <input class="ln-inp" id="ln-name" type="text" placeholder="Roman Yarema" autocomplete="name">
+    <label class="ln-lbl">ПАРОЛЬ</label>
+    <input class="ln-inp" id="ln-pass" type="password" placeholder="••••••">
+    <button class="ln-btn" onclick="doLogin()">Увійти →</button>
+    <div class="ln-err" id="ln-err">Невірне ім'я або пароль</div>
+  </div>
+  <div class="ln-ver">DriveStat v3.0</div>
+</div>
+
+<!-- ── ONBOARDING ── -->
+<div id="onboarding" style="display:none;">
+  <div class="ob-steps" id="ob-steps"></div>
+  <div id="ob-content"></div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="main-app">
+  <header>
+    <div>
+      <div class="h-brand" id="h-brand">BOLT · ВОДІЙ</div>
+      <div class="h-name" id="h-name">Водій</div>
+    </div>
+    <button class="h-sync" id="sync-btn" onclick="syncBolt()">
+      <div class="sdot" id="sdot"></div>
+      <span id="sync-lbl">Синхронізувати</span>
+    </button>
+  </header>
+
+  <div id="content">
+    <div class="tab-pane active" id="tab-dash"></div>
+    <div class="tab-pane" id="tab-reports"></div>
+    <div class="tab-pane" id="tab-profile"></div>
+  </div>
+
+  <nav>
+    <button class="nb active" id="nav-dash" onclick="showTab('dash')">
+      <span class="nb-icon">📊</span><span class="nb-lbl">Дашборд</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-reports" onclick="showTab('reports')">
+      <span class="nb-icon">📈</span><span class="nb-lbl">Звіти</span><div class="nb-dot"></div>
+    </button>
+    <button class="nb" id="nav-profile" onclick="showTab('profile')">
+      <span class="nb-icon">👤</span><span class="nb-lbl">Профіль</span><div class="nb-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-ov" id="modal" style="display:none;" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-ttl" id="modal-ttl">Додати</div>
+    <label class="modal-lbl" id="modal-name-lbl">НАЗВА</label>
+    <input class="modal-inp" id="modal-name" type="text" placeholder="Назва...">
+    <label class="modal-lbl">СУМА (Kč)</label>
+    <input class="modal-inp" id="modal-amt" type="number" inputmode="numeric" placeholder="0">
+    <label class="modal-lbl" id="modal-date-lbl">ДАТА</label>
+    <input class="modal-inp" id="modal-date" type="date">
+    <div class="modal-row">
+      <button class="modal-save" id="modal-save-btn" onclick="saveModal()">✓ Зберегти</button>
+      <button class="modal-cancel" onclick="closeModal()">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── USERS ──
+const USERS = {
+  "Roman Yarema": { pass:"taxi2026",  role:"driver" },
+  "Admin":        { pass:"fleet2026", role:"admin"  },
+  "Daniel":       { pass:"daniel2026",role:"driver" },
+  "Sergii":       { pass:"sergii2026",role:"driver" },
+};
+const WORKER = "https://uber-bolt-proxy.romon-yarema.workers.dev";
+const MY_UUID = "ead4f6a3-8c17-42a1-9fb3-277f6f892ee8";
+
+let selectedRole = "driver";
+let _modalCtx = null;
+
+// ── STATE ──
+let state = {
+  user: null, role:"driver", lang:"uk",
+  boltData:{ orders:[] },
+  monthlyFixedCosts: [
+    {id:"m1", name:"Страховка авто", amount:2000, dueDay:15},
+    {id:"m2", name:"Соціалка OSVČ",  amount:5000, dueDay:25},
+  ],
+  weeklyFixedCosts: [],
+  recurringIncome: [],
+  oneTimeIncome: [],
+  oneTimeExpenses: [],
+  odometerLog: [],
+  onboardingDone: false,
+  settings:{
+    fuelEnabled: true,
+    fuelPrice:41, fuelCons:9,
+    amort:1.5,
+    dailyGoal:1800,
+    boltCommission:25,
+    dphEnabled:false,
+    incomeTaxEnabled:false,
+    incomeTaxRate:15,
+    boltKmEnabled: true,
+    notifEnabled: false,
+    notifHour: 21,
+    rolloverEnabled: false,
+    forecastEnabled: true,  // true=прогноз по середньому, false=тільки факт
+  },
+  rolloverBalance: 0,
+  lastClosedMonth: null,
+  lastSync:null,
+};
+
+// ── HELPERS ──
+function fmt(n){ return Math.round(Math.abs(n||0)).toLocaleString('cs-CZ'); }
+function fmtS(n){ return (n>=0?"+":"-")+fmt(n); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function todayMonth(){ return today().slice(0,7); }
+function getWeekRange(){
+  const d=new Date(); const day=d.getDay()||7;
+  const mon=new Date(d); mon.setDate(d.getDate()-day+1);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return [mon.toISOString().slice(0,10), sun.toISOString().slice(0,10)];
+}
+function toPragueDate(ts){
+  const d=new Date((ts+7200)*1000);
+  return d.toISOString().slice(0,10);
+}
+function daysLeftInMonth(){
+  const n=new Date(); const last=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();
+  return Math.max(1, last-n.getDate()+1);
+}
+function save(){ localStorage.setItem('ds3', JSON.stringify(state)); }
+function load(){
+  try{
+    const s=localStorage.getItem('ds3');
+    if(s){
+      const p=JSON.parse(s);
+      state={...state,...p};
+      // migrate old otherIncome → oneTimeIncome
+      if(p.otherIncome&&p.otherIncome.length>0&&(!p.oneTimeIncome||p.oneTimeIncome.length===0)){
+        state.oneTimeIncome=p.otherIncome;
+      }
+    }
+  }catch(e){}
+}
+function isAdmin(){ return state.role==='admin'; }
+
+// ── TRANSLATIONS (simplified) ──
+const T = {
+  uk:{ dash:"Дашборд", reports:"Звіти", profile:"Профіль",
+       monthCovered:"місяць покрито", grossEarned:"ЗАГАЛЬНИЙ ДОХІД",
+       todayLbl:"СЬОГОДНІ", goalDone:"✅ Ціль виконана", goalWait:"⏳ До цілі",
+       weekLbl:"ТИЖДЕНЬ (чистий)", hourLbl:"ДОХІД / ГОД", taxLbl:"РЕЗЕРВА",
+       afterFuel:"після бензину та аморт.", avgHour:"Kč середній",
+       reserveTax:"Kč резерв",
+       costMonth:"ВИТРАТИ МІСЯЦЯ", monthReport:"МІСЯЦЬ",
+       weekReport:"ЦЬОГО ТИЖНЯ", daysHist:"ДНІ", shareBtn:"📤 Поділитися звітом",
+       boltIncome:"Bolt дохід", otherIncome:"Інші доходи",
+       fuel:"Авто + пальне", amortCost:"Амортизація",
+       weeklyFC:"Тижневі витрати", monthlyFC:"Місячні витрати",
+       noData:"Синхронізуй щоб побачити дані",
+       settingsSaved:"✓ Збережено", added:"✓ Додано", deleted:"✓ Видалено",
+       fillAll:"Заповни всі поля",
+  },
+  cs:{ dash:"Dnes", reports:"Výkazy", profile:"Profil",
+       monthCovered:"měsíc pokryto", grossEarned:"CELKOVÝ PŘÍJEM",
+       todayLbl:"DNES", goalDone:"✅ Cíl splněn", goalWait:"⏳ Do cíle",
+       weekLbl:"TÝDEN (čistý)", hourLbl:"PŘÍJEM / HOD", taxLbl:"REZERVA",
+       afterFuel:"po odečtu paliva a odpisu", avgHour:"Kč průměrně",
+       reserveTax:"Kč rezerva",
+       costMonth:"NÁKLADY MĚSÍCE", monthReport:"MĚSÍC",
+       weekReport:"TENTO TÝDEN", daysHist:"DNY", shareBtn:"📤 Sdílet výkaz",
+       boltIncome:"Bolt příjem", otherIncome:"Ostatní příjmy",
+       fuel:"Auto + palivo", amortCost:"Odpis",
+       weeklyFC:"Týdenní náklady", monthlyFC:"Měsíční náklady",
+       noData:"Synchronizuj pro zobrazení dat",
+       settingsSaved:"✓ Uloženo", added:"✓ Přidáno", deleted:"✓ Smazáno",
+       fillAll:"Vyplň všechna pole",
+  },
+  ru:{ dash:"Сегодня", reports:"Отчёты", profile:"Профиль",
+       monthCovered:"месяц покрыто", grossEarned:"ОБЩИЙ ДОХОД",
+       todayLbl:"СЕГОДНЯ", goalDone:"✅ Цель выполнена", goalWait:"⏳ До цели",
+       weekLbl:"НЕДЕЛЯ (чистый)", hourLbl:"ДОХОД / ЧАС", taxLbl:"РЕЗЕРВ",
+       afterFuel:"после бензина и амортиз.", avgHour:"Kč средний",
+       reserveTax:"Kč резерв",
+       costMonth:"РАСХОДЫ МЕСЯЦА", monthReport:"МЕСЯЦ",
+       weekReport:"ЭТА НЕДЕЛЯ", daysHist:"ДНИ", shareBtn:"📤 Поделиться отчётом",
+       boltIncome:"Bolt доход", otherIncome:"Другие доходы",
+       fuel:"Авто + бензин", amortCost:"Амортизация",
+       weeklyFC:"Еженедельные расходы", monthlyFC:"Ежемесячные расходы",
+       noData:"Синхронизируй для просмотра данных",
+       settingsSaved:"✓ Сохранено", added:"✓ Добавлено", deleted:"✓ Удалено",
+       fillAll:"Заполни все поля",
+  }
+};
+function t(k){ const l=state.lang||'uk'; return (T[l]&&T[l][k])||T.uk[k]||k; }
+
+// ── CALC ──
+function ordersForMonth(mo){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return ts && toPragueDate(ts).slice(0,7)===mo;
+  });
+}
+function ordersForWeek(from,to){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(!ts) return false;
+    const d=toPragueDate(ts);
+    return d>=from && d<=to;
+  });
+}
+function ordersForDay(day){
+  return state.boltData.orders.filter(o=>{
+    if(o.order_status!=='finished') return false;
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    return ts && toPragueDate(ts)===day;
+  });
+}
+
+// ── ONBOARDING ──
+let _obStep = 1;
+let _obMonthly = [];
+let _obWeekly = [];
+
+function startOnboarding(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('onboarding').style.display='flex';
+  _obStep=1; _obMonthly=[]; _obWeekly=[];
+  renderObStep();
+}
+
+function renderObStep(){
+  const steps=document.getElementById('ob-steps');
+  steps.innerHTML=[1,2,3].map(i=>`<div class="ob-step ${i<_obStep?'done':i===_obStep?'active':''}"></div>`).join('');
+  const el=document.getElementById('ob-content');
+
+  if(_obStep===1){
+    el.innerHTML=`
+      <div class="ob-icon">🎯</div>
+      <div class="ob-title">Яка твоя денна ціль?</div>
+      <div class="ob-sub">Скільки хочеш заробляти чисто в день? Додаток буде показувати прогрес.</div>
+      <div class="ob-form">
+        <div class="ob-inp-row">
+          <span class="ob-inp-ico">💰</span>
+          <div class="ob-inp-body">
+            <div class="ob-inp-lbl">ДЕННА ЦІЛЬ</div>
+            <input class="ob-inp" id="ob-goal" type="number" inputmode="numeric" placeholder="1 800" value="1800">
+          </div>
+          <span style="font-size:13px;color:rgba(255,255,255,.3);">Kč</span>
+        </div>
+        <div class="ob-inp-row">
+          <span class="ob-inp-ico">🚗</span>
+          <div class="ob-inp-body">
+            <div class="ob-inp-lbl">ПРОБІГ</div>
+            <select id="ob-km" style="background:transparent;border:none;color:#FFC400;font-size:14px;font-weight:700;font-family:inherit;outline:none;width:100%;">
+              <option value="bolt">Автоматично з Bolt</option>
+              <option value="manual">Вручну (одометр)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="ob-btn" onclick="obNext1()">Далі →</button>
+      <span class="ob-skip" onclick="skipOnboarding()">Пропустити</span>
+    `;
+  } else if(_obStep===2){
+    el.innerHTML=`
+      <div class="ob-icon">📅</div>
+      <div class="ob-title">Місячні витрати</div>
+      <div class="ob-sub">Додай постійні витрати і вкажи коли платиш. Можна пропустити і додати пізніше.</div>
+      <div class="ob-list" id="ob-mlist">
+        ${_obMonthly.map(c=>`
+          <div class="ob-list-item">
+            <span class="ob-li-name">${c.name}</span>
+            <span style="font-size:9px;color:rgba(255,255,255,.25);">до ${c.dueDay}-го</span>
+            <span class="ob-li-amt">-${c.amount} Kč</span>
+            <button class="ob-li-del" onclick="obDelMonthly('${c.id}')">✕</button>
+          </div>`).join('')}
+        <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-top:${_obMonthly.length>0?'1px solid rgba(255,255,255,.05)':'none'};">
+          <div style="display:flex;gap:6px;">
+            <input class="ob-add-inp" id="ob-mn" type="text" placeholder="Страховка, кредит..." style="flex:1;">
+            <input class="ob-add-inp ob-add-amt" id="ob-ma" type="number" inputmode="numeric" placeholder="Kč" style="width:80px;flex-shrink:0;">
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input class="ob-add-inp" id="ob-md" type="number" inputmode="numeric" placeholder="День місяця коли платиш (напр. 15)" style="flex:1;">
+            <button class="ob-add-btn" onclick="obAddMonthly()">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="ob-btn" style="margin-top:14px;" onclick="obNext2()">Далі →</button>
+      <span class="ob-skip" onclick="skipOnboarding()">Пропустити</span>
+    `;
+  } else if(_obStep===3){
+    el.innerHTML=`
+      <div class="ob-icon">📆</div>
+      <div class="ob-title">Тижневі витрати</div>
+      <div class="ob-sub">Наприклад оренда авто. Буде враховуватись щотижня.</div>
+      <div class="ob-list" id="ob-wlist">
+        ${_obWeekly.map(c=>`
+          <div class="ob-list-item">
+            <span class="ob-li-name">${c.name}</span>
+            <span class="ob-li-amt">-${c.amount} Kč</span>
+            <button class="ob-li-del" onclick="obDelWeekly('${c.id}')">✕</button>
+          </div>`).join('')}
+        <div style="display:flex;gap:6px;padding:10px 12px;border-top:${_obWeekly.length>0?'1px solid rgba(255,255,255,.05)':'none'};">
+          <input class="ob-add-inp" id="ob-wn" type="text" placeholder="Оренда авто..." style="flex:1;">
+          <input class="ob-add-inp ob-add-amt" id="ob-wa" type="number" inputmode="numeric" placeholder="Kč" style="width:90px;flex-shrink:0;">
+          <button class="ob-add-btn" onclick="obAddWeekly()">+</button>
+        </div>
+      </div>
+      <button class="ob-btn" style="margin-top:14px;" onclick="finishOnboarding()">Почати →</button>
+    `;
+  }
+}
+
+function obNext1(){
+  const goal=parseInt(document.getElementById('ob-goal')?.value)||1800;
+  const km=document.getElementById('ob-km')?.value;
+  state.settings.dailyGoal=goal;
+  state.settings.boltKmEnabled=(km==='bolt');
+  _obStep=2; renderObStep();
+}
+function obNext2(){ _obStep=3; renderObStep(); }
+
+function obAddMonthly(){
+  const n=document.getElementById('ob-mn')?.value.trim();
+  const a=parseInt(document.getElementById('ob-ma')?.value)||0;
+  const d=parseInt(document.getElementById('ob-md')?.value)||15;
+  if(!n||!a) return;
+  _obMonthly.push({id:Date.now()+'',name:n,amount:a,dueDay:d});
+  document.getElementById('ob-mn').value='';
+  document.getElementById('ob-ma').value='';
+  document.getElementById('ob-md').value='';
+  renderObStep();
+}
+function obDelMonthly(id){ _obMonthly=_obMonthly.filter(c=>c.id!==id); renderObStep(); }
+
+function obAddWeekly(){
+  const n=document.getElementById('ob-wn')?.value.trim();
+  const a=parseInt(document.getElementById('ob-wa')?.value)||0;
+  if(!n||!a) return;
+  _obWeekly.push({id:Date.now()+'',name:n,amount:a});
+  document.getElementById('ob-wn').value='';
+  document.getElementById('ob-wa').value='';
+  renderObStep();
+}
+function obDelWeekly(id){ _obWeekly=_obWeekly.filter(c=>c.id!==id); renderObStep(); }
+
+function finishOnboarding(){
+  if(_obMonthly.length>0) state.monthlyFixedCosts=_obMonthly;
+  if(_obWeekly.length>0) state.weeklyFixedCosts=_obWeekly;
+  state.onboardingDone=true;
+  save();
+  document.getElementById('onboarding').style.display='none';
+  showApp();
+}
+function skipOnboarding(){
+  state.onboardingDone=true; save();
+  document.getElementById('onboarding').style.display='none';
+  showApp();
+}
+
+// ── UPCOMING PAYMENTS CALC ──
+let _collapsedAlerts = new Set();
+function toggleAlert(dueDay){
+  if(_collapsedAlerts.has(dueDay)) _collapsedAlerts.delete(dueDay);
+  else _collapsedAlerts.add(dueDay);
+  renderDash();
+}
+
+function calcUpcoming(){
+  const now=new Date();
+  const dayNow=now.getDate();
+  const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const s=state.settings;
+
+  const byDay={};
+  (state.monthlyFixedCosts||[]).forEach(c=>{
+    const d=c.dueDay||1;
+    if(!byDay[d]) byDay[d]=[];
+    byDay[d].push(c);
+  });
+  if(Object.keys(byDay).length===0) return [];
+
+  // Current actual balance
+  const rd=calcRingData();
+  const dailyAvg=dayNow>0 ? rd.grossActual/dayNow : 0;
+
+  // Sort due dates by days until
+  const dueDays=Object.keys(byDay).map(Number).sort((a,b)=>a-b).map(d=>{
+    let daysUntil=d-dayNow;
+    if(daysUntil<0) daysUntil=daysInMonth-dayNow+d;
+    return {d, daysUntil};
+  }).sort((a,b)=>a.daysUntil-b.daysUntil);
+
+  // CASCADE: running balance decreases after each payment
+  let runningBalance=rd.grossActual;
+  const upcoming=[];
+
+  dueDays.forEach(({d, daysUntil})=>{
+    const total=byDay[d].reduce((s,c)=>s+c.amount,0);
+    const prevD=upcoming.length>0 ? upcoming[upcoming.length-1].dueDay : dayNow;
+
+    // Recurring income arriving in this window
+    const recurringForPeriod=(state.recurringIncome||[])
+      .filter(e=>{ const ed=e.dueDay||1; return ed>prevD && ed<=d; })
+      .reduce((a,e)=>a+e.amount,0);
+
+    // One-time income arriving in this window
+    const prevDateStr=upcoming.length>0
+      ? `${todayMonth()}-${String(upcoming[upcoming.length-1].dueDay).padStart(2,'0')}`
+      : today();
+    const dueDateStr=`${todayMonth()}-${String(d).padStart(2,'0')}`;
+    const oneTimeForPeriod=(state.oneTimeIncome||[])
+      .filter(e=>e.date>prevDateStr && e.date<=dueDateStr)
+      .reduce((a,e)=>a+e.amount,0);
+
+    // Forecast bolt earnings between now and due date (only if forecast mode on)
+    const forecastEarnings=s.forecastEnabled ? Math.round(dailyAvg*daysUntil) : 0;
+
+    const availableAtDueDate=runningBalance+recurringForPeriod+oneTimeForPeriod+forecastEarnings;
+    const diff=availableAtDueDate-total;
+
+    upcoming.push({
+      dueDay:d, daysUntil, costs:byDay[d], total,
+      available:availableAtDueDate, diff,
+      recurringForPeriod, oneTimeForPeriod, forecastEarnings,
+      balanceBefore:Math.round(runningBalance),
+    });
+
+    // Cascade: subtract this payment from running balance
+    runningBalance=availableAtDueDate-total;
+  });
+
+  return upcoming;
+}
+
+// ── RENDER ALERT CARD ──
+function renderAlertCard(){
+  const upcoming=calcUpcoming();
+  if(upcoming.length===0) return '';
+  const forecastMode=state.settings.forecastEnabled;
+
+  return upcoming.map(u=>{
+    const isOk=u.diff>=0;
+    const isWarn=isOk && u.diff<u.total*0.15;
+    const collapsed=_collapsedAlerts.has(u.dueDay);
+    const cls=isOk?(isWarn?'ac-warn':'ac-ok'):'ac-danger';
+    const lbl=isOk?(isWarn?'⚠️ СКОРО':'✅ ПОКРИТО'):'⚠️ НЕ ВИСТАЧАЄ';
+    const lblCol=isOk?(isWarn?'rgba(245,158,11,.7)':'rgba(52,211,153,.7)'):'rgba(255,69,58,.7)';
+    const pillCol=isOk?(isWarn?'rgba(245,158,11,.15)':'rgba(52,211,153,.1)'):'rgba(255,69,58,.15)';
+    const pillBrd=isOk?(isWarn?'rgba(245,158,11,.3)':'rgba(52,211,153,.25)'):'rgba(255,69,58,.3)';
+    const pillTxt=isOk?(isWarn?'#F59E0B':'#34D399'):'#FF453A';
+    const dayWord=u.daysUntil===0?'Сьогодні!':u.daysUntil===1?'Завтра':`${u.daysUntil} дн.`;
+    const tipMsg=isOk
+      ? `✅ Вистачає${isWarn?' — залишок малий':''}`
+      : `❌ −${fmt(Math.abs(u.diff))} Kč · заробляй +${fmt(Math.ceil(Math.abs(u.diff)/Math.max(1,u.daysUntil)))} Kč/день`;
+    const tipCls=isOk?(isWarn?'ac-tip-warn':'ac-tip-ok'):'ac-tip-danger';
+    const namesPreview=u.costs.map(c=>c.name).join(', ');
+    // Залишок після цього платежу
+    const afterPayment=u.available-u.total;
+
+    return `<div class="alert-card ${cls}" style="margin-bottom:6px;">
+      <div class="ac-hdr" onclick="toggleAlert(${u.dueDay})" style="cursor:pointer;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="ac-lbl" style="color:${lblCol};">${lbl}</span>
+          ${collapsed?`<span style="font-size:10px;color:rgba(255,255,255,.35);">${namesPreview}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span class="ac-date-pill" style="background:${pillCol};border:1px solid ${pillBrd};color:${pillTxt};">${dayWord} · ${u.dueDay}-го</span>
+          <span style="font-size:15px;color:rgba(255,255,255,.25);${collapsed?'':'transform:rotate(180deg);display:inline-block;'}">⌄</span>
+        </div>
+      </div>
+      ${collapsed?'':`
+      <div class="ac-rows">
+        ${u.costs.map(c=>`<div class="ac-row"><span class="ac-name">${c.name}</span><span class="ac-amt" style="color:#FF6B6B;">-${fmt(c.amount)} Kč</span></div>`).join('')}
+        ${u.recurringForPeriod>0?`<div class="ac-row"><span class="ac-name" style="color:rgba(52,211,153,.5);">+ Постійний дохід</span><span class="ac-amt" style="color:#34D399;">+${fmt(u.recurringForPeriod)} Kč</span></div>`:''}
+        ${u.oneTimeForPeriod>0?`<div class="ac-row"><span class="ac-name" style="color:rgba(99,102,241,.6);">+ Разовий дохід</span><span class="ac-amt" style="color:#818CF8;">+${fmt(u.oneTimeForPeriod)} Kč</span></div>`:''}
+        ${forecastMode&&u.forecastEarnings>0?`<div class="ac-row"><span class="ac-name" style="color:rgba(255,196,0,.5);">+ Прогноз Bolt (${u.daysUntil} дн.)</span><span class="ac-amt" style="color:#FFC400;">+${fmt(u.forecastEarnings)} Kč</span></div>`:''}
+      </div>
+      <div class="ac-divider"></div>
+      <div class="ac-totals">
+        <div class="ac-t-col"><div class="ac-t-lbl">Потрібно</div><div class="ac-t-val" style="color:#FF453A;">-${fmt(u.total)} Kč</div></div>
+        <div class="ac-t-col" style="text-align:right;"><div class="ac-t-lbl">${forecastMode?'Прогноз на':'Є зараз'}</div><div class="ac-t-val" style="color:#FFC400;">+${fmt(u.available)} Kč</div></div>
+      </div>
+      <div class="ac-tip ${tipCls}">${tipMsg}</div>
+      <div style="margin-top:6px;font-size:10px;color:rgba(255,255,255,.25);text-align:right;">
+        Залишок після платежу: <span style="font-weight:700;color:${afterPayment>=0?'rgba(52,211,153,.7)':'rgba(255,69,58,.7)'};">${afterPayment>=0?'+':''}${fmt(afterPayment)} Kč</span>
+      </div>
+      `}
+    </div>`;
+  }).join('');
+}
+
+// ── WEEK COMPARE ──
+function calcPrevWeek(){
+  const [from,to]=getWeekRange();
+  const prevFrom=new Date(from); prevFrom.setDate(prevFrom.getDate()-7);
+  const prevTo=new Date(to); prevTo.setDate(prevTo.getDate()-7);
+  const pf=prevFrom.toISOString().slice(0,10);
+  const pt=prevTo.toISOString().slice(0,10);
+  const orders=ordersForWeek(pf,pt);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const km=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const vc=calcVarCosts(km);
+  const weeklyFixed=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  return {boltGross,km,trips:orders.length,net:boltGross-vc.total-weeklyFixed,vc};
+}
+
+let _wkcOpen=false;
+function toggleWkc(){ _wkcOpen=!_wkcOpen; renderReports(); }
+
+// ── PWA NOTIFICATIONS ──
+async function requestNotifPermission(){
+  if(!('Notification' in window)) return showToast('Браузер не підтримує сповіщення');
+  const p=await Notification.requestPermission();
+  if(p==='granted'){
+    state.settings.notifEnabled=true; save();
+    scheduleNotif();
+    showToast('✅ Нагадування увімкнено!');
+    renderProfile();
+  } else {
+    showToast('❌ Дозвіл не надано');
+  }
+}
+
+function scheduleNotif(){
+  if(!state.settings.notifEnabled) return;
+  const now=new Date();
+  const target=new Date();
+  target.setHours(state.settings.notifHour,0,0,0);
+  if(target<=now) target.setDate(target.getDate()+1);
+  const ms=target-now;
+  setTimeout(()=>{
+    if(Notification.permission==='granted'){
+      new Notification('DriveStat 🚕',{
+        body:'Не забудь ввести показник одометра за сьогодні!',
+        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚕</text></svg>'
+      });
+    }
+    scheduleNotif();
+  },ms);
+}
+function getOdometerKmForPeriod(from, to){
+  // Sort log by date
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(log.length<2) return 0;
+  // Find entries covering the period
+  const inPeriod=log.filter(e=>e.date>=from&&e.date<=to);
+  if(inPeriod.length===0) return 0;
+  if(inPeriod.length===1){
+    // Find the entry just before the period start
+    const before=log.filter(e=>e.date<from).pop();
+    if(!before) return 0;
+    return Math.max(0, inPeriod[inPeriod.length-1].value - before.value);
+  }
+  return Math.max(0, inPeriod[inPeriod.length-1].value - inPeriod[0].value);
+}
+function getOdometerKmForDay(day){
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const idx=log.findIndex(e=>e.date===day);
+  if(idx<0) return 0;
+  if(idx===0) return 0;
+  return Math.max(0, log[idx].value - log[idx-1].value);
+}
+function getOdometerKmForMonth(mo){
+  const log=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const inMo=log.filter(e=>e.date.startsWith(mo));
+  if(inMo.length===0) return 0;
+  const before=log.filter(e=>e.date<inMo[0].date).pop();
+  const start=before?before.value:inMo[0].value;
+  return Math.max(0, inMo[inMo.length-1].value - start);
+}
+
+function calcVarCosts(km){
+  const s=state.settings;
+  const fuel = s.fuelEnabled ? (km/100)*s.fuelCons*s.fuelPrice : 0;
+  const amort = (s.amort>0) ? km*s.amort : 0;
+  return {fuel, amort, total:fuel+amort};
+}
+
+// Get km for a period based on current mode
+function getKm(mode, ...args){
+  const s=state.settings;
+  if(s.boltKmEnabled){
+    // km already calculated from orders — passed in directly
+    return args[0]||0;
+  } else {
+    if(mode==='day')   return getOdometerKmForDay(args[0]);
+    if(mode==='week')  return getOdometerKmForPeriod(args[0],args[1]);
+    if(mode==='month') return getOdometerKmForMonth(args[0]);
+    return 0;
+  }
+}
+
+function calcMonth(mo){
+  mo=mo||todayMonth(); const s=state.settings;
+  const orders=ordersForMonth(mo);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForMonth(mo);
+  const vc=calcVarCosts(km);
+
+  const recurringInc=(state.recurringIncome||[]).reduce((a,e)=>a+e.amount,0);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date?.startsWith(mo)).reduce((a,e)=>a+e.amount,0);
+  const oneTimeExp=(state.oneTimeExpenses||[]).filter(e=>e.date?.startsWith(mo)).reduce((a,e)=>a+e.amount,0);
+
+  // Rollover: add previous month balance if enabled and this is current month
+  const rollover=(s.rolloverEnabled && mo===todayMonth()) ? (state.rolloverBalance||0) : 0;
+  const gross=boltGross+recurringInc+oneTimeInc+rollover;
+
+  const fixedMonthly=(state.monthlyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const weeksInMonth=4.33;
+  const fixedWeekly=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0)*weeksInMonth;
+  const dph=s.dphEnabled ? boltGross*(s.boltCommission/100)*0.21 : 0;
+  const totalFixed=fixedMonthly+fixedWeekly+dph;
+  const totalVar=vc.total+oneTimeExp;
+  const totalCosts=totalFixed+totalVar;
+
+  const netBeforeTax=gross-totalCosts;
+  const incomeTax=s.incomeTaxEnabled&&netBeforeTax>0 ? netBeforeTax*(s.incomeTaxRate/100) : 0;
+  const net=netBeforeTax-incomeTax;
+  const pct=totalFixed>0 ? (gross/totalFixed)*100 : 0;
+
+  const activeMin=orders.reduce((a,o)=>{
+    const s2=o.order_created_timestamp||0, e2=o.order_finished_timestamp||0;
+    return a+(e2>s2?(e2-s2)/60:0);
+  },0);
+  const activeHours=activeMin/60;
+  const dailyTarget=Math.round(Math.max(0,totalFixed-gross+totalVar)/daysLeftInMonth());
+
+  return {gross,boltGross,recurringInc,oneTimeInc,oneTimeExp,rollover,km,boltKm,vc,
+    fixedMonthly,fixedWeekly,dph,totalFixed,totalVar,totalCosts,
+    incomeTax,net,pct,activeHours,dailyTarget,trips:orders.length,mo};
+}
+
+// ── ROLLOVER CHECK — call on app start ──
+function checkRollover(){
+  const now=new Date();
+  const currentMo=todayMonth();
+  const lastClosed=state.lastClosedMonth;
+  if(!state.settings.rolloverEnabled) return;
+  if(lastClosed===currentMo) return;
+
+  // Calculate previous month net
+  const prevMo=new Date(now.getFullYear(),now.getMonth()-1,1).toISOString().slice(0,7);
+  if(lastClosed===prevMo) return; // already done
+
+  const prevCalc=calcMonth(prevMo);
+  if(prevCalc.net>0){
+    state.rolloverBalance=prevCalc.net;
+  } else {
+    state.rolloverBalance=0;
+  }
+  state.lastClosedMonth=prevMo;
+  save();
+}
+
+function calcWeek(){
+  const [from,to]=getWeekRange();
+  const orders=ordersForWeek(from,to);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const s=state.settings;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForPeriod(from,to);
+  const vc=calcVarCosts(km);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date>=from&&e.date<=to).reduce((a,e)=>a+e.amount,0);
+  const weeklyFixed=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const gross=boltGross+oneTimeInc;
+  const netVarOnly=gross-vc.total;
+  const netFull=gross-vc.total-weeklyFixed;
+  const pct=weeklyFixed>0 ? Math.min(100,(gross-vc.total)/weeklyFixed*100) : 100;
+  return {gross,boltGross,oneTimeInc,km,vc,weeklyFixed,netVarOnly,netFull,pct,trips:orders.length,from,to};
+}
+
+function calcToday(){
+  const d=today(); const s=state.settings;
+  const orders=ordersForDay(d);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const boltKm=orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000;
+  const km=s.boltKmEnabled ? boltKm : getOdometerKmForDay(d);
+  const vc=calcVarCosts(km);
+  const oneTimeInc=(state.oneTimeIncome||[]).filter(e=>e.date===d).reduce((a,e)=>a+e.amount,0);
+  const exp=(state.oneTimeExpenses||[]).filter(e=>e.date===d).reduce((a,e)=>a+e.amount,0);
+  const net=boltGross+oneTimeInc-vc.total-exp;
+  const pct=s.dailyGoal>0?Math.min(100,(net/s.dailyGoal)*100):0;
+  return {boltGross,oneTimeInc,km,vc,exp,net,pct,trips:orders.length,goal:s.dailyGoal};
+}
+
+// ── LOGIN ──
+function selectRole(r){
+  selectedRole=r;
+  document.getElementById('role-driver').classList.toggle('sel',r==='driver');
+  document.getElementById('role-admin').classList.toggle('sel',r==='admin');
+}
+function doLogin(){
+  const name=document.getElementById('ln-name').value.trim();
+  const pass=document.getElementById('ln-pass').value;
+  const u=USERS[name];
+  if(u&&u.pass===pass&&u.role===selectedRole){
+    state.user=name; state.role=u.role; save();
+    if(!state.onboardingDone && u.role==='driver'){
+      startOnboarding();
+    } else {
+      showApp();
+    }
+  } else {
+    const el=document.getElementById('ln-err');
+    el.style.display='block'; el.textContent='Невірне ім\'я або пароль';
+  }
+}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  const app=document.getElementById('main-app'); app.style.display='flex';
+  document.getElementById('h-name').textContent=state.user;
+  document.getElementById('h-brand').textContent=isAdmin()?'BOLT · ФЛОТ':'BOLT · МОЇ ПОЇЗДКИ';
+  renderAll();
+}
+function logout(){ state.user=null; save(); location.reload(); }
+
+// ── SYNC ──
+async function syncBolt(){
+  const btn=document.getElementById('sync-btn');
+  const dot=document.getElementById('sdot');
+  const lbl=document.getElementById('sync-lbl');
+  btn.classList.add('syncing'); dot.classList.add('spin'); lbl.textContent='Завантаження...';
+  try{
+    const now=Math.floor(Date.now()/1000);
+    const r=await fetch(`${WORKER}/orders`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({start_ts:now-30*86400,end_ts:now})}).then(r=>r.json());
+    if(r.orders?.length){
+      state.boltData.orders = isAdmin() ? r.orders : r.orders.filter(o=>o.driver_uuid===MY_UUID);
+    }
+    state.lastSync=new Date().toLocaleTimeString('uk',{hour:'2-digit',minute:'2-digit'});
+    save(); showToast('✅ Bolt дані оновлено!'); renderAll();
+  }catch(e){ showToast('❌ Помилка синхронізації'); }
+  finally{
+    btn.classList.remove('syncing'); dot.classList.remove('spin');
+    lbl.textContent=state.lastSync?`Оновлено ${state.lastSync}`:'Синхронізувати';
+  }
+}
+
+// ── ACTUAL vs PROJECTED ──
+function calcRingData(){
+  const mo=todayMonth(); const s=state.settings;
+  const now=new Date(); const dayNow=now.getDate();
+  const orders=ordersForMonth(mo);
+  const boltGross=orders.reduce((a,o)=>a+(o.order_price?.net_earnings||0),0);
+  const km=s.boltKmEnabled ? orders.reduce((a,o)=>a+(o.ride_distance||0),0)/1000 : getOdometerKmForMonth(mo);
+  const vc=calcVarCosts(km);
+  const oneTimeExp=(state.oneTimeExpenses||[]).filter(e=>e.date?.startsWith(mo)).reduce((a,e)=>a+e.amount,0);
+  const fixedMonthly=(state.monthlyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const fixedWeekly=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0)*4.33;
+  const totalFixed=fixedMonthly+fixedWeekly;
+
+  // ACTUAL: only income that has physically arrived by today
+  const recurringActual=(state.recurringIncome||[])
+    .filter(e=>(e.dueDay||1)<=dayNow)
+    .reduce((a,e)=>a+e.amount,0);
+  const oneTimeActual=(state.oneTimeIncome||[])
+    .filter(e=>e.date<=today())
+    .reduce((a,e)=>a+e.amount,0);
+  const rollover=(s.rolloverEnabled?(state.rolloverBalance||0):0);
+  const grossActual=boltGross+recurringActual+oneTimeActual+rollover;
+  const pctActual=totalFixed>0 ? Math.min(200,(grossActual/totalFixed)*100) : 0;
+
+  // PROJECTED: all planned income this month
+  const recurringAll=(state.recurringIncome||[]).reduce((a,e)=>a+e.amount,0);
+  const oneTimeAll=(state.oneTimeIncome||[])
+    .filter(e=>e.date?.startsWith(mo))
+    .reduce((a,e)=>a+e.amount,0);
+  const grossProjected=boltGross+recurringAll+oneTimeAll+rollover;
+  const pctProjected=totalFixed>0 ? Math.min(200,(grossProjected/totalFixed)*100) : 0;
+
+  return {pctActual, pctProjected, grossActual, grossProjected, totalFixed,
+    netActual:grossActual-vc.total-oneTimeExp-totalFixed};
+}
+function renderDash(){
+  const m=calcMonth(); const td=calcToday(); const w=calcWeek();
+  const s=state.settings;
+  const rd=calcRingData();
+
+  const actualColor=rd.pctActual>=100?'#34D399':rd.pctActual>=50?'#FFC400':'#FF453A';
+  const projColor='#8B5CF6';
+  const outerCirc=377; const innerCirc=302;
+  const outerOffset=(outerCirc*(1-Math.min(100,rd.pctProjected)/100)).toFixed(1);
+  const innerOffset=(innerCirc*(1-Math.min(100,rd.pctActual)/100)).toFixed(1);
+  const over100=rd.pctActual>=100;
+  const taxReserve=s.dphEnabled||s.incomeTaxEnabled ? m.dph+m.incomeTax : 0;
+
+  const bars=[];
+  if(s.fuelEnabled && m.vc.fuel>0) bars.push({name:t('fuel'), val:m.vc.fuel, color:'#FB923C'});
+  if(s.amort>0 && m.vc.amort>0)   bars.push({name:t('amortCost'), val:m.vc.amort, color:'#FBBF24'});
+  (state.monthlyFixedCosts||[]).forEach(c=>bars.push({name:c.name, val:c.amount, color:'#FF453A'}));
+  (state.weeklyFixedCosts||[]).forEach(c=>bars.push({name:c.name, val:c.amount*4.33, color:'#F87171'}));
+  if(m.dph>0) bars.push({name:'ПДВ 21%', val:m.dph, color:'#A78BFA'});
+  if(m.incomeTax>0) bars.push({name:'Податок '+s.incomeTaxRate+'%', val:m.incomeTax, color:'#818CF8'});
+  const maxBar=Math.max(...bars.map(b=>b.val),1);
+
+  const insight=rd.pctActual>=100
+    ? `Місяць <span class="ins-b">покрито на ${Math.round(rd.pctActual)}%</span>. Все понад норму — твій чистий прибуток! 🎉`
+    : `Заробляй <span class="ins-b">${fmt(m.dailyTarget)} Kč/день</span> — закриєш місяць. Залишилось ${daysLeftInMonth()} днів.`;
+
+  document.getElementById('tab-dash').innerHTML = `
+    <!-- DOUBLE RING -->
+    <div class="ring-wrap">
+      <div class="ring-outer">
+        <svg class="ring-svg" viewBox="0 0 130 130">
+          <defs>
+            <linearGradient id="rg-act" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${actualColor}"/>
+              <stop offset="100%" stop-color="${actualColor}CC"/>
+            </linearGradient>
+            <linearGradient id="rg-proj" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${projColor}"/>
+              <stop offset="100%" stop-color="${projColor}99"/>
+            </linearGradient>
+          </defs>
+          <circle fill="none" stroke="rgba(139,92,246,.1)" stroke-width="7" cx="65" cy="65" r="60"/>
+          <circle fill="none" stroke="url(#rg-proj)" stroke-width="7" stroke-linecap="round"
+            cx="65" cy="65" r="60" stroke-dasharray="${outerCirc}" stroke-dashoffset="${outerOffset}"/>
+          <circle fill="none" stroke="rgba(255,255,255,.06)" stroke-width="7" cx="65" cy="65" r="48"/>
+          <circle fill="none" stroke="url(#rg-act)" stroke-width="7" stroke-linecap="round"
+            cx="65" cy="65" r="48" stroke-dasharray="${innerCirc}" stroke-dashoffset="${innerOffset}"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" style="color:${actualColor};font-size:30px;">${Math.round(rd.pctActual)}%</div>
+          <div style="font-size:11px;font-weight:700;color:rgba(139,92,246,.75);margin-top:1px;">▸ ${Math.round(rd.pctProjected)}% план</div>
+          <div class="ring-sub">${t('monthCovered')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:8px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);">
+          <div style="width:14px;height:4px;border-radius:2px;background:${actualColor};"></div>Зараз факт
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);">
+          <div style="width:14px;height:4px;border-radius:2px;background:${projColor};opacity:.7;"></div>Прогноз місяця
+        </div>
+      </div>
+      <div class="ring-gross">
+        <div class="ring-gross-lbl">${t('grossEarned')}</div>
+        <div class="ring-gross-num">+${fmt(rd.grossActual)} Kč</div>
+      </div>
+      <div class="ring-badge ${over100?'rb-ok':'rb-warn'}">
+        ${over100?`🎉 Покрито! +${fmt(rd.grossActual-rd.totalFixed)} Kč`:`⏳ Ще ${fmt(rd.totalFixed-rd.grossActual)} Kč`}
+      </div>
+    </div>
+
+    <!-- INSIGHT -->
+    <div class="insight"><div class="ins-txt">${insight}</div></div>
+
+    <!-- UPCOMING PAYMENTS ALERT -->
+    ${renderAlertCard()}
+
+    <!-- TODAY -->
+    <div class="today-card">
+      <div class="tc-hdr">
+        <span class="tc-lbl">${t('todayLbl')}</span>
+        <span class="tc-badge">${td.pct>=100?t('goalDone'):t('goalWait')+': '+fmt(td.goal-td.net)+' Kč'}</span>
+      </div>
+      <div class="tc-num">${fmtS(td.net)} <span class="tc-kc">Kč</span></div>
+      <div class="tc-sub">${td.trips} поїздок · ${fmt(td.km)} км · ціль ${fmt(td.goal)} Kč</div>
+      <div class="tc-prog"><div class="tc-fill" style="width:${td.pct.toFixed(0)}%;"></div></div>
+    </div>
+
+    <!-- SWIPE KEY CARDS -->
+    <div class="swipe-hdr"><span class="sw-ttl">КЛЮЧОВІ ЦИФРИ</span><span class="sw-hint">← свайп →</span></div>
+    <div class="swipe-row">
+      <div class="sw sw-week">
+        <div class="swl">${t('weekLbl')}</div>
+        <div class="swv" style="color:${w.netVarOnly>=0?'#FCD34D':'#FF453A'};">${w.netVarOnly>=0?'+':''}${fmt(w.netVarOnly)}</div>
+        <div class="sws">Kč</div>
+      </div>
+      ${taxReserve>0?`<div class="sw sw-tax">
+        <div class="swl">${t('taxLbl')}</div>
+        <div class="swv" style="color:#A78BFA;">${fmt(taxReserve)}</div>
+        <div class="sws">${t('reserveTax')}</div>
+      </div>`:''}
+      <div class="sw" style="background:rgba(255,255,255,.04);">
+        <div class="swl">ЦІЛЬ НА СЬОГОДНІ</div>
+        <div class="swv" style="color:#F59E0B;">${fmt(m.dailyTarget)}</div>
+        <div class="sws">Kč · ${m.daysLeft||daysLeftInMonth()} дн.</div>
+      </div>
+    </div>
+
+    <!-- COST BARS -->
+    ${bars.length>0?`<div class="cst-card">
+      <div class="cst-hdr"><span class="cst-ttl">${t('costMonth')}</span><span class="cst-tot">-${fmt(m.totalCosts)} Kč</span></div>
+      ${bars.map(b=>`<div class="cst-row">
+        <span class="cst-name">${b.name}</span>
+        <div class="cst-bar"><div class="cst-fill" style="width:${Math.min(100,(b.val/maxBar)*100).toFixed(0)}%;background:${b.color};"></div></div>
+        <span class="cst-val">-${fmt(b.val)}</span>
+      </div>`).join('')}
+    </div>`:''}
+
+    ${state.lastSync?`<div class="hint-txt">Дані з Bolt · ${state.lastSync}</div>`:`<div class="hint-txt">${t('noData')}</div>`}
+  `;
+}
+
+// ── RENDER REPORTS ──
+function renderReports(){
+  const m=calcMonth(); const w=calcWeek();
+
+  // Days grouped
+  const byDay={};
+  state.boltData.orders.filter(o=>o.order_status==='finished').forEach(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp; if(!ts) return;
+    const d=toPragueDate(ts);
+    if(!byDay[d]) byDay[d]={bolt:0,other:0,km:0,trips:0};
+    byDay[d].bolt+=(o.order_price?.net_earnings||0);
+    byDay[d].km+=(o.ride_distance||0)/1000;
+    byDay[d].trips++;
+  });
+  (state.oneTimeIncome||[]).forEach(e=>{
+    if(!e.date) return;
+    if(!byDay[e.date]) byDay[e.date]={bolt:0,other:0,km:0,trips:0};
+    byDay[e.date].other+=e.amount;
+  });
+  const days=Object.keys(byDay).sort().reverse().slice(0,30);
+  const maxTotal=Math.max(...days.map(d=>byDay[d].bolt+byDay[d].other),1);
+
+  const pct=Math.min(100,m.pct);
+  const progColor=pct>=100?'#34D399':pct>=50?'#FFC400':'#FF453A';
+  const wFrom=w.from.slice(5).replace('-','.');
+  const wTo=w.to.slice(5).replace('-','.');
+
+  // ── YEAR/MONTH HISTORY ──
+  // Collect all months from orders + oneTimeIncome
+  const allMonths=new Set();
+  state.boltData.orders.filter(o=>o.order_status==='finished').forEach(o=>{
+    const ts=o.order_finished_timestamp||o.order_created_timestamp;
+    if(ts) allMonths.add(toPragueDate(ts).slice(0,7));
+  });
+  (state.oneTimeIncome||[]).forEach(e=>{ if(e.date) allMonths.add(e.date.slice(0,7)); });
+  (state.oneTimeExpenses||[]).forEach(e=>{ if(e.date) allMonths.add(e.date.slice(0,7)); });
+
+  const monthsSorted=[...allMonths].sort().reverse();
+  const byYear={};
+  monthsSorted.forEach(mo=>{
+    const yr=mo.slice(0,4);
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(mo);
+  });
+  const years=Object.keys(byYear).sort().reverse();
+
+  const monthNames={
+    '01':'Січень','02':'Лютий','03':'Березень','04':'Квітень',
+    '05':'Травень','06':'Червень','07':'Липень','08':'Серпень',
+    '09':'Вересень','10':'Жовтень','11':'Листопад','12':'Грудень'
+  };
+
+  const histHTML = years.length===0 ? '' : `
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;margin:14px 0 8px 2px;">📅 ІСТОРІЯ</div>
+    ${years.map(yr=>`
+      <div class="card" style="margin-bottom:8px;overflow:hidden;">
+        <div onclick="toggleYear('${yr}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;cursor:pointer;">
+          <span style="font-size:15px;font-weight:700;color:#fff;">${yr}</span>
+          <span id="yr-arrow-${yr}" style="font-size:16px;color:rgba(255,255,255,.25);transition:transform .2s;">⌄</span>
+        </div>
+        <div id="yr-body-${yr}" style="display:none;">
+          ${byYear[yr].map(mo=>{
+            const mc=calcMonth(mo);
+            const moName=monthNames[mo.slice(5)]||mo.slice(5);
+            const col=mc.net>=0?'#34D399':'#FF453A';
+            return `
+            <div style="border-top:1px solid rgba(255,255,255,.05);">
+              <div onclick="toggleMonth('${mo}')" style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px 11px 20px;cursor:pointer;">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#fff;">${moName} ${mo.slice(0,4)}</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;">${mc.trips} поїздок · ${fmt(mc.km)} км</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:14px;font-weight:700;color:${col};">${fmtS(mc.net)} Kč</span>
+                  <span id="mo-arrow-${mo}" style="font-size:14px;color:rgba(255,255,255,.2);">›</span>
+                </div>
+              </div>
+              <div id="mo-body-${mo}" style="display:none;padding:0 16px 12px 20px;">
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Bolt дохід</span><span style="font-size:12px;font-weight:600;color:#4FC3F7;">+${fmt(mc.boltGross)} Kč</span></div>
+                ${mc.recurringInc>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Постійні доходи</span><span style="font-size:12px;font-weight:600;color:#34D399;">+${fmt(mc.recurringInc)} Kč</span></div>`:''}
+                ${mc.oneTimeInc>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Разові доходи</span><span style="font-size:12px;font-weight:600;color:#34D399;">+${fmt(mc.oneTimeInc)} Kč</span></div>`:''}
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:12px;color:rgba(255,255,255,.4);">Всього витрат</span><span style="font-size:12px;font-weight:600;color:#FF6B6B;">-${fmt(mc.totalCosts)} Kč</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0 2px;"><span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);">Чистий</span><span style="font-size:13px;font-weight:800;color:${col};">${fmtS(mc.net)} Kč</span></div>
+                <button onclick="downloadMonthReport('${mo}')" style="width:100%;margin-top:8px;padding:9px;background:rgba(255,196,0,.08);border:1px solid rgba(255,196,0,.2);border-radius:10px;color:#FFC400;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ Скачати звіт ${moName}</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('tab-reports').innerHTML = `
+    <!-- MONTH HERO -->
+    <div class="rep-hero">
+      <div class="rh-lbl">${t('monthReport')} · ${todayMonth()}</div>
+      <div class="rh-num" style="color:${m.net>=0?'#fff':'#FF453A'};">${fmtS(m.net)} <span style="font-size:16px;color:rgba(255,255,255,.3);">Kč</span></div>
+      <div class="rh-prog"><div class="rh-fill" style="width:${pct.toFixed(0)}%;background:${progColor};"></div></div>
+      <div class="rh-prow">
+        <span>0</span>
+        <span style="color:${progColor};font-weight:700;">${Math.round(m.pct)}%</span>
+        <span>${fmt(m.totalFixed)}</span>
+      </div>
+    </div>
+
+    <!-- WEEK CARD -->
+    <div class="week-card">
+      <div class="wc-hdr">
+        <div>
+          <div class="wc-lbl">${t('weekReport')}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;">${wFrom} – ${wTo}</div>
+        </div>
+        <div class="wc-num" style="color:${w.netFull>=0?'#FCD34D':'#FF453A'};">${fmtS(w.netFull)} <span style="font-size:12px;color:rgba(255,196,0,.4);">Kč</span></div>
+      </div>
+      ${w.weeklyFixed>0?`<div class="wc-prog"><div class="wc-fill" style="width:${w.pct.toFixed(0)}%;background:${w.pct>=100?'#34D399':'#FFC400'};"></div></div>
+      <div class="wc-meta"><span>0</span><span style="color:${w.pct>=100?'#34D399':'#FFC400'};font-weight:600;">${Math.round(w.pct)}%</span><span>${fmt(w.weeklyFixed)} Kč</span></div>`:''}
+      <div style="margin-top:8px;">
+        <div class="wc-row"><span class="wc-l">Bolt дохід</span><span class="wc-r" style="color:#4FC3F7;">+${fmt(w.boltGross)} Kč</span></div>
+        ${w.oneTimeInc>0?`<div class="wc-row"><span class="wc-l">Інші доходи</span><span class="wc-r" style="color:#34D399;">+${fmt(w.oneTimeInc)} Kč</span></div>`:''}
+        ${w.vc.fuel>0?`<div class="wc-row"><span class="wc-l">Пальне</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.vc.fuel)} Kč</span></div>`:''}
+        ${w.vc.amort>0?`<div class="wc-row"><span class="wc-l">Амортизація</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.vc.amort)} Kč</span></div>`:''}
+        ${w.weeklyFixed>0?`<div class="wc-row"><span class="wc-l">Тижневі витрати</span><span class="wc-r" style="color:#FF6B6B;">-${fmt(w.weeklyFixed)} Kč</span></div>`:''}
+        <div class="wc-row" style="border-top:1px solid rgba(255,196,0,.15);margin-top:4px;padding-top:8px;">
+          <span class="wc-l" style="font-weight:700;color:rgba(255,255,255,.7);">Чистий</span>
+          <span class="wc-r" style="color:${w.netFull>=0?'#34D399':'#FF453A'};">${fmtS(w.netFull)} Kč</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAYS with dual bars -->
+    <div class="days-card">
+      <div class="days-ttl">${t('daysHist')}</div>
+      ${days.length===0?`<div style="padding:16px;font-size:13px;color:rgba(255,255,255,.2);text-align:center;">${t('noData')}</div>`:
+        days.map(d=>{
+          const day=byDay[d];
+          const total=day.bolt+day.other;
+          const vc2=calcVarCosts(day.km);
+          const net2=total-vc2.total;
+          const boltW=Math.min(100,(day.bolt/maxTotal)*100);
+          const otherW=Math.min(100-boltW,(day.other/maxTotal)*100);
+          const col=net2>=0?'#34D399':'#FF453A';
+          return `<div class="day-row">
+            <span class="day-date">${d.slice(5).replace('-','.')}</span>
+            <div class="day-bar" style="display:flex;gap:1px;">
+              ${day.bolt>0?`<div style="height:100%;width:${boltW.toFixed(0)}%;background:#34D399;border-radius:2px;flex-shrink:0;min-width:2px;"></div>`:''}
+              ${day.other>0?`<div style="height:100%;width:${otherW.toFixed(0)}%;background:#818CF8;border-radius:2px;flex-shrink:0;min-width:2px;"></div>`:''}
+            </div>
+            <span class="day-trips" style="color:rgba(255,255,255,.2);">${day.trips||''}</span>
+            <span class="day-earn" style="color:${col};">${fmtS(net2)}</span>
+          </div>`;
+        }).join('')}
+      ${days.some(d=>byDay[d].other>0)?`
+      <div style="display:flex;gap:12px;padding:8px 16px;border-top:1px solid rgba(255,255,255,.05);">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);"><div style="width:10px;height:4px;background:#34D399;border-radius:2px;"></div>Bolt</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);"><div style="width:10px;height:4px;background:#818CF8;border-radius:2px;"></div>Інші доходи</div>
+      </div>`:''}
+    </div>
+
+    <!-- WEEK COMPARE -->
+    <div class="wk-compare">
+      <div class="wkc-hdr" onclick="toggleWkc()">
+        <span class="wkc-ttl">📊 ПОРІВНЯННЯ ТИЖНІВ</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${(()=>{const cw=calcWeek(),pw=calcPrevWeek();const d=cw.netFull-pw.net;return`<span style="font-size:11px;font-weight:700;color:${d>=0?'#34D399':'#FF453A'};">${d>=0?'+':''}${fmt(d)} Kč</span>`})()}
+          <span style="font-size:16px;color:rgba(255,255,255,.2);transition:transform .2s;${_wkcOpen?'transform:rotate(180deg)':''}">⌄</span>
+        </div>
+      </div>
+      ${_wkcOpen?`<div class="wkc-body">${(()=>{
+        const cw=calcWeek(),pw=calcPrevWeek();
+        const rows=[
+          {lbl:'Bolt дохід',cur:cw.boltGross,prev:pw.boltGross,col:'#4FC3F7'},
+          {lbl:'Поїздок',cur:cw.trips,prev:pw.trips,col:'#CE93D8',noKc:true},
+          {lbl:'Пробіг',cur:Math.round(cw.km),prev:Math.round(pw.km),col:'#fff',unit:'км'},
+          {lbl:'Чистий',cur:cw.netFull,prev:pw.net,col:cw.netFull>=0?'#FCD34D':'#FF453A'},
+        ];
+        return rows.map(r=>{const d=r.cur-r.prev;return`<div class="wkc-row">
+          <span class="wkc-lbl">${r.lbl}</span>
+          <div class="wkc-vals">
+            <span class="wkc-cur" style="color:${r.col};">${fmt(r.cur)}${r.noKc?'':r.unit?' '+r.unit:' Kč'}</span>
+            <span class="wkc-prev">${fmt(r.prev)}${r.noKc?'':r.unit?' '+r.unit:''}</span>
+            <span class="wkc-diff ${d>=0?'diff-pos':'diff-neg'}">${d>=0?'+':''}${fmt(d)}</span>
+          </div>
+        </div>`;}).join('');
+      })()}</div>`:''}
+    </div>
+
+    <!-- SHARE -->
+    <button class="share-btn" onclick="shareReport()">${t('shareBtn')}</button>
+
+    ${histHTML}
+  `;
+}
+
+// ── ACCORDION TOGGLES ──
+function toggleYear(yr){
+  const body=document.getElementById('yr-body-'+yr);
+  const arrow=document.getElementById('yr-arrow-'+yr);
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  arrow.style.transform=open?'rotate(180deg)':'';
+}
+function toggleMonth(mo){
+  const body=document.getElementById('mo-body-'+mo);
+  const arrow=document.getElementById('mo-arrow-'+mo);
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  arrow.textContent=open?'⌄':'›';
+}
+
+// ── DOWNLOAD MONTHLY REPORT ──
+function downloadMonthReport(mo){
+  const mc=calcMonth(mo);
+  const monthNames={
+    '01':'Січень','02':'Лютий','03':'Березень','04':'Квітень',
+    '05':'Травень','06':'Червень','07':'Липень','08':'Серпень',
+    '09':'Вересень','10':'Жовтень','11':'Листопад','12':'Грудень'
+  };
+  const moName=monthNames[mo.slice(5)]||mo;
+  const txt=
+`📊 DriveStat · Місячний звіт
+👤 ${state.user} · ${moName} ${mo.slice(0,4)}
+━━━━━━━━━━━━━━━━━━━━
+
+💵 ДОХОДИ:
+⚡ Bolt: +${fmt(mc.boltGross)} Kč
+${mc.recurringInc>0?`🔄 Постійні: +${fmt(mc.recurringInc)} Kč\n`:''}${mc.oneTimeInc>0?`💰 Разові: +${fmt(mc.oneTimeInc)} Kč\n`:''}📊 Загальний дохід: +${fmt(mc.gross)} Kč
+
+💸 ВИТРАТИ:
+${state.settings.fuelEnabled?`⛽ Авто + пальне: -${fmt(mc.vc.fuel)} Kč\n`:''}${mc.vc.amort>0?`🔧 Амортизація: -${fmt(mc.vc.amort)} Kč\n`:''}${(state.monthlyFixedCosts||[]).map(c=>`📋 ${c.name}: -${fmt(c.amount)} Kč`).join('\n')}
+${(state.weeklyFixedCosts||[]).map(c=>`📆 ${c.name} (×4): -${fmt(c.amount*4)} Kč`).join('\n')}
+${mc.dph>0?`🧾 ПДВ 21%: -${fmt(mc.dph)} Kč\n`:''}${mc.incomeTax>0?`📋 Податок: -${fmt(mc.incomeTax)} Kč\n`:''}📉 Всього витрат: -${fmt(mc.totalCosts)} Kč
+
+━━━━━━━━━━━━━━━━━━━━
+🚗 ${mc.trips} поїздок · ${fmt(mc.km)} км
+${mc.kph>0?`⏱ Дохід/год: ${fmt(mc.kph)} Kč\n`:''}━━━━━━━━━━━━━━━━━━━━
+💰 ЧИСТИЙ: ${fmtS(mc.net)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat · ${new Date().toLocaleDateString('uk')}`;
+
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`DriveStat_${moName}_${mo.slice(0,4)}.txt`;
+  a.click();
+  showToast('✅ Звіт скачано!');
+}
+
+// ── SHARE ──
+function shareReport(){
+  const w=calcWeek();
+  const [from,to]=getWeekRange();
+  const wFrom=from.slice(5).replace('-','.');
+  const wTo=to.slice(5).replace('-','.');
+  const txt=
+`📊 DriveStat · Тижневий звіт
+👤 ${state.user} · ${wFrom}–${wTo}
+━━━━━━━━━━━━━━━━━━━━
+
+⚡ Bolt дохід: +${fmt(w.boltGross)} Kč
+${w.vc.fuel>0?`⛽ Пальне: -${fmt(w.vc.fuel)} Kč\n`:''}${w.vc.amort>0?`🔧 Амортизація: -${fmt(w.vc.amort)} Kč\n`:''}${w.weeklyFixed>0?`🚙 Тижневі витрати: -${fmt(w.weeklyFixed)} Kč\n`:''}
+━━━━━━━━━━━━━━━━━━━━
+💰 Чистий: ${fmtS(w.netFull)} Kč
+━━━━━━━━━━━━━━━━━━━━
+DriveStat`;
+  navigator.clipboard.writeText(txt).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=txt;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  showToast('✅ Звіт скопійовано!');
+}
+
+// ── RENDER PROFILE ──
+let _profTab = 'main'; // main | monthly | weekly | rec-inc | one-inc | one-exp | odometer | taxes | auto
+
+function renderProfile(){
+  const s=state.settings;
+  const langs=[{c:'uk',f:'🇺🇦',n:'Укр'},{c:'cs',f:'🇨🇿',n:'Čes'},{c:'ru',f:'🇷🇺',n:'Рус'}];
+
+  // Totals for cards
+  const monthlyTotal=(state.monthlyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const weeklyTotal=(state.weeklyFixedCosts||[]).reduce((a,c)=>a+c.amount,0);
+  const recurringTotal=(state.recurringIncome||[]).reduce((a,c)=>a+c.amount,0);
+  const oneTimeIncTotal=(state.oneTimeIncome||[]).filter(e=>e.date?.startsWith(todayMonth())).reduce((a,e)=>a+e.amount,0);
+  const oneTimeExpTotal=(state.oneTimeExpenses||[]).filter(e=>e.date?.startsWith(todayMonth())).reduce((a,e)=>a+e.amount,0);
+  const taxStatus=s.dphEnabled||s.incomeTaxEnabled?'Увімкнено':'Вимкнено';
+
+  const cards=[
+    {id:'monthly', ico:'📅', ttl:'Місячні витрати', val:`-${fmt(monthlyTotal)} Kč`, cnt:(state.monthlyFixedCosts||[]).length, bg:'rgba(255,69,58,.09)', bc:'rgba(255,69,58,.18)', vc:'#FF6B6B'},
+    {id:'weekly',  ico:'📆', ttl:'Тижневі витрати', val:`-${fmt(weeklyTotal)} Kč`,  cnt:(state.weeklyFixedCosts||[]).length,  bg:'rgba(251,146,60,.09)', bc:'rgba(251,146,60,.18)', vc:'#FB923C'},
+    {id:'rec-inc', ico:'🔄', ttl:'Постійні доходи', val:`+${fmt(recurringTotal)} Kč`, cnt:(state.recurringIncome||[]).length, bg:'rgba(52,211,153,.08)', bc:'rgba(52,211,153,.18)', vc:'#34D399'},
+    {id:'one-inc', ico:'💰', ttl:'Разові доходи',   val:`+${fmt(oneTimeIncTotal)} Kč`, cnt:(state.oneTimeIncome||[]).length,  bg:'rgba(99,102,241,.1)',  bc:'rgba(99,102,241,.2)',  vc:'#818CF8'},
+    {id:'one-exp', ico:'🔴', ttl:'Разові витрати',  val:`-${fmt(oneTimeExpTotal)} Kč`, cnt:(state.oneTimeExpenses||[]).length, bg:'rgba(255,69,58,.07)',  bc:'rgba(255,69,58,.13)',  vc:'#FF453A'},
+    {id:'taxes',   ico:'🧾', ttl:'Податки',          val:taxStatus,                    cnt:null,                                bg:'rgba(139,92,246,.09)', bc:'rgba(139,92,246,.18)', vc:'#A78BFA'},
+    {id:'auto',    ico:'🚗', ttl:'Авто та пальне',   val:`${s.fuelPrice} Kč/л`,        cnt:null,                                bg:'rgba(255,196,0,.07)',  bc:'rgba(255,196,0,.15)',  vc:'#FFC400'},
+    ...((!s.boltKmEnabled)?[{id:'odometer',ico:'📍',ttl:'Одометр',val:`${(state.odometerLog||[]).length} записів`,cnt:null,bg:'rgba(99,102,241,.08)',bc:'rgba(99,102,241,.15)',vc:'#818CF8'}]:[]),
+  ];
+
+  // ── DETAIL VIEWS ──
+  function detailView(){
+    if(_profTab==='main') return '';
+
+    if(_profTab==='monthly') return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">📅 МІСЯЧНІ ВИТРАТИ — вкажи день місяця коли платиш</div>
+      <div class="dyn-list">
+        ${(state.monthlyFixedCosts||[]).map(c=>`
+          <div class="dyn-item">
+            <div class="dyn-dot" style="background:#FF453A;"></div>
+            <div style="flex:1;min-width:0;"><div class="dyn-name">${c.name}</div><div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">щомісяця · до ${c.dueDay||1}-го числа</div></div>
+            <span class="dyn-amt" style="color:#FF6B6B;">-${fmt(c.amount)} Kč</span>
+            <button class="dyn-del" onclick="delMonthly('${c.id}')">✕</button>
+          </div>`).join('')}
+        <div class="add-inline" style="flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:6px;"><input class="ai-inp" id="mc-name" type="text" placeholder="Страховка, кредит..." style="flex:1;"><input class="ai-inp ai-amt" id="mc-amt" type="number" inputmode="numeric" placeholder="Kč"></div>
+          <div style="display:flex;gap:6px;align-items:center;"><input class="ai-inp" id="mc-day" type="number" inputmode="numeric" placeholder="День місяця (напр. 15)" style="flex:1;"><button class="ai-btn" onclick="addMonthly()" style="flex-shrink:0;">+</button></div>
+        </div>
+      </div>`;
+
+    if(_profTab==='weekly') return listSection('📆 ТИЖНЕВІ ВИТРАТИ', state.weeklyFixedCosts||[], '#FB923C', 'delWeekly',
+      `<input class="ai-inp" id="wc-name" type="text" placeholder="Оренда авто..."><input class="ai-inp ai-amt" id="wc-amt" type="number" inputmode="numeric" placeholder="Kč"><button class="ai-btn" style="background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.25);color:#FB923C;" onclick="addWeekly()">+</button>`, 'щотижня', false);
+
+    if(_profTab==='rec-inc') return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">Постійні доходи — щомісяця автоматично. Вкажи день коли приходять гроші.</div>
+      <div class="dyn-list" style="border-color:rgba(52,211,153,.15);">
+        ${(state.recurringIncome||[]).map(e=>`
+          <div class="dyn-item">
+            <div class="dyn-dot" style="background:#34D399;"></div>
+            <div style="flex:1;min-width:0;">
+              <div class="dyn-name">${e.name}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">щомісяця · надходить ${e.dueDay||1}-го</div>
+            </div>
+            <span class="dyn-amt" style="color:#34D399;">+${fmt(e.amount)} Kč</span>
+            <button class="dyn-del" style="background:rgba(52,211,153,.1);color:#34D399;border-color:rgba(52,211,153,.2);" onclick="delRecurring('${e.id}')">✕</button>
+          </div>`).join('')}
+        <div class="add-inline" style="flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:6px;">
+            <input class="ai-inp" id="rec-name" type="text" placeholder="Uber, оренда квартири..." style="flex:1;">
+            <input class="ai-inp ai-amt" id="rec-amt" type="number" inputmode="numeric" placeholder="Kč">
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input class="ai-inp" id="rec-day" type="number" inputmode="numeric" placeholder="День місяця коли приходять гроші (напр. 25)" style="flex:1;">
+            <button class="ai-btn ai-btn-green" onclick="addRecurring()" style="flex-shrink:0;">+</button>
+          </div>
+        </div>
+      </div>`;
+
+    if(_profTab==='one-inc') return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">Разові доходи з датою</div>
+      <div class="dyn-list" style="border-color:rgba(99,102,241,.15);">
+        ${(state.oneTimeIncome||[]).slice().reverse().slice(0,15).map(e=>`
+          <div class="dyn-item">
+            <div class="dyn-dot" style="background:#818CF8;"></div>
+            <div style="flex:1;min-width:0;"><div class="dyn-name">${e.name}</div><div style="font-size:10px;color:rgba(255,255,255,.25);">${e.date}</div></div>
+            <span class="dyn-amt" style="color:#818CF8;">+${fmt(e.amount)} Kč</span>
+            <button class="dyn-del" style="background:rgba(99,102,241,.1);color:#818CF8;border-color:rgba(99,102,241,.2);" onclick="delOneTimeIncome('${e.id}')">✕</button>
+          </div>`).join('')}
+        <div class="add-inline" style="flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:6px;"><input class="ai-inp" id="inc-name" type="text" placeholder="Uber, готівка..." style="flex:1;"><input class="ai-inp ai-amt" id="inc-amt" type="number" inputmode="numeric" placeholder="Kč"></div>
+          <div style="display:flex;gap:6px;align-items:center;"><input class="ai-inp" id="inc-date" type="date" value="${today()}" style="flex:1;font-size:12px;color:rgba(99,102,241,.8);"><button class="ai-btn" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#818CF8;flex-shrink:0;" onclick="addOneTimeIncome()">+</button></div>
+        </div>
+      </div>`;
+
+    if(_profTab==='one-exp') return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">Разові витрати з датою</div>
+      <div class="dyn-list" style="border-color:rgba(255,69,58,.12);">
+        ${(state.oneTimeExpenses||[]).slice().reverse().slice(0,15).map(e=>`
+          <div class="dyn-item">
+            <div class="dyn-dot" style="background:#FF453A;"></div>
+            <div style="flex:1;min-width:0;"><div class="dyn-name">${e.name}</div><div style="font-size:10px;color:rgba(255,255,255,.25);">${e.date}</div></div>
+            <span class="dyn-amt" style="color:#FF6B6B;">-${fmt(e.amount)} Kč</span>
+            <button class="dyn-del" onclick="delOneTime('${e.id}')">✕</button>
+          </div>`).join('')}
+        <div class="add-inline" style="flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:6px;"><input class="ai-inp" id="exp-name" type="text" placeholder="Мийка, штраф..." style="flex:1;"><input class="ai-inp ai-amt" id="exp-amt" type="number" inputmode="numeric" placeholder="Kč"></div>
+          <div style="display:flex;gap:6px;align-items:center;"><input class="ai-inp" id="exp-date" type="date" value="${today()}" style="flex:1;font-size:12px;color:rgba(255,100,100,.7);"><button class="ai-btn" style="flex-shrink:0;" onclick="addOneTime()">+</button></div>
+        </div>
+      </div>`;
+
+    if(_profTab==='taxes') return `
+      <div class="st-group">
+        <div class="st-row"><div><div class="st-lbl">ПДВ 21%</div><div class="st-hint">На комісію Bolt</div></div><label class="tog"><input type="checkbox" id="tog-dph" ${s.dphEnabled?'checked':''} onchange="toggleDph(this.checked)"><span class="tog-sl"></span></label></div>
+        <div class="st-row"><div><div class="st-lbl">Подохідний податок</div><div class="st-hint">Резерва від чистого</div></div><label class="tog"><input type="checkbox" id="tog-tax" ${s.incomeTaxEnabled?'checked':''} onchange="toggleTax(this.checked)"><span class="tog-sl"></span></label></div>
+        ${s.incomeTaxEnabled?`<div class="st-row"><div class="st-lbl">Ставка %</div><input class="st-inp" id="st-taxrate" type="number" inputmode="numeric" value="${s.incomeTaxRate}"></div>`:''}
+      </div>
+      <button class="btn-save" onclick="saveTaxSettings()">✓ Зберегти</button>`;
+
+    if(_profTab==='auto') return `
+      <div class="st-group">
+        <div class="st-row"><div><div class="st-lbl">Пробіг з Bolt API</div><div class="st-hint">${s.boltKmEnabled?'Авто з поїздок Bolt':'Ручний ввід одометра'}</div></div><label class="tog"><input type="checkbox" id="tog-boltKm" ${s.boltKmEnabled?'checked':''} onchange="toggleBoltKm(this.checked)"><span class="tog-sl"></span></label></div>
+        <div class="st-row"><div><div class="st-lbl">Розрахунок пального</div><div class="st-hint">По км автоматично</div></div><label class="tog"><input type="checkbox" id="tog-fuel" ${s.fuelEnabled?'checked':''} onchange="toggleFuel(this.checked)"><span class="tog-sl"></span></label></div>
+        ${s.fuelEnabled?`<div class="st-row"><div class="st-lbl">Ціна пального Kč/л</div><input class="st-inp" id="st-fprice" type="number" inputmode="decimal" value="${s.fuelPrice}"></div><div class="st-row"><div class="st-lbl">Витрата л/100км</div><input class="st-inp" id="st-fcons" type="number" inputmode="decimal" value="${s.fuelCons}"></div>`:''}
+        <div class="st-row"><div><div class="st-lbl">Амортизація Kč/км</div><div class="st-hint">0 = не враховувати</div></div><input class="st-inp" id="st-amort" type="number" inputmode="decimal" value="${s.amort}" step="0.1"></div>
+      </div>
+      <div class="st-group" style="margin-top:10px;">
+        <div class="st-row">
+          <div><div class="st-lbl">🔔 Нагадування одометра</div><div class="st-hint">${s.notifEnabled?`Щодня о ${s.notifHour}:00`:'Вимкнено'}</div></div>
+          <button onclick="requestNotifPermission()" style="background:${s.notifEnabled?'rgba(52,211,153,.1)':'rgba(255,196,0,.1)'};border:1px solid ${s.notifEnabled?'rgba(52,211,153,.3)':'rgba(255,196,0,.25)'};border-radius:10px;color:${s.notifEnabled?'#34D399':'#FFC400'};font-size:11px;font-weight:700;cursor:pointer;padding:7px 12px;font-family:inherit;">${s.notifEnabled?'✅ Увімкнено':'Увімкнути'}</button>
+        </div>
+        ${s.notifEnabled?`<div class="st-row"><div class="st-lbl">Час нагадування</div><input class="st-inp" id="st-notifhour" type="number" inputmode="numeric" value="${s.notifHour}" min="6" max="23"></div>`:''}
+      </div>
+      <button class="btn-save" onclick="saveAutoSettings()">✓ Зберегти</button>`;
+
+    if(_profTab==='odometer') return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">Вводь повний показник одометра — додаток сам рахує пробіг</div>
+      <div class="dyn-list" style="border-color:rgba(99,102,241,.15);">
+        ${(state.odometerLog||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).map(e=>{
+          const prev=(state.odometerLog||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+          const idx=prev.findIndex(x=>x.id===e.id);
+          const diff=idx>0?Math.max(0,e.value-prev[idx-1].value):0;
+          return `<div class="dyn-item">
+            <div class="dyn-dot" style="background:#818CF8;"></div>
+            <div style="flex:1;min-width:0;"><div class="dyn-name">${e.date}</div>${diff>0?`<div style="font-size:10px;color:rgba(255,255,255,.25);">+${fmt(diff)} км за день</div>`:''}</div>
+            <span class="dyn-amt" style="color:#818CF8;">${fmt(e.value)} км</span>
+            <button class="dyn-del" style="background:rgba(99,102,241,.1);color:#818CF8;border-color:rgba(99,102,241,.2);" onclick="delOdometer('${e.id}')">✕</button>
+          </div>`;
+        }).join('')}
+        <div class="add-inline">
+          <input class="ai-inp" id="odo-date" type="date" value="${today()}" style="width:110px;font-size:12px;flex-shrink:0;">
+          <input class="ai-inp" id="odo-val" type="number" inputmode="numeric" placeholder="напр. 45230 км" style="flex:1;">
+          <button class="ai-btn" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#818CF8;" onclick="addOdometer()">+</button>
+        </div>
+      </div>`;
+
+    return '';
+  }
+
+  function listSection(title, items, color, delFn, addHtml, subLbl, isIncome){
+    return `
+      <div style="font-size:10px;color:rgba(255,255,255,.25);padding:0 0 10px;">${title}</div>
+      <div class="dyn-list" style="border-color:${isIncome?'rgba(52,211,153,.15)':'rgba(255,69,58,.12)'};">
+        ${items.map(c=>`
+          <div class="dyn-item">
+            <div class="dyn-dot" style="background:${color};"></div>
+            <div style="flex:1;min-width:0;"><div class="dyn-name">${c.name}</div><div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">${subLbl}</div></div>
+            <span class="dyn-amt" style="color:${color};">${isIncome?'+':'−'}${fmt(c.amount)} Kč</span>
+            <button class="dyn-del" ${isIncome?`style="background:rgba(52,211,153,.1);color:#34D399;border-color:rgba(52,211,153,.2);"`:''} onclick="${delFn}('${c.id}')">✕</button>
+          </div>`).join('')}
+        <div class="add-inline">${addHtml}</div>
+      </div>`;
+  }
+
+  const isDetail = _profTab !== 'main';
+
+  document.getElementById('tab-profile').innerHTML = `
+    <!-- USER -->
+    <div class="usr-card">
+      <div class="usr-av">${(state.user||'?').split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+      <div><div class="usr-name">${state.user}</div><div class="usr-role">DriveStat · ${isAdmin()?'Admin':'Driver'}</div></div>
+    </div>
+
+    ${isDetail ? `
+      <!-- BACK + DETAIL -->
+      <button onclick="_profTab='main';renderProfile();" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.6);padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px;width:100%;">‹ Назад</button>
+      ${detailView()}
+    ` : `
+      <!-- LANG -->
+      <div class="sec-lbl">🌐 МОВА</div>
+      <div class="lang-row">
+        ${langs.map(l=>`<button onclick="setLang('${l.c}')" class="lang-pill${state.lang===l.c?' on':''}"><span class="lang-flag">${l.f}</span>${l.n}</button>`).join('')}
+      </div>
+
+      <!-- QUICK SETTINGS -->
+      <div class="sec-lbl">⚙️ ЗАГАЛЬНЕ</div>
+      <div class="st-group" style="margin-bottom:14px;">
+        <div class="st-row"><div><div class="st-lbl">Денна ціль</div></div><input class="st-inp" id="st-goal" type="number" inputmode="numeric" value="${s.dailyGoal}"></div>
+        <div class="st-row">
+          <div><div class="st-lbl">Прогноз у платежах</div><div class="st-hint">${s.forecastEnabled?'По середньому заробітку/день':'Тільки фактичний дохід'}</div></div>
+          <label class="tog"><input type="checkbox" id="tog-forecast" ${s.forecastEnabled?'checked':''} onchange="toggleForecast(this.checked)"><span class="tog-sl"></span></label>
+        </div>
+        <div class="st-row">
+          <div><div class="st-lbl">Перенос залишку</div><div class="st-hint">${s.rolloverEnabled?'Залишок місяця переноситься':'Кожен місяць з нуля'}</div></div>
+          <label class="tog"><input type="checkbox" id="tog-rollover" ${s.rolloverEnabled?'checked':''} onchange="toggleRollover(this.checked)"><span class="tog-sl"></span></label>
+        </div>
+        ${s.rolloverEnabled&&(state.rolloverBalance||0)>0?`<div class="st-row"><span class="st-lbl">З минулого місяця</span><span style="font-size:13px;font-weight:700;color:#34D399;">+${fmt(state.rolloverBalance)} Kč</span></div>`:''}
+      </div>
+      <button class="btn-save" onclick="saveMainSettings()" style="margin-bottom:14px;">✓ Зберегти</button>
+
+      <!-- CARDS GRID -->
+      <div class="sec-lbl">📂 РОЗДІЛИ</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        ${cards.map(c=>`
+          <div onclick="_profTab='${c.id}';renderProfile();" style="background:${c.bg};border:1px solid ${c.bc};border-radius:16px;padding:14px 14px 12px;cursor:pointer;position:relative;">
+            ${c.cnt!==null?`<div style="position:absolute;top:10px;right:12px;font-size:9px;font-weight:700;color:${c.vc};opacity:.6;">${c.cnt}</div>`:''}
+            <div style="font-size:22px;margin-bottom:7px;">${c.ico}</div>
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:3px;">${c.ttl}</div>
+            <div style="font-size:11px;font-weight:700;color:${c.vc};">${c.val}</div>
+          </div>`).join('')}
+      </div>
+
+      <button class="btn-logout" onclick="logout()">Вийти з акаунту</button>
+      <div style="height:4px;"></div>
+    `}
+  `;
+}
+
+function saveMainSettings(){
+  state.settings.dailyGoal=parseInt(document.getElementById('st-goal')?.value)||1800;
+  save(); showToast(t('settingsSaved')); renderDash();
+}
+function saveTaxSettings(){
+  state.settings.incomeTaxRate=parseInt(document.getElementById('st-taxrate')?.value)||15;
+  save(); showToast(t('settingsSaved')); renderDash();
+}
+function saveAutoSettings(){
+  state.settings.fuelPrice=parseFloat(document.getElementById('st-fprice')?.value)||41;
+  state.settings.fuelCons=parseFloat(document.getElementById('st-fcons')?.value)||9;
+  state.settings.amort=parseFloat(document.getElementById('st-amort')?.value)||0;
+  const nh=parseInt(document.getElementById('st-notifhour')?.value);
+  if(nh>=6&&nh<=23) state.settings.notifHour=nh;
+  save(); showToast(t('settingsSaved')); renderDash();
+  if(state.settings.notifEnabled) scheduleNotif();
+}
+
+// ── SETTINGS ACTIONS ──
+function setLang(c){ state.lang=c; save(); renderProfile(); renderDash(); }
+function toggleFuel(v){ state.settings.fuelEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleDph(v){ state.settings.dphEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleTax(v){ state.settings.incomeTaxEnabled=v; save(); renderProfile(); renderDash(); }
+function toggleBoltKm(v){ state.settings.boltKmEnabled=v; save(); renderProfile(); renderDash(); }
+
+function addOdometer(){
+  const d=document.getElementById('odo-date')?.value||today();
+  const v=parseInt(document.getElementById('odo-val')?.value)||0;
+  if(!v){showToast(t('fillAll'));return;}
+  if(!state.odometerLog)state.odometerLog=[];
+  // Replace if same date exists
+  state.odometerLog=state.odometerLog.filter(e=>e.date!==d);
+  state.odometerLog.push({id:Date.now()+'',date:d,value:v});
+  save();showToast(t('added'));renderProfile();
+}
+function delOdometer(id){
+  state.odometerLog=(state.odometerLog||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+
+function saveSettings(){
+  const g=id=>document.getElementById(id);
+  state.settings.dailyGoal   = parseInt(g('st-goal')?.value)||1800;
+  state.settings.boltCommission=parseInt(g('st-comm')?.value)||25;
+  state.settings.amort       = parseFloat(g('st-amort')?.value)||0;
+  if(state.settings.fuelEnabled){
+    state.settings.fuelPrice = parseFloat(g('st-fprice')?.value)||41;
+    state.settings.fuelCons  = parseFloat(g('st-fcons')?.value)||9;
+  }
+  if(state.settings.incomeTaxEnabled)
+    state.settings.incomeTaxRate=parseInt(g('st-taxrate')?.value)||15;
+  save(); showToast(t('settingsSaved')); renderAll();
+}
+
+// ── DYNAMIC LISTS ──
+function addMonthly(){
+  const n=document.getElementById('mc-name')?.value.trim();
+  const a=parseInt(document.getElementById('mc-amt')?.value)||0;
+  const d=parseInt(document.getElementById('mc-day')?.value)||1;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.monthlyFixedCosts)state.monthlyFixedCosts=[];
+  state.monthlyFixedCosts.push({id:Date.now()+'',name:n,amount:a,dueDay:d});
+  save();showToast(t('added'));renderProfile();
+}
+function delMonthly(id){
+  state.monthlyFixedCosts=(state.monthlyFixedCosts||[]).filter(c=>c.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addWeekly(){
+  const n=document.getElementById('wc-name')?.value.trim();
+  const a=parseInt(document.getElementById('wc-amt')?.value)||0;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.weeklyFixedCosts)state.weeklyFixedCosts=[];
+  state.weeklyFixedCosts.push({id:Date.now()+'',name:n,amount:a});
+  save();showToast(t('added'));renderProfile();
+}
+function delWeekly(id){
+  state.weeklyFixedCosts=(state.weeklyFixedCosts||[]).filter(c=>c.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addRecurring(){
+  const n=document.getElementById('rec-name')?.value.trim();
+  const a=parseInt(document.getElementById('rec-amt')?.value)||0;
+  const d=parseInt(document.getElementById('rec-day')?.value)||1;
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.recurringIncome)state.recurringIncome=[];
+  state.recurringIncome.push({id:Date.now()+'',name:n,amount:a,dueDay:d});
+  save();showToast(t('added'));renderProfile();
+}
+function toggleRollover(v){
+  state.settings.rolloverEnabled=v;
+  if(!v) state.rolloverBalance=0;
+  save(); renderProfile(); renderDash();
+}
+function toggleForecast(v){
+  state.settings.forecastEnabled=v;
+  save(); renderProfile(); renderDash();
+}
+function delRecurring(id){
+  state.recurringIncome=(state.recurringIncome||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+function addOneTimeIncome(){
+  const n=document.getElementById('inc-name')?.value.trim();
+  const a=parseInt(document.getElementById('inc-amt')?.value)||0;
+  const d=document.getElementById('inc-date')?.value||today();
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.oneTimeIncome)state.oneTimeIncome=[];
+  state.oneTimeIncome.push({id:Date.now()+'',name:n,amount:a,date:d});
+  save();showToast(t('added'));renderProfile();
+}
+function delOneTimeIncome(id){
+  state.oneTimeIncome=(state.oneTimeIncome||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+// keep old names for compatibility
+function addIncome(){ addOneTimeIncome(); }
+function delIncome(id){ delOneTimeIncome(id); }
+function addOneTime(){
+  const n=document.getElementById('exp-name')?.value.trim();
+  const a=parseInt(document.getElementById('exp-amt')?.value)||0;
+  const d=document.getElementById('exp-date')?.value||today();
+  if(!n||!a){showToast(t('fillAll'));return;}
+  if(!state.oneTimeExpenses)state.oneTimeExpenses=[];
+  state.oneTimeExpenses.push({id:Date.now()+'',name:n,amount:a,date:d});
+  save();showToast(t('added'));renderProfile();
+}
+function delOneTime(id){
+  state.oneTimeExpenses=(state.oneTimeExpenses||[]).filter(e=>e.id!==id);
+  save();showToast(t('deleted'));renderProfile();
+}
+
+// ── MODAL (unused now but kept for future) ──
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+function closeModalBg(e){ if(e.target.id==='modal') closeModal(); }
+function saveModal(){ closeModal(); }
+
+// ── TABS ──
+let curTab='dash';
+function showTab(name){
+  document.querySelectorAll('.tab-pane').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  curTab=name;
+  if(name!=='profile') _profTab='main';
+  document.getElementById('content').scrollTop=0;
+  if(name==='dash') renderDash();
+  else if(name==='reports') renderReports();
+  else if(name==='profile') renderProfile();
+}
+function renderAll(){
+  if(curTab==='dash') renderDash();
+  else if(curTab==='reports') renderReports();
+  else if(curTab==='profile') renderProfile();
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+load();
+checkRollover();
+document.getElementById('ln-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+if(state.user){
+  if(!state.onboardingDone && state.role==='driver'){
+    startOnboarding();
+  } else {
+    showApp();
+  }
+}
+if(state.settings?.notifEnabled) scheduleNotif();
+</script>
+</body>
+</html>
