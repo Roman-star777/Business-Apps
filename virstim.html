@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulačka zakázky — Virstim</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0e0e0e;--s1:#161616;--s2:#1e1e1e;--s3:#2a2a2a;--border:#2e2e2e;
+  --text:#f0ece4;--muted:#7a7570;--accent:#e8b84b;--accent-dim:#2e2208;
+  --green:#5db87a;--green-dim:#0d2118;--red:#e06060;--red-dim:#2a0e0e;
+  --blue:#6a9fd8;--orange:#e8934b;
+  --serif:'DM Serif Display',serif;--sans:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:10px;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--accent);}
+.logo-sub{font-size:12px;color:var(--muted);}
+
+.page{max-width:900px;margin:0 auto;padding:28px 20px 60px;}
+
+/* STEP */
+.step{margin-bottom:28px;}
+.step-label{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.15em;font-family:var(--sans);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#000;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-title{font-family:var(--serif);font-size:17px;color:var(--text);margin-bottom:14px;}
+
+/* CARDS GRID */
+.cards{display:flex;flex-wrap:wrap;gap:10px;}
+.card-opt{
+  flex:1;min-width:140px;
+  background:var(--s2);border:1.5px solid var(--border);border-radius:10px;
+  padding:14px 16px;cursor:pointer;transition:all 0.15s;
+  display:flex;flex-direction:column;gap:4px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+}
+.card-opt:hover{border-color:var(--muted);}
+.card-opt.selected{border-color:var(--accent);background:var(--accent-dim);}
+.card-opt.selected .co-title{color:var(--accent);}
+.co-icon{font-size:20px;margin-bottom:4px;pointer-events:none;}
+.co-title{font-size:13px;font-weight:600;color:var(--text);transition:color 0.15s;pointer-events:none;}
+.co-sub{font-size:11px;color:var(--muted);line-height:1.4;pointer-events:none;}
+.co-price{font-size:12px;color:var(--accent);margin-top:4px;font-weight:500;pointer-events:none;}
+
+/* CONTRACT */
+.contract-cards{display:flex;gap:10px;flex-wrap:wrap;}
+.cc{
+  flex:1;min-width:160px;
+  background:var(--s2);border:1.5px solid var(--border);border-radius:10px;
+  padding:14px 16px;cursor:pointer;transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+}
+.cc:hover{border-color:var(--muted);}
+.cc.selected{border-color:var(--accent);background:var(--accent-dim);}
+.cc-title{font-size:14px;font-weight:600;margin-bottom:4px;transition:color 0.15s;pointer-events:none;}
+.cc.selected .cc-title{color:var(--accent);}
+.cc-desc{font-size:11px;color:var(--muted);line-height:1.5;pointer-events:none;}
+.cc-cost{font-size:12px;margin-top:8px;font-weight:500;pointer-events:none;}
+.cc.selected .cc-cost{color:var(--accent);}
+
+/* MARGIN TABS */
+.margin-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+.mt{
+  padding:10px 20px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--s2);color:var(--muted);font-family:var(--sans);
+  font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.mt:hover{border-color:var(--muted);}
+.mt.selected{background:var(--accent);color:#000;border-color:var(--accent);}
+
+/* INPUTS */
+.input-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.inp-group{flex:1;min-width:160px;}
+.inp-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.inp-wrap{position:relative;}
+.inp{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:17px;font-weight:500;padding:9px 42px 9px 12px;outline:none;transition:border-color 0.15s;-moz-appearance:textfield;}
+.inp::-webkit-inner-spin-button,.inp::-webkit-outer-spin-button{-webkit-appearance:none;}
+.inp:focus{border-color:var(--accent);}
+.inp-unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);pointer-events:none;}
+
+.divider{height:1px;background:var(--border);margin:24px 0;}
+
+/* RESULT */
+.result{
+  background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  margin-top:8px;
+}
+.result-head{
+  padding:16px 22px;background:var(--accent-dim);
+  border-bottom:1px solid #3a2a0a;
+  display:flex;align-items:center;gap:8px;
+}
+.result-head-title{font-family:var(--serif);font-size:17px;color:var(--accent);}
+
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);}
+.rc{background:var(--s1);padding:16px 20px;}
+.rc.hl{background:var(--s2);}
+.rc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;}
+.rc-val{font-family:var(--serif);font-size:26px;line-height:1.1;}
+.rc-val.green{color:var(--green);}
+.rc-val.red{color:var(--red);}
+.rc-val.accent{color:var(--accent);}
+.rc-val.blue{color:var(--blue);}
+.rc-val.muted{color:var(--muted);}
+.rc-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+.breakdown{padding:18px 22px;border-top:1px solid var(--border);}
+.bk-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
+.bk-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:13px;}
+.bk-label{flex:1;color:var(--muted);}
+.bk-bar-wrap{width:140px;height:5px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.bk-bar{height:100%;border-radius:3px;transition:width 0.4s;}
+.bk-val{min-width:75px;text-align:right;font-weight:500;font-size:12px;}
+
+.alert{padding:12px 22px;font-size:13px;border-top:1px solid var(--border);display:none;}
+.alert.warn{background:var(--red-dim);color:var(--red);}
+.alert.ok{background:var(--green-dim);color:var(--green);}
+.alert.show{display:block;}
+
+/* OFFER BOX */
+.offer-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px;}
+.offer-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.offer-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.offer-row:last-child{border-bottom:none;padding-top:10px;}
+.offer-key{color:var(--muted);}
+.offer-val{font-weight:500;color:var(--text);}
+.offer-val.big{font-family:var(--serif);font-size:20px;color:var(--accent);}
+
+/* ZAKAZNIK INPUT */
+.zakaznik-row{display:flex;gap:10px;align-items:flex-end;margin-top:12px;flex-wrap:wrap;}
+.zakaznik-note{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic;}
+
+@media(max-width:580px){.cards{flex-direction:column;}.contract-cards{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">Virstim</span>
+  <span class="logo-sub">— Kalkulačka zakázky</span>
+</div>
+
+<div class="page">
+
+<!-- KROK 1 — TYP PRACOVNÍKA -->
+<div class="step">
+  <div class="step-label"><span class="step-num">1</span> Typ pracovníka</div>
+  <div class="cards" id="worker-cards">
+    <div class="card-opt selected" onclick="selectWorker(this,'pomocny',155)" data-rate="155">
+      <div class="co-icon">🧱</div>
+      <div class="co-title">Pomocný dělník</div>
+      <div class="co-sub">Kopání, demolice, úklid, podávání materiálu</div>
+      <div class="co-price">155–175 Kč/hod čistá</div>
+    </div>
+    <div class="card-opt" onclick="selectWorker(this,'zručný',190)" data-rate="190">
+      <div class="co-icon">🔨</div>
+      <div class="co-title">Zručný dělník</div>
+      <div class="co-sub">Zdění, omítky, obklady, základní řemeslo</div>
+      <div class="co-price">180–220 Kč/hod čistá</div>
+    </div>
+    <div class="card-opt" onclick="selectWorker(this,'specialista',240)" data-rate="240">
+      <div class="co-icon">⚡</div>
+      <div class="co-title">Specialista</div>
+      <div class="co-sub">Elektrikář, instalatér, obkladač — mistr</div>
+      <div class="co-price">220–280 Kč/hod čistá</div>
+    </div>
+    <div class="card-opt" onclick="selectWorker(this,'skladnik',138)" data-rate="138">
+      <div class="co-icon">📦</div>
+      <div class="co-title">Skladník / Manipulant</div>
+      <div class="co-sub">Sklad, logistika, expedice, VZV</div>
+      <div class="co-price">130–155 Kč/hod čistá</div>
+    </div>
+  </div>
+</div>
+
+<!-- KROK 2 — SMLOUVA -->
+<div class="step">
+  <div class="step-label"><span class="step-num">2</span> Typ smlouvy / spolupráce</div>
+  <div class="contract-cards" id="contract-cards">
+    <div class="cc selected" onclick="selectContract(this,'dpc',5209)">
+      <div class="cc-title">DPČ</div>
+      <div class="cc-desc">Dohoda o pracovní činnosti — zaměstnanec u tebe. Odvody na tvé straně.</div>
+      <div class="cc-cost" id="cc-cost-dpc">+ 5 209 Kč/měsíc (zdrav + soc + daň)</div>
+    </div>
+    <div class="cc" onclick="selectContract(this,'dpp',0)">
+      <div class="cc-title">DPP</div>
+      <div class="cc-desc">Dohoda o provedení práce — do 10 000 Kč/měsíc bez odvodů.</div>
+      <div class="cc-cost">+ 0 Kč odvodů</div>
+    </div>
+    <div class="cc" onclick="selectContract(this,'ico',0)">
+      <div class="cc-title">IČO / OSVČ</div>
+      <div class="cc-desc">Pracovník fakturuje jako živnostník. Žádné odvody na tvé straně.</div>
+      <div class="cc-cost">+ 0 Kč odvodů</div>
+    </div>
+  </div>
+</div>
+
+<!-- KROK 3 — PARAMETRY -->
+<div class="step">
+  <div class="step-label"><span class="step-num">3</span> Parametry zakázky</div>
+  <div class="input-row">
+    <div class="inp-group">
+      <div class="inp-label">Čistá hodinová sazba pracovníka</div>
+      <div class="inp-wrap">
+        <input class="inp" id="cistaHod" type="number" value="155" min="0" oninput="calc()">
+        <span class="inp-unit">Kč/h</span>
+      </div>
+    </div>
+    <div class="inp-group">
+      <div class="inp-label">Počet pracovníků</div>
+      <div class="inp-wrap">
+        <input class="inp" id="pocet" type="number" value="1" min="1" oninput="calc()">
+        <span class="inp-unit">os.</span>
+      </div>
+    </div>
+    <div class="inp-group">
+      <div class="inp-label">Hodin / měsíc / pracovník</div>
+      <div class="inp-wrap">
+        <input class="inp" id="hodiny" type="number" value="160" min="1" oninput="calc()">
+        <span class="inp-unit">hod</span>
+      </div>
+    </div>
+  </div>
+  <div class="input-row">
+    <div class="inp-group">
+      <div class="inp-label">Doprava / pracovník / měsíc</div>
+      <div class="inp-wrap">
+        <input class="inp" id="doprava" type="number" value="800" min="0" oninput="calc()">
+        <span class="inp-unit">Kč</span>
+      </div>
+    </div>
+    <div class="inp-group">
+      <div class="inp-label">OOPP + ostatní / měsíc</div>
+      <div class="inp-wrap">
+        <input class="inp" id="oopp" type="number" value="300" min="0" oninput="calc()">
+        <span class="inp-unit">Kč</span>
+      </div>
+    </div>
+    <div class="inp-group">
+      <div class="inp-label">Režie firmy</div>
+      <div class="inp-wrap">
+        <input class="inp" id="rezie" type="number" value="8" min="0" oninput="calc()">
+        <span class="inp-unit">Kč/h</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KROK 4 — MARŽE -->
+<div class="step">
+  <div class="step-label"><span class="step-num">4</span> Požadovaná marže</div>
+  <div class="margin-tabs" id="margin-tabs">
+    <button class="mt" onclick="selectMargin(this,20)">20 %</button>
+    <button class="mt selected" onclick="selectMargin(this,25)">25 %</button>
+    <button class="mt" onclick="selectMargin(this,30)">30 %</button>
+    <button class="mt" onclick="selectMargin(this,40)">40 %</button>
+  </div>
+</div>
+
+<!-- KROK 5 — NABÍDKA ZÁKAZNÍKA -->
+<div class="step">
+  <div class="step-label"><span class="step-num">5</span> Zákazník ti nabídl sazbu? (volitelné)</div>
+  <div class="zakaznik-row">
+    <div class="inp-group" style="max-width:200px;">
+      <div class="inp-label">Sazba zákazníka</div>
+      <div class="inp-wrap">
+        <input class="inp" id="zakaznikSazba" type="number" value="" min="0" placeholder="—" oninput="calc()">
+        <span class="inp-unit">Kč/h</span>
+      </div>
+    </div>
+  </div>
+  <div class="zakaznik-note">Pokud zadáš sazbu zákazníka, uvidíš jestli je to pro tebe výhodné.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- VÝSLEDEK -->
+<div class="result">
+  <div class="result-head">
+    <span>📊</span>
+    <span class="result-head-title">Výsledek kalkulace</span>
+  </div>
+
+  <div class="result-grid">
+    <div class="rc"><div class="rc-label">Náklad / hod / pracovník</div><div class="rc-val muted" id="r-naklad">—</div><div class="rc-sub">vše včetně odvodů a režie</div></div>
+    <div class="rc"><div class="rc-label">Náklad / měsíc / pracovník</div><div class="rc-val muted" id="r-naklad-m">—</div><div class="rc-sub">celkový měsíční náklad</div></div>
+    <div class="rc hl"><div class="rc-label">Minimální sazba zákazníkovi</div><div class="rc-val accent" id="r-min-sazba">—</div><div class="rc-sub">při 0 % marži (hranice ztráty)</div></div>
+    <div class="rc hl"><div class="rc-label">Doporučená sazba</div><div class="rc-val green" id="r-doporucena">—</div><div class="rc-sub" id="r-doporucena-sub">při zvolené marži</div></div>
+    <div class="rc"><div class="rc-label">Marže v Kč / hod</div><div class="rc-val" id="r-marze-kc">—</div><div class="rc-sub">čistý zisk na hodinu</div></div>
+    <div class="rc"><div class="rc-label">Celková marže / měsíc</div><div class="rc-val blue" id="r-total">—</div><div class="rc-sub" id="r-total-sub">všichni pracovníci</div></div>
+  </div>
+
+  <div class="breakdown">
+    <div class="bk-title">Rozložení nákladů / hodinu</div>
+    <div id="bk-rows"></div>
+  </div>
+
+  <!-- ZÁKAZNÍKOVA SAZBA -->
+  <div id="zakaznik-result" style="display:none;padding:16px 22px;border-top:1px solid var(--border);">
+    <div class="bk-title">Hodnocení nabídky zákazníka</div>
+    <div id="zakaznik-detail"></div>
+  </div>
+
+  <div class="alert" id="alertBox"></div>
+</div>
+
+<!-- NABÍDKA PRO ZÁKAZNÍKA -->
+<div class="offer-box" id="offer-box">
+  <div class="offer-title">Shrnutí pro zákazníka</div>
+  <div class="offer-row"><span class="offer-key">Typ pracovníka</span><span class="offer-val" id="o-typ">—</span></div>
+  <div class="offer-row"><span class="offer-key">Počet pracovníků</span><span class="offer-val" id="o-pocet">—</span></div>
+  <div class="offer-row"><span class="offer-key">Smlouva</span><span class="offer-val" id="o-smlouva">—</span></div>
+  <div class="offer-row"><span class="offer-key">Hodin / měsíc</span><span class="offer-val" id="o-hodiny">—</span></div>
+  <div class="offer-row" style="border-top:2px solid var(--border);margin-top:4px;">
+    <span class="offer-key" style="font-weight:600;color:var(--text);">Navrhovaná sazba zákazníkovi</span>
+    <span class="offer-val big" id="o-sazba">—</span>
+  </div>
+</div>
+
+</div>
+
+<script>
+let workerType = 'pomocny';
+let contractType = 'dpc';
+let contractCost = 5209;
+let marginPct = 25;
+
+const workerNames = {pomocny:'Pomocný dělník', zručný:'Zručný dělník', specialista:'Specialista', skladnik:'Skladník / Manipulant'};
+const contractNames = {dpc:'DPČ (zaměstnanec)', dpp:'DPP', ico:'IČO / OSVČ'};
+
+function selectWorker(el, type, rate) {
+  document.querySelectorAll('.card-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  workerType = type;
+  document.getElementById('cistaHod').value = rate;
+  calc();
+}
+
+function selectContract(el, type, cost) {
+  document.querySelectorAll('.cc').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  contractType = type;
+  contractCost = cost;
+  calc();
+}
+
+function selectMargin(el, pct) {
+  document.querySelectorAll('.mt').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  marginPct = pct;
+  calc();
+}
+
+function fmt(n, d=0) {
+  return (n||0).toLocaleString('cs-CZ', {minimumFractionDigits:d, maximumFractionDigits:d});
+}
+
+function calc() {
+  const cistaHod = parseFloat(document.getElementById('cistaHod').value) || 0;
+  const pocet    = parseInt(document.getElementById('pocet').value) || 1;
+  const hodiny   = parseInt(document.getElementById('hodiny').value) || 160;
+  const doprava  = parseFloat(document.getElementById('doprava').value) || 0;
+  const oopp     = parseFloat(document.getElementById('oopp').value) || 0;
+  const rezie    = parseFloat(document.getElementById('rezie').value) || 0;
+  const zakaznikSazba = parseFloat(document.getElementById('zakaznikSazba').value) || 0;
+
+  // Měsíční náklady na 1 pracovníka
+  const cistaMesic   = cistaHod * hodiny;
+  const celkemMesic  = cistaMesic + contractCost + doprava + oopp;
+  const nakladHod    = (celkemMesic / hodiny) + rezie;
+
+  // Doporučená sazba při zvolené marži
+  const doporucenaSazba = nakladHod / (1 - marginPct / 100);
+  const marzeKc = doporucenaSazba - nakladHod;
+  const totalMesic = marzeKc * pocet * hodiny;
+
+  // Update UI
+  document.getElementById('r-naklad').textContent = fmt(nakladHod, 1) + ' Kč';
+  document.getElementById('r-naklad-m').textContent = fmt(celkemMesic) + ' Kč';
+  document.getElementById('r-min-sazba').textContent = fmt(nakladHod, 0) + ' Kč/h';
+  document.getElementById('r-doporucena').textContent = fmt(doporucenaSazba, 0) + ' Kč/h';
+  document.getElementById('r-doporucena-sub').textContent = `při marži ${marginPct} %`;
+
+  const marzeEl = document.getElementById('r-marze-kc');
+  marzeEl.textContent = fmt(marzeKc, 1) + ' Kč';
+  marzeEl.className = 'rc-val ' + (marzeKc >= 0 ? 'green' : 'red');
+
+  document.getElementById('r-total').textContent = fmt(totalMesic) + ' Kč';
+  document.getElementById('r-total-sub').textContent = `${pocet} pracovník${pocet > 1 ? 'ů' : ''} × ${hodiny} hod`;
+
+  // Breakdown
+  const items = [
+    {l:'Čistá mzda / hod',     v:cistaHod,              c:'#e06060'},
+    {l:'Odvody (DPČ)',          v:contractCost/hodiny,   c:'#e0a040', hide: contractCost===0},
+    {l:'Doprava',               v:doprava/hodiny,        c:'#8080c0'},
+    {l:'OOPP + ostatní',        v:oopp/hodiny,           c:'#607060'},
+    {l:'Režie firmy',           v:rezie,                 c:'#407080'},
+    {l:'Vaše marže',            v:Math.max(0,marzeKc),  c:'#5db87a'},
+  ];
+  const max = doporucenaSazba || 1;
+  document.getElementById('bk-rows').innerHTML = items
+    .filter(it => !it.hide && it.v > 0)
+    .map(it => `
+      <div class="bk-row">
+        <span class="bk-label">${it.l}</span>
+        <div class="bk-bar-wrap"><div class="bk-bar" style="width:${Math.min(100, it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div>
+        <span class="bk-val" style="color:${it.c}">${fmt(it.v,2)} Kč/h</span>
+      </div>`).join('');
+
+  // Zákazníkova sazba
+  if (zakaznikSazba > 0) {
+    const zakaznikMarze = zakaznikSazba - nakladHod;
+    const zakaznikPct = (zakaznikMarze / zakaznikSazba) * 100;
+    const zakaznikTotal = zakaznikMarze * pocet * hodiny;
+    const isOk = zakaznikMarze >= 0;
+    const isProfitable = zakaznikPct >= 15;
+
+    document.getElementById('zakaznik-result').style.display = 'block';
+    document.getElementById('zakaznik-detail').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:4px;">
+        <div style="background:var(--s2);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Sazba zákazníka</div>
+          <div style="font-family:var(--serif);font-size:22px;color:var(--accent)">${fmt(zakaznikSazba)} Kč/h</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Tvoje marže</div>
+          <div style="font-family:var(--serif);font-size:22px;color:${isProfitable?'#5db87a':isOk?'#e8b84b':'#e06060'}">${fmt(zakaznikPct,1)} %</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${fmt(zakaznikMarze,1)} Kč/hod</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Měsíční marže</div>
+          <div style="font-family:var(--serif);font-size:22px;color:${isProfitable?'#5db87a':isOk?'#e8b84b':'#e06060'}">${fmt(zakaznikTotal)} Kč</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px 14px;display:flex;align-items:center;">
+          <div style="font-size:20px;margin-right:10px;">${!isOk?'❌':!isProfitable?'⚠️':'✅'}</div>
+          <div style="font-size:13px;color:${isProfitable?'#5db87a':isOk?'#e8b84b':'#e06060'};font-weight:500;">${!isOk?'Ztráta — nepřijímat':!isProfitable?'Nízká marže — zvažit':zakaznikPct>=25?'Výborná nabídka':'Dobrá nabídka'}</div>
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('zakaznik-result').style.display = 'none';
+  }
+
+  // Alert
+  const alertEl = document.getElementById('alertBox');
+  if (marzeKc < 0) {
+    alertEl.textContent = '⚠️ Při této konfiguraci pracuješ se ztrátou — zkontroluj sazbu nebo sniž náklady.';
+    alertEl.className = 'alert warn show';
+  } else if (marginPct >= 30) {
+    alertEl.textContent = '✅ Zdravá marže — máš prostor na nečekané náklady i slevy při vyjednávání.';
+    alertEl.className = 'alert ok show';
+  } else {
+    alertEl.className = 'alert';
+  }
+
+  // Offer summary
+  document.getElementById('o-typ').textContent = workerNames[workerType];
+  document.getElementById('o-pocet').textContent = pocet + ' pracovník' + (pocet > 1 ? 'ů' : '');
+  document.getElementById('o-smlouva').textContent = contractNames[contractType];
+  document.getElementById('o-hodiny').textContent = hodiny + ' hod';
+  document.getElementById('o-sazba').textContent = fmt(doporucenaSazba, 0) + ' Kč/hod';
+}
+
+calc();
+
+// iOS Safari fix — точне розрізнення tap і scroll
+document.querySelectorAll('.card-opt, .cc, .mt').forEach(el => {
+  let startX = 0, startY = 0, moved = false;
+
+  el.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, {passive: true});
+
+  el.addEventListener('touchmove', function(e) {
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dx > 8 || dy > 8) moved = true;
+  }, {passive: true});
+
+  el.addEventListener('touchend', function(e) {
+    if (!moved) {
+      e.preventDefault();
+      this.click();
+    }
+  }, {passive: false});
+});
+</script>
+</body>
+</html>
