@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#06060E;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;color:#fff;padding:24px 12px 50px;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:16px;font-weight:700;margin-bottom:6px;text-align:center;}
+.sub{font-size:11px;color:rgba(255,255,255,.3);margin-bottom:28px;text-align:center;}
+
+.phone{width:340px;background:#0D0D18;border-radius:24px;border:1.5px solid rgba(255,255,255,.08);padding:20px 14px;box-shadow:0 28px 70px rgba(0,0,0,.8);}
+
+/* header */
+.hdr{text-align:center;margin-bottom:20px;}
+.hdr-ico{font-size:32px;}
+.hdr-brand{font-size:20px;font-weight:800;letter-spacing:-.5px;}
+.hdr-brand span{color:#FFC400;}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:3px;}
+
+.sec-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:.16em;margin:0 0 6px 2px;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:3px 0;margin-bottom:10px;}
+.row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);gap:10px;}
+.row:last-child{border-bottom:none;}
+.row-ico{font-size:18px;width:24px;flex-shrink:0;text-align:center;}
+.row-info{flex:1;}
+.row-name{font-size:13px;font-weight:600;color:#fff;}
+.row-hint{font-size:10px;color:rgba(255,255,255,.28);margin-top:1px;}
+.inp{width:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#FFC400;padding:8px 10px;font-size:14px;font-weight:700;font-family:inherit;text-align:right;}
+
+/* ★ NEW: total row */
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.07);border-radius:0 0 14px 14px;}
+.total-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:5px;}
+.total-val{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.total-kc{font-size:11px;color:rgba(255,255,255,.4);}
+
+/* breakdown */
+.fleet-box{background:rgba(10,132,255,.07);border:1px solid rgba(10,132,255,.2);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.fleet-ttl{font-size:9px;font-weight:700;letter-spacing:.12em;color:rgba(10,132,255,.6);margin-bottom:8px;}
+.fleet-row{display:flex;justify-content:space-between;padding:4px 0;}
+.fl{font-size:12px;color:rgba(255,255,255,.4);}
+.fv{font-size:12px;font-weight:700;}
+
+.result-card{border-radius:18px;padding:16px;margin-bottom:10px;background:linear-gradient(135deg,rgba(48,209,88,.12),rgba(48,209,88,.05));border:1.5px solid rgba(48,209,88,.25);}
+.rl{font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(48,209,88,.7);margin-bottom:6px;}
+.rn{font-size:36px;font-weight:800;letter-spacing:-2px;line-height:1;color:#30D158;}
+.rs{font-size:11px;margin-top:4px;color:rgba(255,255,255,.4);}
+
+.copy-btn{width:100%;padding:13px;background:rgba(255,196,0,.1);border:1.5px solid rgba(255,196,0,.35);border-radius:14px;color:#FFC400;font-size:14px;font-weight:700;text-align:center;}
+
+/* highlight box */
+.highlight{background:rgba(255,196,0,.05);border:1px dashed rgba(255,196,0,.3);border-radius:10px;padding:6px 10px;margin-bottom:10px;font-size:10px;color:rgba(255,196,0,.7);text-align:center;}
+</style>
+</head>
+<body>
+
+<h1>Калькулятор — додаємо загальну суму</h1>
+<div class="sub">Після рядків готівка + карта → рядок з загальною виручкою</div>
+
+<div class="phone">
+  <div class="hdr">
+    <div class="hdr-ico">🚕</div>
+    <div class="hdr-brand">Drive<span>Stat</span></div>
+    <div class="hdr-sub">Калькулятор виплат водію</div>
+  </div>
+
+  <div class="sec-lbl">ВОДІЙ</div>
+  <div class="card">
+    <div class="row">
+      <div class="row-ico">🧑</div>
+      <div class="row-info"><div class="row-name">Ім'я водія</div></div>
+      <input class="inp" style="color:rgba(255,255,255,.7);" value="Yurii" readonly>
+    </div>
+    <div class="row">
+      <div class="row-ico">📅</div>
+      <div class="row-info"><div class="row-name">Тиждень</div></div>
+      <input class="inp" style="color:rgba(255,255,255,.7);width:110px;" value="2026-W23" readonly>
+    </div>
+  </div>
+
+  <div class="sec-lbl">BOLT — ВИРУЧКА ВОДІЯ</div>
+  <div class="card" style="border-radius:16px 16px 0 0;margin-bottom:0;border-bottom:none;">
+    <div class="row">
+      <div class="row-ico">💵</div>
+      <div class="row-info">
+        <div class="row-name">Готівка (cash)</div>
+        <div class="row-hint">Водій отримав особисто</div>
+      </div>
+      <input class="inp" value="4 103" readonly>
+    </div>
+    <div class="row">
+      <div class="row-ico">💳</div>
+      <div class="row-info">
+        <div class="row-name">На карту флоту (безнал)</div>
+        <div class="row-hint">Прийшло від Bolt на флот</div>
+      </div>
+      <input class="inp" value="7 044" readonly>
+    </div>
+  </div>
+
+  <!-- ★ NEW TOTAL ROW -->
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-top:none;border-radius:0 0 16px 16px;margin-bottom:10px;overflow:hidden;">
+    <div class="total-row">
+      <div class="total-lbl">
+        <span style="width:6px;height:6px;border-radius:50%;background:#FFC400;display:inline-block;"></span>
+        Загальна виручка
+      </div>
+      <div>
+        <span class="total-val">11 147</span>
+        <span class="total-kc"> Kč</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight">👆 Ось тут — сума готівки + безналу = загальна виручка за тиждень</div>
+
+  <div class="sec-lbl">ВІДРАХУВАННЯ З КАРТИ ФЛОТУ</div>
+  <div class="card">
+    <div class="row">
+      <div class="row-ico">🚗</div>
+      <div class="row-info"><div class="row-name">Оренда авто</div><div class="row-hint">За тиждень</div></div>
+      <input class="inp" value="3 500" readonly>
+    </div>
+    <div class="row" style="padding:8px 14px;">
+      <input style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.7);padding:7px 10px;font-size:12px;font-family:inherit;" value="dph" readonly>
+      <input class="inp" style="margin-left:8px;width:80px;color:#FF6B6B;" value="1 025" readonly>
+      <div style="width:26px;height:26px;border-radius:7px;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.2);color:#FF453A;font-size:13px;display:flex;align-items:center;justify-content:center;margin-left:6px;flex-shrink:0;">✕</div>
+    </div>
+  </div>
+
+  <div class="fleet-box">
+    <div class="fleet-ttl">💼 РАХУНОК ФЛОТУ</div>
+    <div class="fleet-row"><span class="fl">Надійшло від Bolt (безнал)</span><span class="fv" style="color:#4FC3F7;">+7 044 Kč</span></div>
+    <div class="fleet-row"><span class="fl">Всього відрахувань</span><span class="fv" style="color:#FF6B6B;">-4 525 Kč</span></div>
+    <div class="fleet-row" style="border-top:1px solid rgba(255,255,255,.07);margin-top:4px;padding-top:6px;"><span class="fl" style="font-weight:700;color:rgba(255,255,255,.6);">Залишок на рахунку</span><span class="fv" style="color:#30D158;">+2 519 Kč</span></div>
+  </div>
+
+  <div class="result-card">
+    <div class="rl">ВИПЛАТА НА РУКИ</div>
+    <div class="rn">+6 622 Kč</div>
+    <div class="rs">Готівка: +4 103 Kč · Переказ: +2 519 Kč</div>
+  </div>
+
+  <div class="copy-btn">📋 Скопіювати звіт для водія</div>
+</div>
+
+</body>
+</html>
