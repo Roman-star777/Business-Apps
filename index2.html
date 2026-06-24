@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Kokpit — Finanční řízení</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0A0B; --bg2:#0E0E0F; --card:#151517; --card2:#1C1C1F; --card3:#222226;
+    --line:#242428; --line2:#1C1C1F;
+    --txt:#FFFFFF; --txt2:#C7C7CC; --txt3:#9A9AA0; --txt4:#6B6B72;
+    --gold:#F5C76A; --gold2:#D89B3A; --green:#5BE89A; --red:#F08A6A; --blue:#7FB0E0; --purple:#B79AE0;
+    --r-lg:22px; --r-md:16px; --r-sm:12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);}
+  body{font-family:'Inter',-apple-system,system-ui,sans-serif;color:var(--txt);-webkit-font-smoothing:antialiased;}
+  input,select,button,textarea{font-family:inherit;}
+  input::placeholder{color:var(--txt4);}
+  input[type=number]::-webkit-inner-spin-button{opacity:.2;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#242428;border-radius:4px;}
+  button{cursor:pointer;border:none;background:none;color:inherit;}
+  .metal{background:linear-gradient(135deg,#2A2A2E 0%,#3C3C42 48%,#1A1A1D 100%);}
+  .goldgrad{background:linear-gradient(135deg,var(--gold),var(--gold2));}
+  .fade{animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--line2);
+    display:flex;flex-direction:column;padding:28px 18px;position:sticky;top:0;height:100vh;}
+  .content{flex:1;min-width:0;padding:32px 40px 80px;max-width:1280px;margin:0 auto;width:100%;}
+  .bottomnav{display:none;}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .split{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
+
+  @media(max-width:1080px){ .g4{grid-template-columns:repeat(2,1fr);} .g3,.g2,.split{grid-template-columns:1fr;} }
+  @media(max-width:760px){
+    .sidebar{display:none;}
+    .content{padding:18px 16px 100px;}
+    .g4{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .bottomnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(14,14,15,.95);
+      backdrop-filter:blur(16px);border-top:1px solid var(--line2);padding:8px 6px 22px;justify-content:space-around;z-index:50;}
+    .hero-num{font-size:44px !important;}
+    .desktop-only{display:none !important;}
+  }
+  @media(min-width:761px){ .mobile-only{display:none !important;} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef
+} = React;
+
+/* ===== icons ===== */
+function Ic({
+  d,
+  size = 18,
+  color = "currentColor",
+  fill = "none",
+  sw = 2
+}) {
+  return /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: fill,
+    stroke: color,
+    strokeWidth: sw,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, d);
+}
+const I = {
+  grid: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "3",
+      width: "7",
+      height: "7",
+      rx: "1.5"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "14",
+      y: "3",
+      width: "7",
+      height: "7",
+      rx: "1.5"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "14",
+      width: "7",
+      height: "7",
+      rx: "1.5"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "14",
+      y: "14",
+      width: "7",
+      height: "7",
+      rx: "1.5"
+    }))
+  }),
+  briefcase: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "2",
+      y: "7",
+      width: "20",
+      height: "14",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"
+    }))
+  }),
+  car: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M19 17h2l-1.5-6.5a2 2 0 0 0-2-1.5H6.5a2 2 0 0 0-2 1.5L3 17h2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "7",
+      cy: "17",
+      r: "2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "17",
+      cy: "17",
+      r: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M9 17h6"
+    }))
+  }),
+  receipt: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 7h8M8 11h8M8 15h5"
+    }))
+  }),
+  bulb: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M9 18h6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M10 22h4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M15.1 14a5 5 0 1 0-6.2 0c.7.6 1.1 1.2 1.1 2h4c0-.8.4-1.4 1.1-2z"
+    }))
+  }),
+  plus: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "5",
+      x2: "12",
+      y2: "19"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "5",
+      y1: "12",
+      x2: "19",
+      y2: "12"
+    }))
+  }),
+  trash: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "3 6 5 6 21 6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+    }))
+  }),
+  chevron: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement("polyline", {
+      points: "9 6 15 12 9 18"
+    })
+  }),
+  check: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement("polyline", {
+      points: "20 6 9 17 4 12"
+    })
+  }),
+  alert: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "9",
+      x2: "12",
+      y2: "13"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "17",
+      x2: "12.01",
+      y2: "17"
+    }))
+  }),
+  users: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "9",
+      cy: "7",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M23 21v-2a4 4 0 0 0-3-3.9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 3.1a4 4 0 0 1 0 7.8"
+    }))
+  }),
+  settings: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+    }))
+  }),
+  trend: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+      points: "22 7 13.5 15.5 8.5 10.5 2 17"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "16 7 22 7 22 13"
+    }))
+  }),
+  target: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "10"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "6"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "2"
+    }))
+  }),
+  refresh: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M23 4v6h-6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M1 20v-6h6"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M3.5 9a9 9 0 0 1 14.8-3.4L23 10M1 14l4.7 4.4A9 9 0 0 0 20.5 15"
+    }))
+  }),
+  download: p => /*#__PURE__*/React.createElement(Ic, {
+    ...p,
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+    }), /*#__PURE__*/React.createElement("polyline", {
+      points: "7 10 12 15 17 10"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "15",
+      x2: "12",
+      y2: "3"
+    }))
+  })
+};
+
+/* ===== format ===== */
+const czk = n => new Intl.NumberFormat("cs-CZ", {
+  style: "currency",
+  currency: "CZK",
+  maximumFractionDigits: 0
+}).format(isFinite(n) ? n : 0);
+const num = n => new Intl.NumberFormat("cs-CZ", {
+  maximumFractionDigits: 0
+}).format(isFinite(n) ? n : 0);
+const pctF = n => `${(isFinite(n) ? n : 0).toFixed(1)} %`;
+const monthKey = d => d.slice(0, 7);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const todayMonth = () => todayISO().slice(0, 7);
+
+/* ===== DriveStat reader (taxi app, localStorage key ds3) ===== */
+function toPragueDate(ts) {
+  const d = new Date((ts + 7200) * 1000);
+  return d.toISOString().slice(0, 10);
+}
+function readDriveStat() {
+  try {
+    const raw = localStorage.getItem('ds3');
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    const orders = st.boltData && st.boltData.orders || [];
+    const finished = orders.filter(o => o.order_status === 'finished');
+    // group by month
+    const byMonth = {};
+    finished.forEach(o => {
+      const ts = o.order_finished_timestamp || o.order_created_timestamp;
+      if (!ts) return;
+      const mo = toPragueDate(ts).slice(0, 7);
+      const earn = o.order_price && o.order_price.net_earnings || 0;
+      const km = (o.ride_distance || 0) / 1000;
+      if (!byMonth[mo]) byMonth[mo] = {
+        gross: 0,
+        km: 0,
+        trips: 0
+      };
+      byMonth[mo].gross += earn;
+      byMonth[mo].km += km;
+      byMonth[mo].trips++;
+    });
+    // recurring + one-time income from DriveStat
+    const recurring = (st.recurringIncome || []).reduce((a, e) => a + (e.amount || 0), 0);
+    const tMo = todayMonth();
+    const thisMonth = byMonth[tMo] || {
+      gross: 0,
+      km: 0,
+      trips: 0
+    };
+    const last6 = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const mo = d.toISOString().slice(0, 7);
+      last6.push({
+        mo,
+        gross: byMonth[mo] ? byMonth[mo].gross : 0
+      });
+    }
+    return {
+      found: true,
+      monthGross: thisMonth.gross + recurring,
+      boltGross: thisMonth.gross,
+      recurring,
+      km: thisMonth.km,
+      trips: thisMonth.trips,
+      dailyGoal: st.settings && st.settings.dailyGoal || 0,
+      byMonth,
+      last6,
+      totalMonths: Object.keys(byMonth).length
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+/* ===== app data exports ===== */
+window.__K = {
+  I,
+  czk,
+  num,
+  pctF,
+  monthKey,
+  todayISO,
+  todayMonth,
+  readDriveStat
+};
+const KEY = "kokpit-v2";
+const DEFAULT_STATE = {
+  clients: [{
+    id: "c1",
+    name: "Sklad Alfa s.r.o.",
+    rate: 350,
+    color: "#5BE89A",
+    workers: [{
+      id: "w1",
+      name: "Jan Novák",
+      hours: 168,
+      costs: [{
+        id: "x1",
+        name: "Mzda",
+        amount: 26000
+      }, {
+        id: "x2",
+        name: "Sociálka",
+        amount: 6400
+      }, {
+        id: "x3",
+        name: "Daň",
+        amount: 3100
+      }, {
+        id: "x4",
+        name: "Účetní",
+        amount: 1200
+      }, {
+        id: "x5",
+        name: "Pojištění",
+        amount: 1500
+      }, {
+        id: "x6",
+        name: "Noční",
+        amount: -2200
+      }, {
+        id: "x7",
+        name: "Bonus",
+        amount: -1800
+      }, {
+        id: "x8",
+        name: "Pokuty",
+        amount: 1000
+      }]
+    }, {
+      id: "w2",
+      name: "Petr Svoboda",
+      hours: 160,
+      costs: [{
+        id: "y1",
+        name: "Mzda",
+        amount: 25000
+      }, {
+        id: "y2",
+        name: "Sociálka",
+        amount: 6100
+      }, {
+        id: "y3",
+        name: "Daň",
+        amount: 2900
+      }, {
+        id: "y4",
+        name: "Účetní",
+        amount: 1200
+      }, {
+        id: "y5",
+        name: "Pojištění",
+        amount: 1500
+      }]
+    }]
+  }, {
+    id: "c2",
+    name: "Výroba Beta a.s.",
+    rate: 320,
+    color: "#7FB0E0",
+    workers: [{
+      id: "w3",
+      name: "Igor Petrov",
+      hours: 160,
+      costs: [{
+        id: "z1",
+        name: "Mzda",
+        amount: 24000
+      }, {
+        id: "z2",
+        name: "Sociálka",
+        amount: 5900
+      }, {
+        id: "z3",
+        name: "Daň",
+        amount: 2800
+      }, {
+        id: "z4",
+        name: "Účetní",
+        amount: 1200
+      }]
+    }]
+  }],
+  taxi: {
+    manualMonth: 0,
+    useManual: false
+  },
+  expenses: [{
+    id: "e1",
+    name: "Úvěr na auto #1",
+    category: "loan",
+    monthly: 8500,
+    balance: 240000,
+    apr: 9.5
+  }, {
+    id: "e2",
+    name: "Spotřebitelský úvěr",
+    category: "loan",
+    monthly: 6200,
+    balance: 180000,
+    apr: 18
+  }, {
+    id: "e3",
+    name: "Pojištění auta #1",
+    category: "insurance",
+    monthly: 1800
+  }, {
+    id: "e4",
+    name: "Pojištění auta #2",
+    category: "insurance",
+    monthly: 1500
+  }, {
+    id: "e5",
+    name: "Nájem / bydlení",
+    category: "other",
+    monthly: 15000
+  }, {
+    id: "e6",
+    name: "Palivo + provoz",
+    category: "other",
+    monthly: 12000
+  }],
+  plan: {
+    targetIncome: 120000,
+    horizon: 12
+  },
+  history: {} // {"2026-06": {income, expense}} snapshots
+};
+function loadState() {
+  try {
+    const r = localStorage.getItem(KEY);
+    if (r) {
+      const s = JSON.parse(r);
+      return {
+        ...DEFAULT_STATE,
+        ...s,
+        taxi: {
+          ...DEFAULT_STATE.taxi,
+          ...(s.taxi || {})
+        },
+        plan: {
+          ...DEFAULT_STATE.plan,
+          ...(s.plan || {})
+        },
+        history: s.history || {}
+      };
+    }
+  } catch (e) {}
+  return DEFAULT_STATE;
+}
+function saveState(s) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(s));
+  } catch (e) {}
+}
+const EXP_CATS = {
+  loan: {
+    label: "Úvěry",
+    color: "#F08A6A"
+  },
+  insurance: {
+    label: "Pojištění",
+    color: "#7FB0E0"
+  },
+  other: {
+    label: "Ostatní",
+    color: "#B79AE0"
+  }
+};
+
+/* ===== business calculations ===== */
+function workerCalc(w, rate) {
+  const income = rate * (w.hours || 0);
+  const costs = (w.costs || []).reduce((s, c) => s + (c.amount || 0), 0);
+  const profit = income - costs;
+  const margin = income > 0 ? profit / income * 100 : 0;
+  return {
+    income,
+    costs,
+    profit,
+    margin
+  };
+}
+function clientCalc(c) {
+  let income = 0,
+    costs = 0;
+  (c.workers || []).forEach(w => {
+    const r = workerCalc(w, c.rate);
+    income += r.income;
+    costs += r.costs;
+  });
+  const profit = income - costs;
+  const margin = income > 0 ? profit / income * 100 : 0;
+  return {
+    income,
+    costs,
+    profit,
+    margin,
+    workers: (c.workers || []).length
+  };
+}
+function outsourcingCalc(state) {
+  let income = 0,
+    costs = 0;
+  state.clients.forEach(c => {
+    const r = clientCalc(c);
+    income += r.income;
+    costs += r.costs;
+  });
+  const profit = income - costs;
+  const margin = income > 0 ? profit / income * 100 : 0;
+  return {
+    income,
+    costs,
+    profit,
+    margin
+  };
+}
+
+/* ===== shared UI ===== */
+function Card({
+  children,
+  style,
+  className,
+  onClick
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: className,
+    onClick: onClick,
+    style: {
+      background: "var(--card)",
+      borderRadius: "var(--r-lg)",
+      padding: 20,
+      ...style
+    }
+  }, children);
+}
+function Stat({
+  label,
+  value,
+  unit,
+  sub,
+  subc,
+  color
+}) {
+  return /*#__PURE__*/React.createElement(Card, {
+    style: {
+      padding: 18
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 25,
+      fontWeight: 800,
+      marginTop: 7,
+      color: color || "#fff",
+      letterSpacing: "-0.5px"
+    }
+  }, value, unit && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      color: "var(--txt4)",
+      marginLeft: 4,
+      fontWeight: 600
+    }
+  }, unit)), sub && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: subc || "var(--txt4)",
+      marginTop: 6
+    }
+  }, sub));
+}
+function NumInput({
+  value,
+  onChange,
+  suffix,
+  width,
+  placeholder
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      background: "var(--card2)",
+      border: "1px solid var(--line)",
+      borderRadius: "var(--r-sm)",
+      overflow: "hidden",
+      width: width || "auto"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: value,
+    placeholder: placeholder,
+    onChange: e => onChange(parseFloat(e.target.value) || 0),
+    style: {
+      background: "transparent",
+      border: "none",
+      color: "var(--txt)",
+      padding: "9px 11px",
+      fontSize: 14,
+      outline: "none",
+      width: "100%",
+      fontWeight: 600
+    }
+  }), suffix && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)",
+      padding: "0 11px 0 0"
+    }
+  }, suffix));
+}
+function TextInput({
+  value,
+  onChange,
+  width,
+  placeholder
+}) {
+  return /*#__PURE__*/React.createElement("input", {
+    value: value,
+    placeholder: placeholder,
+    onChange: e => onChange(e.target.value),
+    style: {
+      background: "var(--card2)",
+      border: "1px solid var(--line)",
+      color: "#fff",
+      borderRadius: "var(--r-sm)",
+      padding: "9px 11px",
+      fontSize: 14,
+      outline: "none",
+      width: width || "auto",
+      fontWeight: 500
+    }
+  });
+}
+function PageHead({
+  title,
+  sub,
+  action
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 24,
+      gap: 12,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 27,
+      fontWeight: 800,
+      letterSpacing: "-0.6px",
+      margin: 0
+    }
+  }, title), sub && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)",
+      marginTop: 4
+    }
+  }, sub)), action);
+}
+function Btn({
+  children,
+  onClick,
+  gold,
+  style
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: onClick,
+    className: gold ? "goldgrad" : "",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "11px 17px",
+      borderRadius: 13,
+      color: gold ? "#0B0B0C" : "var(--txt2)",
+      background: gold ? undefined : "var(--card2)",
+      fontWeight: 700,
+      fontSize: 14,
+      ...style
+    }
+  }, children);
+}
+
+/* ===== NAV ===== */
+const NAV = [{
+  id: "dashboard",
+  label: "Přehled",
+  icon: I.grid
+}, {
+  id: "outsourcing",
+  label: "Agentura",
+  icon: I.briefcase
+}, {
+  id: "taxi",
+  label: "Taxi",
+  icon: I.car
+}, {
+  id: "expenses",
+  label: "Výdaje",
+  icon: I.receipt
+}];
+function Sidebar({
+  tab,
+  setTab
+}) {
+  return /*#__PURE__*/React.createElement("aside", {
+    className: "sidebar"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 32,
+      paddingLeft: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "goldgrad",
+    style: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(I.target, {
+    size: 19,
+    color: "#0B0B0C",
+    sw: 2.5
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 800
+    }
+  }, "Kokpit"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "var(--txt4)"
+    }
+  }, "Finanční řízení"))), /*#__PURE__*/React.createElement("nav", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      flex: 1
+    }
+  }, NAV.map(n => {
+    const A = tab === n.id;
+    const Icon = n.icon;
+    return /*#__PURE__*/React.createElement("button", {
+      key: n.id,
+      onClick: () => setTab(n.id),
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "12px 14px",
+        borderRadius: 13,
+        background: A ? "var(--card2)" : "transparent",
+        color: A ? "#fff" : "var(--txt3)",
+        fontWeight: A ? 700 : 500,
+        fontSize: 14,
+        position: "relative"
+      }
+    }, A && /*#__PURE__*/React.createElement("span", {
+      style: {
+        position: "absolute",
+        left: 0,
+        top: 10,
+        bottom: 10,
+        width: 3,
+        borderRadius: 2,
+        background: "var(--gold)"
+      }
+    }), /*#__PURE__*/React.createElement(Icon, {
+      size: 18,
+      color: A ? "var(--gold)" : "var(--txt4)"
+    }), n.label);
+  })));
+}
+function BottomNav({
+  tab,
+  setTab
+}) {
+  return /*#__PURE__*/React.createElement("nav", {
+    className: "bottomnav"
+  }, NAV.map(n => {
+    const A = tab === n.id;
+    const Icon = n.icon;
+    return /*#__PURE__*/React.createElement("button", {
+      key: n.id,
+      onClick: () => setTab(n.id),
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 3,
+        padding: "4px 8px",
+        color: A ? "var(--gold)" : "var(--txt4)",
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 21,
+      color: A ? "var(--gold)" : "var(--txt4)"
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        fontWeight: A ? 700 : 500
+      }
+    }, n.label));
+  }));
+}
+
+/* ===== charts ===== */
+function Donut({
+  segments,
+  size = 170,
+  center
+}) {
+  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  const r = (size - 30) / 2,
+    c = 2 * Math.PI * r;
+  let off = 0;
+  return /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--card2)",
+    strokeWidth: "22"
+  }), segments.map((s, i) => {
+    const len = c * s.value / total;
+    const el = /*#__PURE__*/React.createElement("circle", {
+      key: i,
+      cx: size / 2,
+      cy: size / 2,
+      r: r,
+      fill: "none",
+      stroke: s.color,
+      strokeWidth: "22",
+      strokeDasharray: `${len} ${c}`,
+      strokeDashoffset: -off,
+      transform: `rotate(-90 ${size / 2} ${size / 2})`
+    });
+    off += len;
+    return el;
+  }), center && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("text", {
+    x: "50%",
+    y: "46%",
+    fill: "var(--txt4)",
+    fontSize: "12",
+    textAnchor: "middle"
+  }, center.top), /*#__PURE__*/React.createElement("text", {
+    x: "50%",
+    y: "60%",
+    fill: "#fff",
+    fontSize: "22",
+    fontWeight: "800",
+    textAnchor: "middle"
+  }, center.bottom)));
+}
+function AreaChart({
+  series,
+  height = 240,
+  proj
+}) {
+  const W = 720,
+    H = height,
+    padL = 10,
+    padR = 10,
+    padT = 20,
+    padB = 28;
+  if (!series || series.length < 2) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      height,
+      display: "grid",
+      placeItems: "center",
+      color: "var(--txt4)",
+      fontSize: 13
+    }
+  }, "Málo dat pro graf");
+  const all = series.map(s => s.value);
+  const max = Math.max(...all, 1) * 1.1;
+  const stepX = (W - padL - padR) / (series.length - 1 || 1);
+  const pts = series.map((s, i) => [padL + i * stepX, H - padB - s.value / max * (H - padT - padB)]);
+  let splitAt = proj != null ? series.length - proj - 1 : series.length - 1;
+  splitAt = Math.max(0, Math.min(series.length - 1, splitAt));
+  const solidPts = pts.slice(0, splitAt + 1);
+  const dashPts = pts.slice(splitAt);
+  const toPath = arr => arr.map((p, i) => i === 0 ? `M${p[0]} ${p[1]}` : `L${p[0]} ${p[1]}`).join(" ");
+  const lastSolid = solidPts[solidPts.length - 1] || pts[0];
+  const area = `${toPath(solidPts)} L${lastSolid[0]} ${H - padB} L${solidPts[0][0]} ${H - padB} Z`;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: `0 0 ${W} ${H}`,
+    width: "100%",
+    height: height,
+    preserveAspectRatio: "none",
+    style: {
+      display: "block"
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+    id: "ag",
+    x1: "0",
+    y1: "0",
+    x2: "0",
+    y2: "1"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0",
+    stopColor: "#F5C76A",
+    stopOpacity: ".3"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "1",
+    stopColor: "#F5C76A",
+    stopOpacity: "0"
+  }))), [0, .25, .5, .75, 1].map((g, i) => /*#__PURE__*/React.createElement("line", {
+    key: i,
+    x1: padL,
+    y1: padT + g * (H - padT - padB),
+    x2: W - padR,
+    y2: padT + g * (H - padT - padB),
+    stroke: "var(--line)",
+    strokeWidth: "1"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: area,
+    fill: "url(#ag)"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: toPath(solidPts),
+    fill: "none",
+    stroke: "#F5C76A",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }), proj != null && /*#__PURE__*/React.createElement("path", {
+    d: toPath(dashPts),
+    fill: "none",
+    stroke: "#F5C76A",
+    strokeWidth: "2.5",
+    strokeDasharray: "5 5",
+    strokeLinecap: "round",
+    opacity: ".7"
+  }), pts.map((p, i) => /*#__PURE__*/React.createElement("circle", {
+    key: i,
+    cx: p[0],
+    cy: p[1],
+    r: i === splitAt ? 4 : 0,
+    fill: "#F5C76A"
+  })), series.map((s, i) => i % Math.ceil(series.length / 8 || 1) === 0 || i === series.length - 1 ? /*#__PURE__*/React.createElement("text", {
+    key: i,
+    x: pts[i][0],
+    y: H - 8,
+    fill: "var(--txt4)",
+    fontSize: "10",
+    textAnchor: "middle"
+  }, s.label) : null));
+}
+function MiniBars({
+  data,
+  height = 120
+}) {
+  const max = Math.max(...data.map(d => d.value), 1);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-end",
+      gap: 8,
+      height,
+      paddingTop: 10
+    }
+  }, data.map((d, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      maxWidth: 34,
+      height: `${d.value / max * 100}%`,
+      minHeight: 3,
+      background: d.color || "linear-gradient(180deg,#F5C76A,#D89B3A)",
+      borderRadius: 6
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: "var(--txt4)"
+    }
+  }, d.label))));
+}
+
+/* ================= OUTSOURCING ================= */
+function Outsourcing({
+  state,
+  api
+}) {
+  const o = outsourcingCalc(state);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fade"
+  }, /*#__PURE__*/React.createElement(PageHead, {
+    title: "Agentura",
+    sub: "Tvůj hlavní byznys — agentura práce",
+    action: /*#__PURE__*/React.createElement(Btn, {
+      gold: true,
+      onClick: api.addClient
+    }, /*#__PURE__*/React.createElement(I.plus, {
+      size: 16,
+      color: "#0B0B0C"
+    }), " Přidat zakázku")
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "g4",
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Stat, {
+    label: "Obrat (fakturace)",
+    value: num(o.income),
+    unit: "Kč",
+    sub: "měsíčně"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Náklady",
+    value: num(o.costs),
+    unit: "Kč",
+    sub: "mzdy + odvody",
+    color: "var(--red)"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Čistý zisk",
+    value: num(o.profit),
+    unit: "Kč",
+    sub: "měsíčně",
+    color: "var(--green)"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Marže",
+    value: pctF(o.margin),
+    sub: o.margin >= 20 ? "zdravá ziskovost" : "nízká marže",
+    color: "var(--gold)",
+    subc: o.margin >= 20 ? "var(--green)" : "var(--gold)"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 16,
+      marginBottom: 22
+    }
+  }, state.clients.map(c => /*#__PURE__*/React.createElement(ClientSlot, {
+    key: c.id,
+    client: c,
+    api: api
+  })), state.clients.length === 0 && /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      color: "var(--txt4)",
+      padding: 30
+    }
+  }, "Zatím žádné zakázky. Přidej první tlačítkem nahoře."))), state.clients.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "g2"
+  }, /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      marginBottom: 16
+    }
+  }, "Zisk podle zákazníka"), state.clients.map(c => {
+    const cc = clientCalc(c);
+    const maxP = Math.max(...state.clients.map(x => clientCalc(x).profit), 1);
+    return /*#__PURE__*/React.createElement("div", {
+      key: c.id,
+      style: {
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 13,
+        marginBottom: 5
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "var(--txt2)"
+      }
+    }, c.name), /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: cc.profit >= 0 ? "var(--green)" : "var(--red)"
+      }
+    }, czk(cc.profit))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 20,
+        borderRadius: 6,
+        background: "var(--card2)",
+        overflow: "hidden"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: `${Math.max(2, Math.abs(cc.profit) / maxP * 100)}%`,
+        height: "100%",
+        background: cc.profit >= 0 ? c.color : "var(--red)",
+        borderRadius: 6
+      }
+    })));
+  })), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      marginBottom: 16
+    }
+  }, "Kam jdou peníze z obratu"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 24,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement(Donut, {
+    size: 150,
+    center: {
+      top: "obrat",
+      bottom: num(o.income / 1000) + "k"
+    },
+    segments: [{
+      value: o.costs,
+      color: "var(--red)"
+    }, {
+      value: Math.max(0, o.profit),
+      color: "var(--green)"
+    }]
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 140,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement(Legend, {
+    color: "var(--red)",
+    label: "Náklady (mzdy+odvody)",
+    val: pctF(o.income ? o.costs / o.income * 100 : 0)
+  }), /*#__PURE__*/React.createElement(Legend, {
+    color: "var(--green)",
+    label: "Tvůj čistý zisk",
+    val: pctF(o.income ? o.profit / o.income * 100 : 0)
+  }))))));
+}
+function Legend({
+  color,
+  label,
+  val
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "6px 0"
+    }
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 9,
+      height: 9,
+      borderRadius: 3,
+      background: color
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--txt2)",
+      flex: 1
+    }
+  }, label), /*#__PURE__*/React.createElement("b", null, val));
+}
+function ClientSlot({
+  client,
+  api
+}) {
+  const [open, setOpen] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const cc = clientCalc(client);
+  return /*#__PURE__*/React.createElement(Card, {
+    style: {
+      padding: 0,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      padding: "18px 22px",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 44,
+      height: 44,
+      borderRadius: 13,
+      background: client.color + "22",
+      display: "grid",
+      placeItems: "center",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: client.color,
+      fontSize: 19,
+      fontWeight: 800
+    }
+  }, (client.name || "?")[0])), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 160
+    }
+  }, editing ? /*#__PURE__*/React.createElement(TextInput, {
+    value: client.name,
+    onChange: v => api.editClient(client.id, {
+      name: v
+    }),
+    width: "100%"
+  }) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 700
+    }
+  }, client.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)",
+      marginTop: 2
+    }
+  }, "Fakturace ", client.rate, " Kč/h · ", cc.workers, " prac.")), /*#__PURE__*/React.createElement("div", {
+    className: "desktop-only",
+    style: {
+      display: "flex",
+      gap: 22
+    }
+  }, /*#__PURE__*/React.createElement(Mini, {
+    label: "Obrat",
+    val: num(cc.income)
+  }), /*#__PURE__*/React.createElement(Mini, {
+    label: "Zisk",
+    val: num(cc.profit),
+    c: cc.profit >= 0 ? "var(--green)" : "var(--red)"
+  }), /*#__PURE__*/React.createElement(Mini, {
+    label: "Marže",
+    val: pctF(cc.margin),
+    c: "var(--gold)"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setEditing(!editing),
+    style: {
+      padding: 8
+    }
+  }, /*#__PURE__*/React.createElement(I.settings, {
+    size: 17,
+    color: editing ? "var(--gold)" : "var(--txt4)"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setOpen(!open),
+    style: {
+      padding: 8,
+      transform: open ? "rotate(90deg)" : "none",
+      transition: ".2s"
+    }
+  }, /*#__PURE__*/React.createElement(I.chevron, {
+    size: 18,
+    color: "var(--txt4)"
+  }))), editing && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 22px 16px",
+      display: "flex",
+      gap: 12,
+      alignItems: "center",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)"
+    }
+  }, "Sazba zákazníka:"), /*#__PURE__*/React.createElement(NumInput, {
+    value: client.rate,
+    onChange: v => api.editClient(client.id, {
+      rate: v
+    }),
+    suffix: "Kč/h",
+    width: 120
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.removeClient(client.id),
+    style: {
+      marginLeft: "auto",
+      padding: "8px 14px",
+      color: "var(--red)",
+      fontSize: 13,
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement(I.trash, {
+    size: 15,
+    color: "var(--red)"
+  }), " Smazat zakázku")), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderTop: "1px solid var(--line)",
+      padding: "8px 14px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "desktop-only",
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1.6fr .8fr 1fr 1fr 1fr .8fr 40px",
+      gap: 10,
+      padding: "10px 8px",
+      fontSize: 11,
+      color: "var(--txt4)",
+      letterSpacing: ".3px"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "PRACOVNÍK"), /*#__PURE__*/React.createElement("span", null, "HODINY"), /*#__PURE__*/React.createElement("span", null, "PŘÍJEM"), /*#__PURE__*/React.createElement("span", null, "NÁKLADY"), /*#__PURE__*/React.createElement("span", null, "ZISK"), /*#__PURE__*/React.createElement("span", null, "MARŽE"), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, client.workers.map(w => /*#__PURE__*/React.createElement(WorkerRow, {
+    key: w.id,
+    worker: w,
+    rate: client.rate,
+    clientId: client.id,
+    api: api
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.addWorker(client.id),
+    style: {
+      width: "100%",
+      marginTop: 10,
+      padding: "12px",
+      borderRadius: 12,
+      border: "1px dashed var(--line)",
+      color: "var(--txt4)",
+      fontSize: 13
+    }
+  }, "+ Přidat pracovníka")));
+}
+function Mini({
+  label,
+  val,
+  c
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "right"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "var(--txt4)"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700,
+      color: c || "#fff"
+    }
+  }, val));
+}
+function WorkerRow({
+  worker,
+  rate,
+  clientId,
+  api
+}) {
+  const [open, setOpen] = useState(false);
+  const r = workerCalc(worker, rate);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--card2)",
+      borderRadius: 14,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "desktop-only",
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1.6fr .8fr 1fr 1fr 1fr .8fr 40px",
+      gap: 10,
+      alignItems: "center",
+      padding: "12px 8px 12px 14px",
+      cursor: "pointer"
+    },
+    onClick: () => setOpen(!open)
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9
+    }
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      background: r.profit >= 0 ? "var(--green)" : "var(--red)",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14
+    }
+  }, worker.name)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt2)"
+    }
+  }, worker.hours, " h"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      fontWeight: 600
+    }
+  }, num(r.income)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      fontWeight: 600,
+      color: "var(--red)"
+    }
+  }, num(r.costs)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700,
+      color: r.profit >= 0 ? "var(--green)" : "var(--red)"
+    }
+  }, num(r.profit)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700,
+      color: "var(--gold)"
+    }
+  }, r.margin.toFixed(0), "%"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      transform: open ? "rotate(90deg)" : "none",
+      transition: ".2s",
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement(I.chevron, {
+    size: 16,
+    color: "var(--txt4)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mobile-only",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "12px 14px",
+      cursor: "pointer"
+    },
+    onClick: () => setOpen(!open)
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      background: r.profit >= 0 ? "var(--green)" : "var(--red)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14
+    }
+  }, worker.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "var(--txt4)"
+    }
+  }, worker.hours, " h · zisk ", czk(r.profit), " · ", r.margin.toFixed(0), "%")), /*#__PURE__*/React.createElement(I.chevron, {
+    size: 16,
+    color: "var(--txt4)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "4px 14px 16px",
+      borderTop: "1px solid var(--line)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      alignItems: "center",
+      flexWrap: "wrap",
+      margin: "12px 0"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)",
+      minWidth: 120
+    }
+  }, "Jméno"), /*#__PURE__*/React.createElement(TextInput, {
+    value: worker.name,
+    onChange: v => api.editWorker(clientId, worker.id, {
+      name: v
+    }),
+    width: 180
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)"
+    }
+  }, "Hodiny/měs"), /*#__PURE__*/React.createElement(NumInput, {
+    value: worker.hours,
+    onChange: v => api.editWorker(clientId, worker.id, {
+      hours: v
+    }),
+    suffix: "h",
+    width: 100
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)",
+      marginBottom: 8
+    }
+  }, "Náklady na tohoto pracovníka (kladné = náklad, záporné = bonus k zisku):"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))",
+      gap: 10
+    }
+  }, (worker.costs || []).map(cost => /*#__PURE__*/React.createElement("div", {
+    key: cost.id,
+    style: {
+      background: "var(--card)",
+      borderRadius: 11,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    value: cost.name,
+    onChange: e => api.editCost(clientId, worker.id, cost.id, {
+      name: e.target.value
+    }),
+    style: {
+      background: "transparent",
+      border: "none",
+      color: "var(--txt2)",
+      fontSize: 12.5,
+      fontWeight: 600,
+      outline: "none",
+      width: "70%"
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.removeCost(clientId, worker.id, cost.id),
+    style: {
+      padding: 2
+    }
+  }, /*#__PURE__*/React.createElement(I.trash, {
+    size: 13,
+    color: "var(--txt4)"
+  }))), /*#__PURE__*/React.createElement(NumInput, {
+    value: cost.amount,
+    onChange: v => api.editCost(clientId, worker.id, cost.id, {
+      amount: v
+    }),
+    suffix: "Kč",
+    width: "100%"
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.addCost(clientId, worker.id),
+    style: {
+      background: "var(--card)",
+      borderRadius: 11,
+      padding: "10px 12px",
+      border: "1px dashed var(--line)",
+      color: "var(--gold)",
+      fontSize: 12.5,
+      fontWeight: 600,
+      minHeight: 64
+    }
+  }, "+ Přidat položku")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 14,
+      paddingTop: 12,
+      borderTop: "1px solid var(--line)",
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--txt4)"
+    }
+  }, "Příjem ", czk(r.income), " − náklady ", czk(r.costs), " ="), /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: r.profit >= 0 ? "var(--green)" : "var(--red)"
+    }
+  }, "zisk ", czk(r.profit), " (", r.margin.toFixed(1), " %)")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.removeWorker(clientId, worker.id),
+    style: {
+      marginTop: 10,
+      padding: "7px 0",
+      color: "var(--red)",
+      fontSize: 12.5,
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement(I.trash, {
+    size: 14,
+    color: "var(--red)"
+  }), " Odebrat pracovníka")));
+}
+
+/* ================= TAXI ================= */
+function Taxi({
+  state,
+  api,
+  ds
+}) {
+  const monthIncome = state.taxi.useManual ? state.taxi.manualMonth : ds ? ds.monthGross : 0;
+  // forecast from last 6 months
+  const hist = ds && ds.last6 ? ds.last6 : [];
+  const avg = hist.length ? hist.reduce((s, h) => s + h.gross, 0) / hist.filter(h => h.gross > 0).length || 0 : monthIncome;
+  const series = [...hist.map(h => ({
+    label: h.mo.slice(5),
+    value: h.gross
+  }))];
+  // add 3 projected months
+  const proj = 3;
+  for (let i = 1; i <= proj; i++) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + i);
+    series.push({
+      label: d.toISOString().slice(5, 7),
+      value: avg || monthIncome
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fade"
+  }, /*#__PURE__*/React.createElement(PageHead, {
+    title: "Taxi",
+    sub: "Tvůj příjem jako řidič — data z aplikace DriveStat",
+    action: /*#__PURE__*/React.createElement(Btn, {
+      onClick: api.refreshTaxi
+    }, /*#__PURE__*/React.createElement(I.refresh, {
+      size: 15
+    }), " Načíst znovu")
+  }), !ds && !state.taxi.useManual && /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 20,
+      border: "1px solid #F5C76A44",
+      background: "#1A150C"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement(I.alert, {
+    size: 20,
+    color: "var(--gold)"
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      marginBottom: 6
+    }
+  }, "Data z DriveStat nenalezena"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt2)",
+      lineHeight: 1.5,
+      marginBottom: 12
+    }
+  }, "Aby se data načetla automaticky, musí být tato aplikace i DriveStat na stejné webové adrese (např. oba na tvém github.io). Jinak zadej měsíční příjem ručně:"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(NumInput, {
+    value: state.taxi.manualMonth,
+    onChange: v => api.setTaxi({
+      manualMonth: v,
+      useManual: true
+    }),
+    suffix: "Kč",
+    width: 160
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)"
+    }
+  }, "měsíční příjem z taxi"))))), /*#__PURE__*/React.createElement("div", {
+    className: "g3",
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Stat, {
+    label: "Příjem tento měsíc",
+    value: num(monthIncome),
+    unit: "Kč",
+    color: "var(--gold)",
+    sub: ds && !state.taxi.useManual ? `${ds.trips} jízd · ${num(ds.km)} km` : "ručně zadáno"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Průměr / měsíc",
+    value: num(avg),
+    unit: "Kč",
+    sub: "z posledních měsíců",
+    color: "var(--green)"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Prognóza za 3 měs.",
+    value: num((avg || monthIncome) * 3),
+    unit: "Kč",
+    sub: "při zachování tempa"
+  })), /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700
+    }
+  }, "Příjem a prognóza"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)"
+    }
+  }, "plná čára = fakt · tečkovaná = prognóza")), series.length > 1 ? /*#__PURE__*/React.createElement(AreaChart, {
+    series: series,
+    proj: proj
+  }) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      color: "var(--txt4)",
+      padding: 40,
+      fontSize: 13
+    }
+  }, "Zatím málo dat pro graf. Načti data z DriveStat nebo zadej příjem ručně.")), state.taxi.useManual && /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "center",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt4)"
+    }
+  }, "Ruční měsíční příjem:"), /*#__PURE__*/React.createElement(NumInput, {
+    value: state.taxi.manualMonth,
+    onChange: v => api.setTaxi({
+      manualMonth: v
+    }),
+    suffix: "Kč",
+    width: 150
+  }), ds && /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.setTaxi({
+      useManual: false
+    }),
+    style: {
+      fontSize: 13,
+      color: "var(--gold)"
+    }
+  }, "Použít data z DriveStat (", czk(ds.monthGross), ")"))));
+}
+
+/* ================= EXPENSES ================= */
+function Expenses({
+  state,
+  api
+}) {
+  const total = state.expenses.reduce((s, e) => s + (e.monthly || 0), 0);
+  const groups = {};
+  state.expenses.forEach(e => (groups[e.category] = groups[e.category] || []).push(e));
+  const byCat = {};
+  state.expenses.forEach(e => byCat[e.category] = (byCat[e.category] || 0) + (e.monthly || 0));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fade"
+  }, /*#__PURE__*/React.createElement(PageHead, {
+    title: "Výdaje",
+    sub: `Celkem ${czk(total)} / měsíc · ${czk(total * 12)} / rok`,
+    action: /*#__PURE__*/React.createElement(Btn, {
+      gold: true,
+      onClick: api.addExpense
+    }, /*#__PURE__*/React.createElement(I.plus, {
+      size: 16,
+      color: "#0B0B0C"
+    }), " Přidat výdaj")
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "g2",
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      marginBottom: 16
+    }
+  }, "Rozložení výdajů"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 24,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement(Donut, {
+    size: 150,
+    center: {
+      top: "měsíc",
+      bottom: num(total / 1000) + "k"
+    },
+    segments: Object.entries(byCat).map(([k, v]) => ({
+      value: v,
+      color: EXP_CATS[k].color
+    }))
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 140,
+      fontSize: 13
+    }
+  }, Object.entries(byCat).map(([k, v]) => /*#__PURE__*/React.createElement(Legend, {
+    key: k,
+    color: EXP_CATS[k].color,
+    label: EXP_CATS[k].label,
+    val: czk(v)
+  }))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      marginBottom: 8
+    }
+  }, "Dluhy — plán splácení"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)",
+      marginBottom: 14
+    }
+  }, "Splácej nejdřív nejvyšší úrok (lavina)"), state.expenses.filter(e => e.balance > 0).sort((a, b) => (b.apr || 0) - (a.apr || 0)).map((d, i) => /*#__PURE__*/React.createElement("div", {
+    key: d.id,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "10px 0",
+      borderBottom: "1px solid var(--line)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      background: i === 0 ? "#2A1E14" : "var(--card2)",
+      display: "grid",
+      placeItems: "center",
+      fontSize: 12,
+      fontWeight: 700,
+      color: i === 0 ? "var(--gold)" : "var(--txt3)"
+    }
+  }, i + 1), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 600
+    }
+  }, d.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)"
+    }
+  }, "zbývá ", czk(d.balance))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 15,
+      fontWeight: 800,
+      color: i === 0 ? "var(--red)" : "var(--txt2)"
+    }
+  }, pctF(d.apr)))), state.expenses.filter(e => e.balance > 0).length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "var(--txt4)",
+      fontSize: 13
+    }
+  }, "Žádné úvěry se zůstatkem."))), Object.entries(groups).map(([cat, items]) => {
+    const c = EXP_CATS[cat];
+    const sum = items.reduce((s, e) => s + (e.monthly || 0), 0);
+    return /*#__PURE__*/React.createElement("div", {
+      key: cat,
+      style: {
+        marginBottom: 18
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 10,
+        padding: "0 2px"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 14,
+        fontWeight: 700,
+        color: "var(--txt2)"
+      }
+    }, /*#__PURE__*/React.createElement("i", {
+      style: {
+        width: 10,
+        height: 10,
+        borderRadius: 3,
+        background: c.color
+      }
+    }), c.label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        color: "var(--txt4)"
+      }
+    }, czk(sum), "/měs")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }
+    }, items.map(e => /*#__PURE__*/React.createElement(ExpenseCard, {
+      key: e.id,
+      exp: e,
+      api: api
+    }))));
+  }));
+}
+function ExpenseCard({
+  exp,
+  api
+}) {
+  const isLoan = exp.category === "loan";
+  return /*#__PURE__*/React.createElement(Card, {
+    style: {
+      padding: "14px 18px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    value: exp.name,
+    onChange: e => api.editExpense(exp.id, {
+      name: e.target.value
+    }),
+    style: {
+      flex: 1,
+      minWidth: 140,
+      background: "transparent",
+      border: "none",
+      color: "#fff",
+      fontSize: 15,
+      fontWeight: 600,
+      outline: "none"
+    }
+  }), /*#__PURE__*/React.createElement("select", {
+    value: exp.category,
+    onChange: e => api.editExpense(exp.id, {
+      category: e.target.value
+    }),
+    style: {
+      background: "var(--card2)",
+      border: "1px solid var(--line)",
+      color: "#fff",
+      borderRadius: 10,
+      padding: "8px 10px",
+      fontSize: 13,
+      outline: "none"
+    }
+  }, Object.entries(EXP_CATS).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
+    key: k,
+    value: k
+  }, v.label))), /*#__PURE__*/React.createElement(NumInput, {
+    value: exp.monthly,
+    onChange: v => api.editExpense(exp.id, {
+      monthly: v
+    }),
+    suffix: "Kč/měs",
+    width: 130
+  }), isLoan && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NumInput, {
+    value: exp.balance || 0,
+    onChange: v => api.editExpense(exp.id, {
+      balance: v
+    }),
+    suffix: "zbývá",
+    width: 130
+  }), /*#__PURE__*/React.createElement(NumInput, {
+    value: exp.apr || 0,
+    onChange: v => api.editExpense(exp.id, {
+      apr: v
+    }),
+    suffix: "%",
+    width: 90
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => api.removeExpense(exp.id),
+    style: {
+      padding: 7
+    }
+  }, /*#__PURE__*/React.createElement(I.trash, {
+    size: 15,
+    color: "var(--txt4)"
+  }))));
+}
+
+/* ================= DASHBOARD ================= */
+function Dashboard({
+  state,
+  api,
+  ds
+}) {
+  const o = outsourcingCalc(state);
+  const taxiIncome = state.taxi.useManual ? state.taxi.manualMonth : ds ? ds.monthGross : 0;
+  const totalIncome = o.profit + taxiIncome; // outsourcing NET profit + taxi income
+  const expenseTotal = state.expenses.reduce((s, e) => s + (e.monthly || 0), 0);
+  const net = totalIncome - expenseTotal;
+  const margin = totalIncome > 0 ? net / totalIncome * 100 : 0;
+  // forecast 12 months
+  const plan = state.plan;
+  const series = [];
+  const months = plan.horizon || 12;
+  for (let i = 0; i < months; i++) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + i);
+    series.push({
+      label: d.toISOString().slice(5, 7),
+      value: net > 0 ? net * (i + 1) : 0
+    });
+  }
+  // gap to target
+  const gap = plan.targetIncome - totalIncome;
+  const tips = buildTips({
+    o,
+    taxiIncome,
+    totalIncome,
+    expenseTotal,
+    net,
+    margin,
+    gap,
+    plan,
+    state,
+    ds
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fade"
+  }, /*#__PURE__*/React.createElement(PageHead, {
+    title: "Přehled",
+    sub: "Celková finanční situace"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "g4",
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Stat, {
+    label: "Celkový příjem",
+    value: num(totalIncome),
+    unit: "Kč",
+    color: "var(--green)",
+    sub: "agentura + taxi / měs"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Výdaje",
+    value: num(expenseTotal),
+    unit: "Kč",
+    color: "var(--red)",
+    sub: "měsíčně"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Čistý zůstatek",
+    value: num(net),
+    unit: "Kč",
+    color: net >= 0 ? "#fff" : "var(--red)",
+    sub: "po výdajích"
+  }), /*#__PURE__*/React.createElement(Stat, {
+    label: "Marže",
+    value: pctF(margin),
+    color: "var(--gold)",
+    sub: margin >= 20 ? "zdravá" : "hlídej"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "split",
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Card, {
+    className: "metal",
+    style: {
+      border: "1px solid #4A4A5288"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      letterSpacing: ".5px",
+      color: "#A0A0A8"
+    }
+  }, "ČISTÝ MĚSÍČNÍ ZŮSTATEK"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 10,
+      margin: "10px 0 18px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hero-num",
+    style: {
+      fontSize: 58,
+      fontWeight: 800,
+      letterSpacing: "-2px",
+      color: net >= 0 ? "#fff" : "var(--red)"
+    }
+  }, num(net)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 23,
+      fontWeight: 600,
+      color: "#A0A0A8"
+    }
+  }, "Kč")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 28,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#C7C7CC"
+    }
+  }, "Agentura (zisk)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700
+    }
+  }, czk(o.profit))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#C7C7CC"
+    }
+  }, "Taxi"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700
+    }
+  }, czk(taxiIncome))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#C7C7CC"
+    }
+  }, "Za rok"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: "var(--green)"
+    }
+  }, czk(net * 12))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      marginBottom: 14
+    }
+  }, "Plán příjmu"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--txt4)",
+      marginBottom: 6
+    }
+  }, "Cílový měsíční příjem"), /*#__PURE__*/React.createElement(NumInput, {
+    value: plan.targetIncome,
+    onChange: v => api.setPlan({
+      targetIncome: v
+    }),
+    suffix: "Kč",
+    width: "100%"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 13,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--txt4)"
+    }
+  }, "Aktuálně"), /*#__PURE__*/React.createElement("b", null, czk(totalIncome))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 12,
+      borderRadius: 6,
+      background: "var(--card2)",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${Math.min(100, plan.targetIncome ? totalIncome / plan.targetIncome * 100 : 0)}%`,
+      height: "100%",
+      background: "linear-gradient(90deg,#F5C76A,#D89B3A)",
+      borderRadius: 6
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      marginTop: 8,
+      color: gap <= 0 ? "var(--green)" : "var(--gold)"
+    }
+  }, gap <= 0 ? `Cíl splněn! Přebytek ${czk(-gap)}` : `Do cíle chybí ${czk(gap)} měsíčně`)))), /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700
+    }
+  }, "Kde budu — prognóza úspor"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--txt3)"
+    }
+  }, "za ", months, " měs. ≈ ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--gold)"
+    }
+  }, czk(net * months)))), /*#__PURE__*/React.createElement(AreaChart, {
+    series: series,
+    height: 240
+  })), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "goldgrad",
+    style: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(I.bulb, {
+    size: 17,
+    color: "#0B0B0C"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700
+    }
+  }, "Doporučení")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12
+    }
+  }, tips.map((t, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 14,
+      padding: 14,
+      background: "var(--card2)",
+      borderRadius: 14,
+      borderLeft: `3px solid ${t.color}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 34,
+      height: 34,
+      borderRadius: 9,
+      background: t.color + "22",
+      display: "grid",
+      placeItems: "center",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement(t.icon, {
+    size: 17,
+    color: t.color
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14.5,
+      fontWeight: 700,
+      marginBottom: 3
+    }
+  }, t.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13.5,
+      color: "var(--txt2)",
+      lineHeight: 1.55
+    }
+  }, t.text))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "flex-start",
+      padding: 13,
+      background: "var(--card2)",
+      borderRadius: 12,
+      fontSize: 12.5,
+      color: "var(--txt4)",
+      lineHeight: 1.5,
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement(I.bulb, {
+    size: 15,
+    color: "var(--txt4)"
+  }), /*#__PURE__*/React.createElement("span", null, "Doporučení se počítají z tvých čísel. Až připojíš živého AI poradce, bude reagovat na otázky a vývoj v čase."))));
+}
+function buildTips({
+  o,
+  taxiIncome,
+  totalIncome,
+  expenseTotal,
+  net,
+  margin,
+  gap,
+  plan,
+  state,
+  ds
+}) {
+  const t = [];
+  // worker in loss
+  let lossWorker = null;
+  state.clients.forEach(c => c.workers.forEach(w => {
+    const r = workerCalc(w, c.rate);
+    if (r.profit < 0 && (!lossWorker || r.profit < lossWorker.profit)) lossWorker = {
+      ...r,
+      name: w.name,
+      client: c.name
+    };
+  }));
+  if (lossWorker) t.push({
+    icon: I.alert,
+    color: "var(--red)",
+    title: `Ztrátový pracovník: ${lossWorker.name}`,
+    text: `U zakázky „${lossWorker.client}" je ${lossWorker.name} ve ztrátě ${czk(lossWorker.profit)}/měs. Buď navyš jeho hodiny, zvedni sazbu zákazníkovi, nebo sniž náklady — jinak ti ujídá zisk.`
+  });
+  // best client
+  if (state.clients.length) {
+    const best = state.clients.map(c => ({
+      c,
+      r: clientCalc(c)
+    })).sort((a, b) => b.r.margin - a.r.margin)[0];
+    if (best.r.margin > 0) t.push({
+      icon: I.trend,
+      color: "var(--green)",
+      title: `Nejlepší zakázka: ${best.c.name}`,
+      text: `Marže ${best.r.margin.toFixed(1)} %. Sem se vyplatí přidat víc pracovníků — každý další ti přináší nejvyšší zisk z hodiny.`
+    });
+  }
+  // gap to plan
+  if (gap > 0) {
+    const days = Math.ceil(gap / (ds && ds.dailyGoal || 1800));
+    t.push({
+      icon: I.target,
+      color: "var(--gold)",
+      title: "Jak dosáhnout plánu",
+      text: `Do cílového příjmu ${czk(plan.targetIncome)} chybí ${czk(gap)}/měs. Možnosti: ~${days} dní taxi navíc, nebo jeden nový pracovník v nejziskovější zakázce (přidá zisk bez tvého času).`
+    });
+  }
+  // debt
+  const worst = state.expenses.filter(e => e.balance > 0).sort((a, b) => (b.apr || 0) - (a.apr || 0))[0];
+  if (worst && net > 0) t.push({
+    icon: I.receipt,
+    color: "#F08A6A",
+    title: `Splať nejdřív: ${worst.name}`,
+    text: `Úrok ${pctF(worst.apr)} je nejdražší. Pošli přebytek ${czk(net)}/měs sem — ušetříš na úrocích nejvíc a uvolníš si splátku do budoucna.`
+  });
+  if (margin >= 25 && net > 0 && gap <= 0) t.push({
+    icon: I.check,
+    color: "var(--green)",
+    title: "Jsi v dobré kondici",
+    text: `Marže ${margin.toFixed(0)} % a plníš plán. Teď buduj rezervu na 3 měsíce výdajů (${czk(expenseTotal * 3)}) — to tě ochrání před nečekanými výpadky.`
+  });
+  return t;
+}
+
+/* ================= APP ================= */
+function App() {
+  const [state, setState] = useState(loadState);
+  const [tab, setTab] = useState("dashboard");
+  const [ds, setDs] = useState(() => readDriveStat());
+  useEffect(() => {
+    saveState(state);
+  }, [state]);
+  const upd = useCallback(fn => setState(s => ({
+    ...s,
+    ...fn(s)
+  })), []);
+  const mapClients = (s, cid, fn) => ({
+    clients: s.clients.map(c => c.id === cid ? fn(c) : c)
+  });
+  const api = {
+    addClient: () => upd(s => ({
+      clients: [...s.clients, {
+        id: "c" + Date.now(),
+        name: "Nový zákazník",
+        rate: 300,
+        color: "#F5C76A",
+        workers: []
+      }]
+    })),
+    editClient: (cid, p) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      ...p
+    }))),
+    removeClient: cid => upd(s => ({
+      clients: s.clients.filter(c => c.id !== cid)
+    })),
+    addWorker: cid => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: [...c.workers, {
+        id: "w" + Date.now(),
+        name: "Nový pracovník",
+        hours: 160,
+        costs: [{
+          id: "x" + Date.now(),
+          name: "Mzda",
+          amount: 24000
+        }]
+      }]
+    }))),
+    editWorker: (cid, wid, p) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: c.workers.map(w => w.id === wid ? {
+        ...w,
+        ...p
+      } : w)
+    }))),
+    removeWorker: (cid, wid) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: c.workers.filter(w => w.id !== wid)
+    }))),
+    addCost: (cid, wid) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: c.workers.map(w => w.id === wid ? {
+        ...w,
+        costs: [...(w.costs || []), {
+          id: "x" + Date.now(),
+          name: "Nová položka",
+          amount: 0
+        }]
+      } : w)
+    }))),
+    editCost: (cid, wid, xid, p) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: c.workers.map(w => w.id === wid ? {
+        ...w,
+        costs: w.costs.map(x => x.id === xid ? {
+          ...x,
+          ...p
+        } : x)
+      } : w)
+    }))),
+    removeCost: (cid, wid, xid) => upd(s => mapClients(s, cid, c => ({
+      ...c,
+      workers: c.workers.map(w => w.id === wid ? {
+        ...w,
+        costs: w.costs.filter(x => x.id !== xid)
+      } : w)
+    }))),
+    addExpense: () => upd(s => ({
+      expenses: [...s.expenses, {
+        id: "e" + Date.now(),
+        name: "Nový výdaj",
+        category: "other",
+        monthly: 0
+      }]
+    })),
+    editExpense: (id, p) => upd(s => ({
+      expenses: s.expenses.map(e => e.id === id ? {
+        ...e,
+        ...p
+      } : e)
+    })),
+    removeExpense: id => upd(s => ({
+      expenses: s.expenses.filter(e => e.id !== id)
+    })),
+    setTaxi: p => upd(s => ({
+      taxi: {
+        ...s.taxi,
+        ...p
+      }
+    })),
+    setPlan: p => upd(s => ({
+      plan: {
+        ...s.plan,
+        ...p
+      }
+    })),
+    refreshTaxi: () => setDs(readDriveStat())
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "shell"
+  }, /*#__PURE__*/React.createElement(Sidebar, {
+    tab: tab,
+    setTab: setTab
+  }), /*#__PURE__*/React.createElement("main", {
+    className: "content"
+  }, tab === "dashboard" && /*#__PURE__*/React.createElement(Dashboard, {
+    state: state,
+    api: api,
+    ds: ds
+  }), tab === "outsourcing" && /*#__PURE__*/React.createElement(Outsourcing, {
+    state: state,
+    api: api
+  }), tab === "taxi" && /*#__PURE__*/React.createElement(Taxi, {
+    state: state,
+    api: api,
+    ds: ds
+  }), tab === "expenses" && /*#__PURE__*/React.createElement(Expenses, {
+    state: state,
+    api: api
+  })), /*#__PURE__*/React.createElement(BottomNav, {
+    tab: tab,
+    setTab: setTab
+  }));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
+</script>
+</body>
+</html>
